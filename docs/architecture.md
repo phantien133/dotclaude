@@ -17,37 +17,52 @@
 
 Claude Code tự merge cả 2 layer khi chạy. User layer chứa baseline bền (rules, agents, commands chung); project layer chỉ thêm skills cụ thể với stack đó.
 
-## Vendor ECC strategy
+## Vendor strategy
 
-`everything-claude-code` là dependency lớn nhất. Plan:
+`vendor/` chứa external dependencies dưới dạng **git submodule** — đã setup:
 
-### Phase 1 (hiện tại — skeleton)
-- ECC tham chiếu local path `../everything-claude-code` (relative từ `dotclaude/`).
-- Hợp lý khi cả hai cùng nằm trong workspace `claude-code-guides/` để dev/test.
+| Submodule | Role | Lý do |
+|---|---|---|
+| `vendor/everything-claude-code` | runtime | Installer resolve modules từ đây |
+| `vendor/anthropic-cookbook` | docs | Reference API patterns + Claude Code recipes khi build skill mới |
+| `vendor/anthropic-skills` | docs | Skill format reference chính thức từ Anthropic |
+| `vendor/mcp-servers` | docs | MCP server collection để học pattern khi cần extend agent |
 
-### Phase 2 (khi `dotclaude` move ra standalone)
-- Vendor ECC vào `vendor/everything-claude-code/` dưới dạng **git submodule**:
-  ```bash
-  cd dotclaude
-  git submodule add https://github.com/everything-claude-code/everything-claude-code vendor/everything-claude-code
-  git submodule update --init --recursive
-  ```
-- Cập nhật `dependencies.yaml`:
-  ```yaml
-  sources:
-    ecc:
-      local_path: vendor/everything-claude-code
-      pinned_commit: <hash>  # commit của submodule
-  ```
-- Lý do dùng submodule:
-  - Tôn trọng nguồn (không copy-paste, giữ git history)
-  - Version-pinning rõ ràng qua submodule SHA
-  - Update có kiểm soát: `git submodule update --remote --merge`
-  - Khi clone `dotclaude` mới: `git clone --recursive` lấy luôn ECC
+### Lý do dùng submodule
 
-### Phase 3 (tùy chọn)
-- Mirror docs ECC quan trọng vào `docs/ecc-reference/` (snapshot read-only) để tham chiếu offline khi không clone submodule.
-- Hoặc viết `scripts/sync-docs.sh` chỉ pull `everything-claude-code/the-shortform-guide.md`, `everything-claude-code/the-longform-guide.md`, `manifests/*.json` vào `docs/ecc-reference/`.
+- Tôn trọng nguồn (không copy-paste, giữ git history)
+- Version-pinning rõ ràng qua submodule SHA
+- Update có kiểm soát: `git submodule update --remote --merge`
+- Khi clone `dotclaude` mới: `git clone --recursive` lấy luôn vendor
+
+### Update workflow
+
+```bash
+# Update tất cả submodule lên HEAD của ref tracking (mặc định `main`)
+git submodule update --remote --merge
+
+# Hoặc update riêng một cái
+git submodule update --remote vendor/anthropic-cookbook
+
+# Refresh pinned_commit trong dependencies.yaml
+for sub in vendor/*/; do
+  echo "$sub: $(git -C "$sub" rev-parse HEAD)"
+done
+
+# Commit cả .gitmodules + dependencies.yaml
+```
+
+### Quy ước role
+
+- `role: runtime` → installer **bắt buộc** present, parse + sử dụng.
+- `role: docs` → reference cho con người + Claude khi research, **optional** khi clone (có thể skip submodule init nếu chỉ chạy installer).
+
+Để clone gọn (chỉ runtime):
+```bash
+git clone git@github.com:phantien133/dotclaude.git
+cd dotclaude
+git submodule update --init vendor/everything-claude-code
+```
 
 ## Dependency declaration model
 

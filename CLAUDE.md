@@ -27,7 +27,9 @@ Tôn trọng nguồn gốc: external plugins (ECC, marketplace) khai báo trong 
 | Bỏ `framework-language` ở user level | Module này kéo skills của ~15 ngôn ngữ | Skills nên ở preset, đúng stack mới load |
 | User-level modules | `rules-core`, `agents-core`, `commands-core`, `hooks-runtime`, `platform-configs`, `workflow-quality`, `database` | Baseline cross-stack, không bias ngôn ngữ |
 | Symlink mặc định cho preset | `--copy` chỉ khi cần self-contained | Update ECC tự động lan, đỡ phình repo |
-| Folder location hiện tại | Workspace tạm cho skeleton phase | Sẽ move ra standalone (`~/dotclaude/`) sau khi ổn định |
+| Folder location hiện tại | Workspace tạm cho skeleton phase | Move target: `/Users/tienphan/workspace/phantien133/dotclaude/` |
+| Git remote | `git@github.com:phantien133/dotclaude.git` | Set sẵn, chưa push |
+| Git author | `phantien133 <phanqtien@gmail.com>` | Personal identity, KHÔNG dùng email công ty trong repo này |
 
 ## Architecture
 
@@ -49,11 +51,49 @@ dotclaude/
 └── docs/                      # ADR, design notes
 ```
 
-## Vendor ECC plan (3 phases)
+## Vendor layout
 
-1. **Hiện tại**: `local_path: ../everything-claude-code` (relative) — vì cả hai cùng trong workspace `claude-code-guides/`.
-2. **Khi move standalone**: `git submodule add` ECC vào `vendor/everything-claude-code/`. Update `dependencies.yaml` `local_path: vendor/everything-claude-code`.
-3. **Optional**: mirror ECC docs (shortform/longform guides, manifests) vào `docs/ecc-reference/` để offline reference.
+`vendor/` chứa 4 git submodule — đã setup xong:
+
+| Path | Repo | Role | Size |
+|---|---|---|---|
+| `vendor/everything-claude-code` | `affaan-m/everything-claude-code` | **runtime** (installer dùng) | ~39MB |
+| `vendor/anthropic-cookbook` | `anthropics/anthropic-cookbook` | docs (API + Claude Code patterns) | ~199MB |
+| `vendor/anthropic-skills` | `anthropics/skills` | docs (skill format reference) | ~11MB |
+| `vendor/mcp-servers` | `modelcontextprotocol/servers` | docs (MCP server collection) | ~1.6MB |
+
+Khi clone repo dotclaude lần đầu:
+```bash
+git clone --recursive git@github.com:phantien133/dotclaude.git
+# hoặc nếu đã clone không recursive:
+git submodule update --init --recursive
+```
+
+Update toàn bộ vendor về latest:
+```bash
+git submodule update --remote --merge
+# rồi commit hash mới
+```
+
+## Move plan
+
+Repo hiện ở workspace tạm `claude-code-guides/dotclaude/`. Target cuối: `/Users/tienphan/workspace/phantien133/dotclaude/`.
+
+Khi sẵn sàng move:
+```bash
+mkdir -p /Users/tienphan/workspace/phantien133
+mv /Users/tienphan/workspace/hilab/claude-code-guides/dotclaude /Users/tienphan/workspace/phantien133/dotclaude
+```
+
+Submodule paths là **relative trong repo** (xem `.gitmodules`) → `mv` toàn bộ folder không break gì. Chỉ cần verify sau khi move:
+```bash
+cd /Users/tienphan/workspace/phantien133/dotclaude
+git status
+git submodule status
+./scripts/install.sh list
+```
+
+Sau khi move, có thể mở Claude session mới ở folder mới để tiếp tục.
 
 ## Workflow phổ biến
 

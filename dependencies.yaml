@@ -1,31 +1,51 @@
-# dependencies.yaml — Nguồn gốc external cho mọi package
+# dependencies.yaml — Nguồn external cho mọi package
 #
 # Mỗi entry trong `sources:` khai báo một plugin/repo external.
 # Các package (packages/user, packages/presets/*) chỉ tham chiếu source ID,
 # không hardcode URL/path lặp lại.
 #
 # Update workflow:
-#   1. Chỉnh `pinned_commit` (hoặc `ref`) tại đây
-#   2. Chạy scripts/update.sh để verify + refresh local copies
-#   3. Commit dependencies.yaml + lockfile (nếu có)
+#   1. Cập nhật submodule:  git submodule update --remote vendor/<name>
+#   2. Refresh `pinned_commit`:  git -C vendor/<name> rev-parse HEAD
+#   3. Commit dependencies.yaml + .gitmodules
 
 version: 1
 
 sources:
+  # ECC — dependency runtime (installer dùng)
   ecc:
     name: everything-claude-code
     description: Battle-tested agents/skills/hooks/commands collection
-    repo: https://github.com/everything-claude-code/everything-claude-code
-    # Local path nếu đang dev/clone về workspace.
-    # Khi resolve, install scripts ưu tiên local_path nếu tồn tại; fallback clone từ repo.
-    local_path: ../everything-claude-code
-    # Pin commit để đảm bảo reproducible install.
-    # TODO: cập nhật bằng `git -C ../everything-claude-code rev-parse HEAD`
-    pinned_commit: null
-    # Hoặc track branch (đỡ chặt hơn pinned_commit):
+    repo: https://github.com/affaan-m/everything-claude-code
+    local_path: vendor/everything-claude-code
+    pinned_commit: null      # TODO: git -C vendor/everything-claude-code rev-parse HEAD
     ref: main
+    role: runtime            # installer resolve modules từ repo này
 
-  # Ví dụ thêm source khác sau này:
-  # marketplace-x:
-  #   repo: https://github.com/some-org/some-claude-pack
-  #   pinned_commit: abc123...
+  # Docs-only sources — tham khảo khi build agents/skills/MCP, không phải runtime
+  anthropic_cookbook:
+    name: anthropic-cookbook
+    description: Official Anthropic API + Claude Code recipe collection
+    repo: https://github.com/anthropics/anthropic-cookbook
+    local_path: vendor/anthropic-cookbook
+    pinned_commit: null
+    ref: main
+    role: docs
+
+  anthropic_skills:
+    name: anthropic-skills
+    description: Official Anthropic skills collection (skill format reference)
+    repo: https://github.com/anthropics/skills
+    local_path: vendor/anthropic-skills
+    pinned_commit: null
+    ref: main
+    role: docs
+
+  mcp_servers:
+    name: mcp-servers
+    description: Official Model Context Protocol server implementations
+    repo: https://github.com/modelcontextprotocol/servers
+    local_path: vendor/mcp-servers
+    pinned_commit: null
+    ref: main
+    role: docs
