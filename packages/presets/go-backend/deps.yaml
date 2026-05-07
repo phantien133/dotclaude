@@ -1,0 +1,13 @@
+# packages/presets/go-backend/deps.yaml
+#
+# Stack: Go service / API / CLI.
+
+source: ecc
+
+ecc_skills:
+  - coding-standards
+  - golang-patterns
+  - golang-testing
+  - backend-patterns
+  - api-design
+  - postgres-patterns

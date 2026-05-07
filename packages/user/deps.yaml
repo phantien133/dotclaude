@@ -1,0 +1,23 @@
+# packages/user/deps.yaml
+#
+# ECC modules cài vào ~/.claude/ ở user level.
+# Chỉ giữ baseline cross-stack — language/framework skills sống ở project preset.
+
+source: ecc
+
+ecc_modules:
+  - rules-core            # Common rules (coding-style, testing, security…)
+  - agents-core           # planner, code-reviewer, tdd-guide, security-reviewer, build-error-resolver…
+  - commands-core         # /plan, /tdd, /code-review, /build-fix, /e2e…
+  - hooks-runtime         # Hook scripts cho format/lint/type-check
+  - platform-configs      # MCP catalog, package-manager setup
+  - workflow-quality      # tdd-workflow, verification-loop, eval-harness, hookify-rules…
+  - database              # postgres-patterns, database-migrations (cross-stack DB)
+
+# Modules cố ý KHÔNG có ở user level:
+# - framework-language    -> lưu ở per-preset, vì kéo theo skills của ~15 ngôn ngữ
+# - security              -> chỉ kích hoạt cho preset có nhu cầu security cao
+# - research-apis         -> tùy nhu cầu cụ thể
+# - business-content, social-distribution, media-generation -> non-dev work
+# - swift-apple, supply-chain-domain, document-processing   -> không dùng
+# - operator-workflows, agentic-patterns, devops-infra      -> tùy preset bật

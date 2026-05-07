@@ -1,0 +1,18 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Vendored ECC (when added as submodule, .gitmodules tracks it; this just ignores stray clones)
+vendor/everything-claude-code/node_modules/
+
+# Local lockfile (tùy chọn — uncomment nếu không muốn commit)
+# dependencies.lock.yaml
+
+# Test scratch
+.tmp/
+.cache/

@@ -1,0 +1,19 @@
+# packages/presets/typescript-fullstack/deps.yaml
+#
+# Stack: Next.js / React / Node / NestJS / Prisma — fullstack TypeScript.
+# Cài vào <repo>/.claude/skills/ qua symlink (mặc định) hoặc copy (--copy).
+
+source: ecc
+
+ecc_skills:
+  - coding-standards
+  - frontend-patterns
+  - backend-patterns
+  - api-design
+  - mcp-server-patterns
+  - nestjs-patterns       # bỏ nếu không dùng Nest
+
+# Skills cố tình KHÔNG include ở preset này:
+# - django-*, springboot-*, laravel-* -> stack khác
+# - kotlin-*, rust-*, golang-* -> stack khác
+# - swift-*, perl-*           -> stack khác

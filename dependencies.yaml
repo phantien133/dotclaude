@@ -1,0 +1,31 @@
+# dependencies.yaml — Nguồn gốc external cho mọi package
+#
+# Mỗi entry trong `sources:` khai báo một plugin/repo external.
+# Các package (packages/user, packages/presets/*) chỉ tham chiếu source ID,
+# không hardcode URL/path lặp lại.
+#
+# Update workflow:
+#   1. Chỉnh `pinned_commit` (hoặc `ref`) tại đây
+#   2. Chạy scripts/update.sh để verify + refresh local copies
+#   3. Commit dependencies.yaml + lockfile (nếu có)
+
+version: 1
+
+sources:
+  ecc:
+    name: everything-claude-code
+    description: Battle-tested agents/skills/hooks/commands collection
+    repo: https://github.com/everything-claude-code/everything-claude-code
+    # Local path nếu đang dev/clone về workspace.
+    # Khi resolve, install scripts ưu tiên local_path nếu tồn tại; fallback clone từ repo.
+    local_path: ../everything-claude-code
+    # Pin commit để đảm bảo reproducible install.
+    # TODO: cập nhật bằng `git -C ../everything-claude-code rev-parse HEAD`
+    pinned_commit: null
+    # Hoặc track branch (đỡ chặt hơn pinned_commit):
+    ref: main
+
+  # Ví dụ thêm source khác sau này:
+  # marketplace-x:
+  #   repo: https://github.com/some-org/some-claude-pack
+  #   pinned_commit: abc123...
