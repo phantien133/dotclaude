@@ -347,9 +347,9 @@ dotclaude/
 ├── package.json                 # deps: zod, js-yaml, commander, deepmerge, vitest
 ├── tsconfig.json
 ├── vitest.config.ts
-├── bun.lockb                    # Bun lockfile
+├── pnpm-lock.yaml               # pnpm lockfile
 │
-├── scripts/                     # 100% TypeScript, chạy qua bun
+├── scripts/                     # 100% TypeScript, chạy qua tsx (pnpm exec)
 │   ├── install.ts               # entry dispatcher: user|project|list|validate
 │   ├── install-user.ts          # default symlink
 │   ├── install-project.ts       # default copy
@@ -410,19 +410,22 @@ dotclaude/
 
 ### 5.2.1. Phase 0.5 — TypeScript toolchain bootstrap
 
-**Goal**: setup Bun + TS để Phase 1 có nền tảng dùng ngay.
+**Goal**: setup pnpm + TS + tsx (CQ-10 revised 2026-05-08) để Phase 1 có nền tảng dùng
+ngay.
 
 **Steps**:
-1. Verify Bun installed: `bun --version` (≥1.0). Nếu chưa: hướng dẫn cài qua
-   `curl -fsSL https://bun.sh/install | bash`.
-2. `bun init` (hoặc tạo tay) → `package.json` + `tsconfig.json` + `bun.lockb`.
+1. Verify toolchain: `node --version` (≥20), `pnpm --version` (≥9). Nếu thiếu pnpm:
+   `corepack enable` hoặc `brew install pnpm`.
+2. Tạo tay `package.json`, `tsconfig.json`, `vitest.config.ts` (không dùng
+   `pnpm init` để tránh template thừa).
 3. Install deps:
    ```bash
-   bun add zod js-yaml commander deepmerge ajv
-   bun add -d @types/js-yaml @types/node vitest typescript
+   pnpm add zod zod-to-json-schema js-yaml commander deepmerge
+   pnpm add -D tsx typescript vitest @types/js-yaml @types/node
    ```
 4. `tsconfig.json`: `"strict": true`, `"target": "ES2022"`, `"module": "ESNext"`,
-   `"moduleResolution": "Bundler"`.
+   `"moduleResolution": "Bundler"`, `"allowImportingTsExtensions": true`,
+   `"noEmit": true`.
 5. `vitest.config.ts` setup test root `scripts/tests/`.
 6. Add `package.json` scripts:
    ```json
@@ -430,13 +433,20 @@ dotclaude/
      "scripts": {
        "typecheck": "tsc --noEmit",
        "test": "vitest run",
-       "test:watch": "vitest"
+       "test:watch": "vitest",
+       "install:user": "tsx scripts/install.ts user",
+       "install:project": "tsx scripts/install.ts project",
+       "validate": "tsx scripts/install.ts validate",
+       "list": "tsx scripts/install.ts list",
+       "sync": "tsx scripts/sync-from-upstream.ts",
+       "init-private": "tsx scripts/init-private.ts",
+       "clean-backups": "tsx scripts/clean-backups.ts"
      }
    }
    ```
-7. Commit `chore: init TypeScript + Bun toolchain`.
+7. Commit `chore: init TypeScript + pnpm toolchain`.
 
-**Done when**: `bun run typecheck` xanh, `bun test` chạy (0 test cũng OK).
+**Done when**: `pnpm typecheck` xanh, `pnpm test` chạy (0 test cũng OK).
 
 ### 5.3. Phase 1 — Core foundation
 
@@ -529,7 +539,7 @@ provenance + reference.
    - `presets/core/personal-baseline.md` — human docs (when to use, rationale).
 
 5. **Script `scripts/sync-from-upstream.ts` (skeleton)**:
-   - Shebang `#!/usr/bin/env bun`.
+   - Invocation qua `pnpm sync <component>` (script trong package.json wrap `tsx`).
    - Input: component path (vd `agents/code-reviewer`).
    - Đọc sidecar `.source.yaml` qua `scripts/lib/sidecar.ts` → `source_commit`.
    - Spawn `git -C upstream/<repo> fetch && git diff <source_commit>..HEAD -- <source_path>`
@@ -591,7 +601,7 @@ provenance + reference.
      - Cho `dependencies.optional.<type>: [...]`: skip default, log warn. Add nếu
        `--include-optional`.
      - Cho `dependencies.external[]`: check qua `which <name>` cho `system_binary`,
-       `bun pm ls` cho `npm`, etc. Log FOUND/NOT FOUND. Không auto-install.
+       `pnpm ls --depth=0` cho `npm`, etc. Log FOUND/NOT FOUND. Không auto-install.
      - Detect circular: A→B→A → throw error rõ.
      - Dedupe: Set theo `<type>:<id>`.
      - Output log array có thể print verbose ở dry-run.
@@ -605,7 +615,7 @@ provenance + reference.
    - `backup(path)`: tạo `<path>.bak.<timestamp>` nếu file tồn tại.
    - `applyOp(op, mode)`: symlink hoặc copy theo mode.
    - `copyFolder(src, dst, exclude=['SOURCE.yaml'])` cho skill.
-   - Tất cả async fs API (Bun built-in / `node:fs/promises`).
+   - Tất cả async fs API (`node:fs/promises`).
 
 5. **`scripts/lib/manifest.ts`** — read/write manifest atomic:
    - `loadManifest(path): Manifest | null`.
@@ -613,7 +623,7 @@ provenance + reference.
    - `mergeManifest(old, plan)`: cập nhật manifest sau install (multi-preset chồng).
 
 6. **`scripts/install-user.ts`**:
-   - Shebang `#!/usr/bin/env bun`.
+   - Invocation qua `pnpm install:user <preset>` (package.json wrap `tsx`).
    - Default mode: symlink (CQ-5b).
    - Sử dụng resolver → InstallPlan.
    - Apply plan qua `fs-ops` (backup → symlink/copy).

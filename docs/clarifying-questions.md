@@ -697,9 +697,17 @@ Liên quan: REQ-4 (install scripts), R2 (parser fragile).
 - Owner full-stack TS background → familiar, không có learning curve.
 - Bun shebang `#!/usr/bin/env bun` chạy `.ts` trực tiếp.
 
-**Status**: answered (2026-05-07)
+**Status**: answered (2026-05-07), revised (2026-05-08)
 
-**Decision**: **A — 100% TypeScript + Bun**. Scripts là `.ts`, chạy qua `bun`. Layout:
+**Decision** (revised 2026-05-08): **A — 100% TypeScript + pnpm + tsx**. Original decision
+chọn Bun, nhưng tại thời điểm Phase 0.5 owner chưa có Bun cài và Brew chưa có formula
+chính thức (chỉ qua curl-pipe-bash hoặc bun cask third-party). Toolchain hiện có node
+23.7 + pnpm 10.28 → switch sang `pnpm` (package manager) + `tsx` (TS runner) đáp ứng
+cùng mục tiêu mà không cần extra system install. Nếu sau này owner cài Bun, có thể
+revisit (Bun chạy tsx-style scripts trực tiếp, migration shebang `#!/usr/bin/env tsx`
+→ `#!/usr/bin/env bun` rất nhỏ).
+
+**Layout**:
 ```
 scripts/
 ├── install.ts                  # entry, commander
@@ -711,7 +719,7 @@ scripts/
 ├── lib/
 │   ├── schema.ts               # zod schemas (preset, sidecar, manifest)
 │   ├── resolver.ts             # extends resolver, component lookup
-│   ├── manifest.ts             # read/write .dotclaude-manifest.json
+│   ├── manifest.ts             # read/write .dotclaude-manifest.yaml
 │   ├── settings-merge.ts       # deep-merge JSON
 │   ├── sidecar.ts              # parse SOURCE.yaml + <name>.source.yaml
 │   ├── fs-ops.ts               # symlink/copy/backup helpers
@@ -724,13 +732,16 @@ vitest.config.ts
 ```
 
 **Hệ quả**:
-- Repo cần Bun (≥1.0) cài sẵn. README hướng dẫn install Bun.
-- `package.json` track deps: `zod`, `js-yaml`, `@types/js-yaml`, `commander`, `deepmerge`,
-  `ajv`, `vitest`, `@types/node`.
-- Mỗi entry script có shebang `#!/usr/bin/env bun` → chạy như executable.
-- Tests trong `scripts/tests/` chạy bằng `bun test` hoặc `vitest`.
+- Repo cần `node ≥20` + `pnpm ≥9`. README hướng dẫn install (corepack hoặc brew).
+- `package.json` track deps: `zod`, `zod-to-json-schema`, `js-yaml`, `commander`,
+  `deepmerge`, dev: `tsx`, `typescript`, `vitest`, `@types/js-yaml`, `@types/node`.
+- Entry script invocation qua `pnpm` scripts (vd `pnpm install:user <preset>`)
+  hoặc shebang `#!/usr/bin/env -S pnpm exec tsx` nếu cần executable bit. Shebang
+  chuẩn `#!/usr/bin/env tsx` chỉ work khi `tsx` resolvable global → ưu tiên
+  pnpm scripts để portable.
+- Tests trong `scripts/tests/` chạy bằng `pnpm test` (vitest).
 - TypeScript types xuất ra `scripts/lib/types.ts` reusable.
-- CI (Phase 5+) chạy `bun test` + `bun run typecheck`.
+- CI (Phase 5+) chạy `pnpm test` + `pnpm typecheck`.
 - R2 (awk parser fragile) **được giải quyết hoàn toàn** ở Phase 2.
 
 ---
@@ -799,7 +810,7 @@ dependencies:
 - Resolver phải có 2 phase: (1) resolve preset extends + components, (2) resolve
   component dependencies (recursive).
 - Output dry-run có section `[deps]` rõ ràng để owner review trước khi apply.
-- Phase 5+ có thể auto-install external (`bun add prettier` hoặc `brew install jq`)
+- Phase 5+ có thể auto-install external (`pnpm add prettier` hoặc `brew install jq`)
   qua flag `--auto-install-external` — defer, tránh invasive default.
 
 ---
@@ -923,9 +934,10 @@ rename), `.gitmodules` (cập nhật path). Phase 1 bắt đầu build mới.
   install pipeline, 3 lifecycle, 4 marketplace).
 - **CQ-9 (2026-05-07)** — Migration: wipe & rewrite. `git rm packages/ scripts/`,
   `git mv vendor upstream`, commit, build mới Phase 1.
-- **CQ-10 (2026-05-07)** — Scripts language: 100% TypeScript + Bun. Zod cho schema,
-  Vitest cho test. Repo cần `package.json` + `tsconfig.json`. Giải quyết R2 (parser
-  fragile).
+- **CQ-10 (2026-05-07, revised 2026-05-08)** — Scripts language: 100% TypeScript + pnpm
+  + tsx (revised từ Bun do toolchain absent tại Phase 0.5; node 23.7 + pnpm 10.28 đã
+  có sẵn). Zod cho schema, Vitest cho test. Repo cần `package.json` + `tsconfig.json`.
+  Giải quyết R2 (parser fragile).
 - **CQ-11 (2026-05-07)** — Format chuẩn: prefer **YAML** cho mọi file do owner control
   (preset → `.yaml`, manifest → `.yaml`). JSON giữ cho convention bên ngoài
   (settings.json, .mcp.json, package.json, tsconfig.json, JSON Schema, plugin manifest).

@@ -1,0 +1,38 @@
+{
+  "name": "dotclaude",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Personal Claude Code config repo (claudekit + presets + plugins)",
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "install:user": "tsx scripts/install.ts user",
+    "install:project": "tsx scripts/install.ts project",
+    "validate": "tsx scripts/install.ts validate",
+    "list": "tsx scripts/install.ts list",
+    "sync": "tsx scripts/sync-from-upstream.ts",
+    "init-private": "tsx scripts/init-private.ts",
+    "clean-backups": "tsx scripts/clean-backups.ts"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "deepmerge": "^4.3.1",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.8",
+    "zod-to-json-schema": "^3.23.5"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
+  },
+  "packageManager": "pnpm@10.28.1"
+}
