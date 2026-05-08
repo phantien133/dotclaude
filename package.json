@@ -24,7 +24,8 @@
     "init-private": "tsx scripts/init-private.ts",
     "clean-backups": "tsx scripts/clean-backups.ts",
     "build-plugin": "tsx scripts/build-plugin.ts",
-    "publish-plugin": "tsx scripts/publish-plugin.ts"
+    "publish-plugin": "tsx scripts/publish-plugin.ts",
+    "vendor-batch": "tsx scripts/vendor-batch.ts"
   },
   "dependencies": {
     "commander": "^12.1.0",
