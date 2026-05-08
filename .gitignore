@@ -35,6 +35,10 @@ node_modules/
 dist/
 *.tsbuildinfo
 
+# Python bytecode (skill-creator scripts)
+__pycache__/
+*.pyc
+
 # Planning documents (local only — not tracked in git)
 docs/plan/
 
