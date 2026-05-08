@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { homedir } from 'node:os';
+import { createInterface } from 'node:readline/promises';
 import { Command } from 'commander';
 import { COMPONENT_TYPES, PRESET_KINDS, type ComponentType, type PresetKind } from './lib/schema.ts';
 import { locateComponent, loadSidecar } from './lib/sidecar.ts';
@@ -122,8 +123,8 @@ program
   .description('Install preset at user level (~/.claude/)')
   .argument('<preset>', 'preset name')
   .option('--kind <kind>', `Disambiguate preset kind (${PRESET_KINDS.join(' | ')})`)
-  .option('--copy', 'Copy files instead of symlinking (default: symlink)')
-  .option('--symlink', 'Symlink files (default)')
+  .option('--copy', 'Copy files instead of symlinking')
+  .option('--symlink', 'Symlink files instead of copying')
   .option('--force', 'Backup-overwrite conflicts without prompting')
   .option('--skip-existing', 'Skip files that already exist at target')
   .option('--include-optional', 'Also install optional component deps')
@@ -141,8 +142,8 @@ program
   .description('Install preset at project level (<cwd>/.claude/)')
   .argument('<preset>', 'preset name')
   .option('--kind <kind>', `Disambiguate preset kind (${PRESET_KINDS.join(' | ')})`)
-  .option('--symlink', 'Symlink files instead of copying (default: copy)')
-  .option('--copy', 'Copy files (default for project installs)')
+  .option('--symlink', 'Symlink files instead of copying')
+  .option('--copy', 'Copy files instead of symlinking')
   .option('--force', 'Backup-overwrite conflicts without prompting')
   .option('--skip-existing', 'Skip files that already exist at target')
   .option('--include-optional', 'Also install optional component deps')
@@ -171,18 +172,31 @@ interface ProjectInstallOpts extends UserInstallOpts {
   // same flags, different defaults
 }
 
+async function promptInstallMode(): Promise<InstallMode> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  try {
+    const answer = await rl.question('Install mode? [symlink/copy]: ');
+    const normalized = answer.trim().toLowerCase();
+    if (normalized === 'symlink' || normalized === 's') return 'symlink';
+    if (normalized === 'copy' || normalized === 'c') return 'copy';
+    log.warn(`Unknown input "${answer}", defaulting to copy`);
+    return 'copy';
+  } finally {
+    rl.close();
+  }
+}
+
 async function runInstall(
   presetName: string,
   targetRoot: string,
   opts: UserInstallOpts,
   scope: 'user' | 'project',
 ): Promise<void> {
-  const defaultMode: InstallMode = scope === 'user' ? 'symlink' : 'copy';
   const mode: InstallMode = opts.copy === true
     ? 'copy'
     : opts.symlink === true
       ? 'symlink'
-      : defaultMode;
+      : await promptInstallMode();
 
   const conflictPolicy: ConflictPolicy = opts.skipExisting === true
     ? 'skip'
@@ -284,10 +298,9 @@ function printDryRun(
   log.raw('');
   log.raw('[dry-run] Components:');
   for (const c of components) {
-    const effectiveMode: InstallMode = c.layout.kind === 'folder' ? 'symlink' : mode;
     const dst = componentTargetPath(c, targetRoot);
     const depNote = c.auto_included ? ` (auto-dep, req: ${c.required_by.join(', ')})` : '';
-    log.raw(`  ${effectiveMode.padEnd(7)} ${c.type}/${c.id} → ${dst}${depNote}`);
+    log.raw(`  ${mode.padEnd(7)} ${c.type}/${c.id} → ${dst}${depNote}`);
   }
   if (Object.keys(settingsPatch).length > 0) {
     log.raw('');

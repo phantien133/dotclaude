@@ -94,14 +94,11 @@ export async function applyComponent(
 ): Promise<ApplyResult> {
   guardTargetPath(dst, targetRoot);
 
-  // Folder components are always symlinked (Q2-5 decision).
-  const effectiveMode: InstallMode = layoutKind === 'folder' ? 'symlink' : mode;
-
   // Idempotency: already installed in the correct mode pointing to same src.
-  if (effectiveMode === 'symlink' && (await isSymlinkTo(dst, src))) {
+  if (mode === 'symlink' && (await isSymlinkTo(dst, src))) {
     return 'idempotent';
   }
-  if (effectiveMode === 'copy') {
+  if (mode === 'copy') {
     try {
       const s = await lstat(dst);
       if (!s.isSymbolicLink()) return 'idempotent';
@@ -116,7 +113,7 @@ export async function applyComponent(
     await rm(dst, { recursive: true, force: true });
   }
 
-  if (effectiveMode === 'symlink') {
+  if (mode === 'symlink') {
     await symlink(src, dst);
   } else {
     if (layoutKind === 'folder') {
