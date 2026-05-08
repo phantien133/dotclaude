@@ -1,0 +1,39 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+source:
+  repo: https://github.com/anthropics/skills
+  commit: d211d437443a7b2496a3dad9575e7dddd724c585
+  path: skills/pdf
+  ref: main
+imported_at: "2026-05-08"
+license: Proprietary
+modified: false
+modifications: null
+notes: >-
+  Process PDF files: read, extract, merge, split, rotate, watermark, create,
+  fill forms, encrypt/decrypt, OCR. Includes forms.md, reference.md, and
+  scripts/. Proprietary Anthropic license — personal use only, do not redistribute.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - pdf
+  - documents
+categories:
+  purpose:
+    - documents
+  stack:
+    - cross-stack

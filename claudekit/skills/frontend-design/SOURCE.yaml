@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+source:
+  repo: https://github.com/anthropics/skills
+  commit: d211d437443a7b2496a3dad9575e7dddd724c585
+  path: skills/frontend-design
+  ref: main
+imported_at: "2026-05-08"
+license: Apache-2.0
+modified: false
+modifications: null
+notes: >-
+  Create distinctive, production-grade frontend interfaces — avoids generic
+  "AI slop" aesthetics. Minimal skill (SKILL.md only), no sub-scripts.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - frontend
+  - design
+  - ui
+  - css
+categories:
+  purpose:
+    - development
+    - design
+  stack:
+    - web

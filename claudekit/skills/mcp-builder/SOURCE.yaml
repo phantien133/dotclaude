@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+source:
+  repo: https://github.com/anthropics/skills
+  commit: d211d437443a7b2496a3dad9575e7dddd724c585
+  path: skills/mcp-builder
+  ref: main
+imported_at: "2026-05-08"
+license: Apache-2.0
+modified: false
+modifications: null
+notes: >-
+  Build high-quality MCP servers (Python FastMCP or Node/TS MCP SDK).
+  Includes reference/ design patterns and scripts/ implementation tools.
+  scripts/connections.py uses relative intra-skill import (self-contained).
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: mcp
+      type: python_pkg
+      version: ">=1.1.0"
+      reason: "scripts/evaluation.py and connections.py use the MCP Python SDK"
+    - name: anthropic
+      type: python_pkg
+      version: ">=0.39.0"
+      reason: "scripts/evaluation.py imports anthropic for LLM-based eval"
+tags:
+  - mcp
+  - development
+  - protocol
+categories:
+  purpose:
+    - development
+  mechanism:
+    - guided-steps

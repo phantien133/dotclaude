@@ -1,0 +1,41 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+source:
+  repo: https://github.com/anthropics/skills
+  commit: d211d437443a7b2496a3dad9575e7dddd724c585
+  path: skills/doc-coauthoring
+  ref: main
+imported_at: "2026-05-08"
+license: unknown
+modified: false
+modifications: null
+notes: >-
+  Structured co-authoring workflow: context gathering → refinement → reader
+  testing. No LICENSE.txt in upstream folder; no license field in SKILL.md
+  frontmatter. Verify license before redistribution.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - documentation
+  - writing
+  - workflow
+categories:
+  purpose:
+    - writing
+    - workflow
+  mechanism:
+    - guided-steps

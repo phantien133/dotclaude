@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+source:
+  repo: https://github.com/anthropics/skills
+  commit: d211d437443a7b2496a3dad9575e7dddd724c585
+  path: skills/claude-api
+  ref: main
+imported_at: "2026-05-08"
+license: Apache-2.0
+modified: false
+modifications: null
+notes: >-
+  Build, debug, and optimize Claude API / Anthropic SDK apps. Includes
+  language-specific subdirs (python, typescript, go, java, ruby, php, csharp, curl)
+  and a shared/ reference dir. Also registered as a Claude Code skill
+  (claude-api) — already wired to the harness via claudekit/skills/.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - claude
+  - api
+  - sdk
+  - llm
+categories:
+  purpose:
+    - development
+  stack:
+    - cross-stack
