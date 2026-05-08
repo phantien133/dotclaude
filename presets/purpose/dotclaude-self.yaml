@@ -8,6 +8,7 @@ components:
   agents: []
   skills:
     - continuous-learning-v2
+    - dotclaude-component-picker
   commands: []
   hooks: []
   rules: []
