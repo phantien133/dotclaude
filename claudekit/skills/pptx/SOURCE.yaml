@@ -28,7 +28,20 @@ dependencies:
     commands: []
     hooks: []
     rules: []
-  external: []
+  external:
+    - name: markitdown
+      type: python_pkg
+      version: "[pptx]"
+      reason: "SKILL.md: text extraction from .pptx — `pip install 'markitdown[pptx]'`"
+    - name: defusedxml
+      type: python_pkg
+      reason: "scripts/clean.py, thumbnail.py"
+    - name: Pillow
+      type: python_pkg
+      reason: "scripts/thumbnail.py — PIL.Image, ImageDraw, ImageFont"
+    - name: soffice
+      type: system_binary
+      reason: "scripts/thumbnail.py + SKILL.md: LibreOffice for PDF conversion"
 tags:
   - pptx
   - presentations

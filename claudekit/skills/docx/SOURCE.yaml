@@ -28,7 +28,19 @@ dependencies:
     commands: []
     hooks: []
     rules: []
-  external: []
+  external:
+    - name: pandoc
+      type: system_binary
+      reason: "SKILL.md: text extraction and tracked-changes reading"
+    - name: soffice
+      type: system_binary
+      reason: "scripts/accept_changes.py + SKILL.md: LibreOffice for .doc→.docx and PDF conversion"
+    - name: defusedxml
+      type: python_pkg
+      reason: "scripts/comment.py and scripts/office/validators/"
+    - name: lxml
+      type: python_pkg
+      reason: "scripts/office/validators/docx.py — lxml.etree for XML validation"
 tags:
   - word
   - docx

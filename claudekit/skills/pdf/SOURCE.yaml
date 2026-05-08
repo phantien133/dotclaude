@@ -28,7 +28,22 @@ dependencies:
     commands: []
     hooks: []
     rules: []
-  external: []
+  external:
+    - name: pypdf
+      type: python_pkg
+      reason: "scripts/fill_fillable_fields.py, check_fillable_fields.py, fill_pdf_form_with_annotations.py, extract_form_field_info.py"
+    - name: pdfplumber
+      type: python_pkg
+      reason: "scripts/extract_form_structure.py — table and text extraction"
+    - name: Pillow
+      type: python_pkg
+      reason: "scripts/create_validation_image.py — PIL.Image, ImageDraw"
+    - name: pdf2image
+      type: python_pkg
+      reason: "scripts/convert_pdf_to_images.py — convert PDF pages to images"
+    - name: reportlab
+      type: python_pkg
+      reason: "SKILL.md: create PDFs from scratch"
 tags:
   - pdf
   - documents

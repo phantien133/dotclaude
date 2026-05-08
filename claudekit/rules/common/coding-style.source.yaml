@@ -1,17 +1,17 @@
 # yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
-#
-# SOURCE.yaml is INSIDE the skill folder.
-# Installer MUST exclude this file when copying the skill folder to a target.
 source:
   repo: https://github.com/affaan-m/everything-claude-code
   commit: 841beea45cb25ba51f29fa45b7e272938d19b80a
-  path: skills/coding-standards/SKILL.md
+  path: rules/common/coding-style.md
   ref: main
-imported_at: 2026-05-08
+imported_at: "2026-05-08"
 license: MIT
 modified: false
 modifications: null
-notes: First skill vendored Phase 1; foundation skill with no dependencies.
+notes: >-
+  Lightweight reusable rule layer for coding style: immutability, naming,
+  readability. Referenced as optional lighter alternative to the full
+  coding-standards skill. Vendored to satisfy that optional dependency.
 dependencies:
   required:
     agents: []
@@ -24,15 +24,14 @@ dependencies:
     skills: []
     commands: []
     hooks: []
-    rules:
-      - common/coding-style   # lighter rule-layer alternative; SKILL.md line 15
+    rules: []
   external: []
 tags:
   - code-quality
-  - standards
+  - style
+  - rules
 categories:
   purpose:
-    - review
     - guidance
   stack:
     - cross-stack

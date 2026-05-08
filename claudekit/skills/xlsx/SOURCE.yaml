@@ -28,7 +28,19 @@ dependencies:
     commands: []
     hooks: []
     rules: []
-  external: []
+  external:
+    - name: openpyxl
+      type: python_pkg
+      reason: "scripts/recalc.py — load_workbook for formula recalculation"
+    - name: soffice
+      type: system_binary
+      reason: "scripts/recalc.py + SKILL.md: LibreOffice macro for formula recalc"
+    - name: defusedxml
+      type: python_pkg
+      reason: "scripts/office/validators/ — XML parsing"
+    - name: lxml
+      type: python_pkg
+      reason: "scripts/office/validators/docx.py — lxml.etree"
 tags:
   - xlsx
   - spreadsheets
