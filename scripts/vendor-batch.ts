@@ -8,15 +8,18 @@
  *   pnpm vendor-batch --module <id> --dry-run
  *   pnpm vendor-batch --module <id> --force
  *
- * Option A (self-contained only) is applied automatically:
- *   - hooks.json → SKIP (ECC plugin format, requires ECC runtime)
- *   - scripts/lib → SKIP
- *   - scripts/hooks/*.js → only self-contained scripts (no ../lib deps)
- *   - orchestration JS scripts → SKIP
- *   - .agents, AGENTS.md → SKIP (ECC-specific)
+ * Option B (bundle lib) — ALL hook scripts are vendored, not just self-contained ones.
+ * ECC lib files are bundled to claudekit/hooks/lib/ and imports in hook scripts are
+ * rewritten from require('../lib/X') → require('./lib/X').
+ *
+ * Still skipped (cannot be made standalone):
+ *   - hooks/hooks.json  — ECC plugin format; needs separate preset/settings_patch work
+ *   - scripts/lib/      — vendored selectively as hooks/lib/ bundle, not as-is
+ *   - orchestration JS runtime scripts
+ *   - .agents, AGENTS.md  — ECC-specific
  */
 
-import { copyFile, cp, mkdir, readdir, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, extname, join, relative } from 'node:path';
 import { Command } from 'commander';
 import { dumpYaml } from './lib/yaml.ts';
@@ -38,42 +41,27 @@ const EXCLUDED_MODULES = new Set([
   'platform-configs',
 ]);
 
-// Option A: only these hook scripts are self-contained (no ../lib/ imports)
-const SELF_CONTAINED_HOOKS = new Set([
-  'auto-tmux-dev.js',
-  'block-no-verify.js',
-  'config-protection.js',
-  'design-quality-check.js',
-  'doc-file-warning.js',
-  'gateguard-fact-force.js',
-  'governance-capture.js',
-  'insaits-security-wrapper.js',
-  'mcp-health-check.js',
-  'observe-runner.js',
-  'plugin-hook-bootstrap.js',
-  'post-bash-build-complete.js',
-  'post-bash-command-log.js',
-  'post-bash-dispatcher.js',
-  'post-bash-pr-created.js',
-  'post-edit-accumulator.js',
-  'post-edit-typecheck.js',
-  'pre-bash-commit-quality.js',
-  'pre-bash-dispatcher.js',
-  'pre-bash-git-push-reminder.js',
-  'pre-bash-tmux-reminder.js',
-  'pre-write-doc-warn.js',
-  'session-start-bootstrap.js',
-  'insaits-security-monitor.py',
+// Option B: lib files to bundle alongside hook scripts into claudekit/hooks/lib/
+// All are stdlib-only (no npm deps) and their internal cross-refs are ./X (no rewriting needed).
+const LIB_BUNDLE = new Set([
+  'utils.js',           // used by 9 hooks + observer-sessions, package-manager, session-aliases
+  'hook-flags.js',      // used by bash-hook-dispatcher, check-hook-enabled, run-with-flags
+  'resolve-formatter.js', // used by post-edit-format, quality-gate, stop-format-typecheck
+  'shell-split.js',     // used by pre-bash-dev-server-block
+  'observer-sessions.js', // used by session-end-marker, session-start; imports ./utils
+  'package-manager.js', // used by session-start; imports ./utils
+  'project-detect.js',  // used by session-start
+  'session-aliases.js', // used by session-start; imports ./utils
 ]);
 
-// Paths that cannot be vendored standalone (Option A decision)
+// Paths that cannot be made standalone — skip entirely
 const SKIP_PATHS = new Set([
-  'hooks',                              // hooks.json requires ECC plugin runtime
-  'scripts/lib',                        // ECC internal lib
-  '.agents',                            // ECC-specific project manifest
+  'hooks',                              // hooks.json is ECC plugin format (requires ~/.claude/plugins/ecc/)
+  'scripts/lib',                        // ECC internal lib — vendored selectively as hooks/lib/ bundle
+  '.agents',                            // ECC-specific project manifest (not Claude Code native)
   'AGENTS.md',                          // ECC guidance doc
-  'the-security-guide.md',              // Large standalone doc, skip for now
-  // orchestration JS runtime scripts
+  'the-security-guide.md',              // Large standalone doc
+  // orchestration JS runtime (all depend on scripts/lib/ plumbing)
   'scripts/lib/orchestration-session.js',
   'scripts/lib/tmux-worktree-orchestrator.js',
   'scripts/orchestrate-codex-worker.sh',
@@ -85,12 +73,13 @@ const SKIP_PATHS = new Set([
 
 interface ComponentSpec {
   upstreamPath: string;    // relative to ECC root (used in sidecar source.path)
-  upstreamAbs: string;     // absolute path in upstream/
+  upstreamAbs: string;
   type: 'agents' | 'skills' | 'commands' | 'hooks' | 'rules';
-  id: string;              // e.g. 'python-patterns', 'common/coding-style'
+  id: string;              // e.g. 'python-patterns', 'common/coding-style', 'lib/utils'
   layout: 'file' | 'folder';
-  destAbs: string;         // absolute destination in claudekit/
-  sidecarAbs: string;      // absolute path for sidecar YAML
+  destAbs: string;
+  sidecarAbs: string;
+  rewriteImports: boolean; // true for hooks that use require('../lib/')
 }
 
 interface VendorOptions {
@@ -128,31 +117,48 @@ async function walkDir(
   return results;
 }
 
+async function hasLibImport(filePath: string): Promise<boolean> {
+  try {
+    const content = await readFile(filePath, 'utf8');
+    return content.includes("require('../lib/");
+  } catch {
+    return false;
+  }
+}
+
 async function expandAgents(): Promise<ComponentSpec[]> {
   const agentsDir = join(ECC_UPSTREAM, 'agents');
   const files = await walkDir(agentsDir, (n) => n.endsWith('.md'));
   return files.map((abs) => {
     const name = basename(abs, '.md');
-    const upstreamPath = `agents/${name}.md`;
-    const destAbs = join(CLAUDEKIT_DIR, 'agents', `${name}.md`);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'agents', `${name}.source.yaml`);
-    return { upstreamPath, upstreamAbs: abs, type: 'agents', id: name, layout: 'file', destAbs, sidecarAbs };
+    return {
+      upstreamPath: `agents/${name}.md`,
+      upstreamAbs: abs,
+      type: 'agents',
+      id: name,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'agents', `${name}.md`),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'agents', `${name}.source.yaml`),
+      rewriteImports: false,
+    };
   });
 }
 
-async function expandCommands(subPath?: string): Promise<ComponentSpec[]> {
-  const commandsDir = subPath
-    ? join(ECC_UPSTREAM, dirname(subPath))
-    : join(ECC_UPSTREAM, 'commands');
-  const files = subPath
-    ? [join(ECC_UPSTREAM, subPath)]
-    : await walkDir(commandsDir, (n) => n.endsWith('.md'));
+async function expandCommands(): Promise<ComponentSpec[]> {
+  const commandsDir = join(ECC_UPSTREAM, 'commands');
+  const files = await walkDir(commandsDir, (n) => n.endsWith('.md'));
   return files.map((abs) => {
     const name = basename(abs, '.md');
-    const upstreamPath = `commands/${name}.md`;
-    const destAbs = join(CLAUDEKIT_DIR, 'commands', `${name}.md`);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'commands', `${name}.source.yaml`);
-    return { upstreamPath, upstreamAbs: abs, type: 'commands', id: name, layout: 'file', destAbs, sidecarAbs };
+    return {
+      upstreamPath: `commands/${name}.md`,
+      upstreamAbs: abs,
+      type: 'commands',
+      id: name,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'commands', `${name}.md`),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'commands', `${name}.source.yaml`),
+      rewriteImports: false,
+    };
   });
 }
 
@@ -160,34 +166,75 @@ async function expandRules(): Promise<ComponentSpec[]> {
   const rulesDir = join(ECC_UPSTREAM, 'rules');
   const files = await walkDir(rulesDir, (n) => n.endsWith('.md'), true);
   return files.map((abs) => {
-    const rel = relative(rulesDir, abs); // e.g. 'common/coding-style.md'
-    const id = rel.replace(/\.md$/, ''); // e.g. 'common/coding-style'
-    const upstreamPath = `rules/${rel}`;
-    const destAbs = join(CLAUDEKIT_DIR, 'rules', rel);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'rules', rel.replace(/\.md$/, '.source.yaml'));
-    return { upstreamPath, upstreamAbs: abs, type: 'rules', id, layout: 'file', destAbs, sidecarAbs };
+    const rel = relative(rulesDir, abs);
+    const id = rel.replace(/\.md$/, '');
+    return {
+      upstreamPath: `rules/${rel}`,
+      upstreamAbs: abs,
+      type: 'rules',
+      id,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'rules', rel),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'rules', rel.replace(/\.md$/, '.source.yaml')),
+      rewriteImports: false,
+    };
   });
 }
 
 async function expandHooks(): Promise<ComponentSpec[]> {
   const hooksDir = join(ECC_UPSTREAM, 'scripts', 'hooks');
-  const files = await walkDir(hooksDir, (n) => SELF_CONTAINED_HOOKS.has(n));
-  return files.map((abs) => {
-    const filename = basename(abs);
-    const ext = extname(filename);
-    const name = basename(filename, ext);
-    const upstreamPath = `scripts/hooks/${filename}`;
-    const destAbs = join(CLAUDEKIT_DIR, 'hooks', filename);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'hooks', `${name}.source.yaml`);
-    return { upstreamPath, upstreamAbs: abs, type: 'hooks', id: name, layout: 'file', destAbs, sidecarAbs };
-  });
+  const libDir = join(ECC_UPSTREAM, 'scripts', 'lib');
+
+  // ALL hook scripts (Option B — not filtered to self-contained only)
+  const hookFiles = await walkDir(hooksDir, (n) => n.endsWith('.js') || n.endsWith('.py'));
+  const hookSpecs: ComponentSpec[] = await Promise.all(
+    hookFiles.map(async (abs) => {
+      const filename = basename(abs);
+      const ext = extname(filename);
+      const id = basename(filename, ext);
+      return {
+        upstreamPath: `scripts/hooks/${filename}`,
+        upstreamAbs: abs,
+        type: 'hooks' as const,
+        id,
+        layout: 'file' as const,
+        destAbs: join(CLAUDEKIT_DIR, 'hooks', filename),
+        sidecarAbs: join(CLAUDEKIT_DIR, 'hooks', `${id}.source.yaml`),
+        rewriteImports: await hasLibImport(abs),
+      };
+    }),
+  );
+
+  // Lib bundle: 8 selected lib files → claudekit/hooks/lib/
+  const libSpecs: ComponentSpec[] = [];
+  for (const libFile of LIB_BUNDLE) {
+    const abs = join(libDir, libFile);
+    try {
+      await stat(abs);
+    } catch {
+      console.warn(`  WARN: lib file not found: ${libFile}`);
+      continue;
+    }
+    const id = `lib/${basename(libFile, '.js')}`;
+    libSpecs.push({
+      upstreamPath: `scripts/lib/${libFile}`,
+      upstreamAbs: abs,
+      type: 'hooks',
+      id,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'hooks', 'lib', libFile),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'hooks', 'lib', `${basename(libFile, '.js')}.source.yaml`),
+      rewriteImports: false, // lib files use ./X (already correct)
+    });
+  }
+
+  return [...hookSpecs, ...libSpecs];
 }
 
 async function buildSpec(rawPath: string): Promise<ComponentSpec | null> {
   if (SKIP_PATHS.has(rawPath)) return null;
 
   const upstreamAbs = join(ECC_UPSTREAM, rawPath);
-
   let s;
   try {
     s = await stat(upstreamAbs);
@@ -198,51 +245,79 @@ async function buildSpec(rawPath: string): Promise<ComponentSpec | null> {
 
   const isDir = s.isDirectory();
 
-  // skills/<name> → folder component
   if (rawPath.startsWith('skills/') && isDir) {
     const id = rawPath.slice('skills/'.length);
     const destAbs = join(CLAUDEKIT_DIR, 'skills', id);
-    const sidecarAbs = join(destAbs, 'SOURCE.yaml');
-    return { upstreamPath: rawPath, upstreamAbs, type: 'skills', id, layout: 'folder', destAbs, sidecarAbs };
+    return {
+      upstreamPath: rawPath,
+      upstreamAbs,
+      type: 'skills',
+      id,
+      layout: 'folder',
+      destAbs,
+      sidecarAbs: join(destAbs, 'SOURCE.yaml'),
+      rewriteImports: false,
+    };
   }
 
-  // agents/<name>.md
   if (rawPath.startsWith('agents/') && rawPath.endsWith('.md')) {
     const id = basename(rawPath, '.md');
-    const destAbs = join(CLAUDEKIT_DIR, 'agents', `${id}.md`);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'agents', `${id}.source.yaml`);
-    return { upstreamPath: rawPath, upstreamAbs, type: 'agents', id, layout: 'file', destAbs, sidecarAbs };
+    return {
+      upstreamPath: rawPath,
+      upstreamAbs,
+      type: 'agents',
+      id,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'agents', `${id}.md`),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'agents', `${id}.source.yaml`),
+      rewriteImports: false,
+    };
   }
 
-  // commands/<name>.md
   if (rawPath.startsWith('commands/') && rawPath.endsWith('.md')) {
     const id = basename(rawPath, '.md');
-    const destAbs = join(CLAUDEKIT_DIR, 'commands', `${id}.md`);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'commands', `${id}.source.yaml`);
-    return { upstreamPath: rawPath, upstreamAbs, type: 'commands', id, layout: 'file', destAbs, sidecarAbs };
+    return {
+      upstreamPath: rawPath,
+      upstreamAbs,
+      type: 'commands',
+      id,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'commands', `${id}.md`),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'commands', `${id}.source.yaml`),
+      rewriteImports: false,
+    };
   }
 
-  // rules/<...>.md
   if (rawPath.startsWith('rules/') && rawPath.endsWith('.md')) {
-    const rel = rawPath.slice('rules/'.length); // e.g. 'common/coding-style.md'
+    const rel = rawPath.slice('rules/'.length);
     const id = rel.replace(/\.md$/, '');
-    const destAbs = join(CLAUDEKIT_DIR, 'rules', rel);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'rules', rel.replace(/\.md$/, '.source.yaml'));
-    return { upstreamPath: rawPath, upstreamAbs, type: 'rules', id, layout: 'file', destAbs, sidecarAbs };
+    return {
+      upstreamPath: rawPath,
+      upstreamAbs,
+      type: 'rules',
+      id,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'rules', rel),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'rules', rel.replace(/\.md$/, '.source.yaml')),
+      rewriteImports: false,
+    };
   }
 
-  // scripts/hooks/<name>.{js,py}
   if (rawPath.startsWith('scripts/hooks/')) {
     const filename = basename(rawPath);
-    if (!SELF_CONTAINED_HOOKS.has(filename)) {
-      console.warn(`  SKIP (needs ECC lib): ${rawPath}`);
-      return null;
-    }
     const ext = extname(filename);
     const id = basename(filename, ext);
-    const destAbs = join(CLAUDEKIT_DIR, 'hooks', filename);
-    const sidecarAbs = join(CLAUDEKIT_DIR, 'hooks', `${id}.source.yaml`);
-    return { upstreamPath: rawPath, upstreamAbs, type: 'hooks', id, layout: 'file', destAbs, sidecarAbs };
+    const abs = upstreamAbs;
+    return {
+      upstreamPath: rawPath,
+      upstreamAbs: abs,
+      type: 'hooks',
+      id,
+      layout: 'file',
+      destAbs: join(CLAUDEKIT_DIR, 'hooks', filename),
+      sidecarAbs: join(CLAUDEKIT_DIR, 'hooks', `${id}.source.yaml`),
+      rewriteImports: await hasLibImport(abs),
+    };
   }
 
   console.warn(`  SKIP (unrecognized path pattern): ${rawPath}`);
@@ -253,12 +328,10 @@ async function expandModulePaths(paths: string[]): Promise<ComponentSpec[]> {
   const specs: ComponentSpec[] = [];
   for (const rawPath of paths) {
     if (SKIP_PATHS.has(rawPath)) continue;
-    // Aggregate directory paths
     if (rawPath === 'agents') { specs.push(...(await expandAgents())); continue; }
     if (rawPath === 'commands') { specs.push(...(await expandCommands())); continue; }
     if (rawPath === 'rules') { specs.push(...(await expandRules())); continue; }
     if (rawPath === 'scripts/hooks') { specs.push(...(await expandHooks())); continue; }
-    // Single path
     const spec = await buildSpec(rawPath);
     if (spec) specs.push(spec);
   }
@@ -269,8 +342,7 @@ async function expandModulePaths(paths: string[]): Promise<ComponentSpec[]> {
 
 function schemaComment(sidecarAbs: string): string {
   const schemaAbs = join(REPO_ROOT, 'presets', 'schema', 'sidecar.schema.json');
-  const rel = relative(dirname(sidecarAbs), schemaAbs);
-  return `# yaml-language-server: $schema=${rel}`;
+  return `# yaml-language-server: $schema=${relative(dirname(sidecarAbs), schemaAbs)}`;
 }
 
 function buildSidecarContent(spec: ComponentSpec, eccCommit: string): string {
@@ -283,8 +355,10 @@ function buildSidecarContent(spec: ComponentSpec, eccCommit: string): string {
     },
     imported_at: TODAY,
     license: 'MIT',
-    modified: false,
-    modifications: null,
+    modified: spec.rewriteImports, // import rewrite counts as a modification
+    modifications: spec.rewriteImports
+      ? 'require("../lib/") → require("./lib/") — path adjusted for claudekit/hooks/ layout'
+      : null,
     notes: null,
     dependencies: {
       required: { agents: [], skills: [], commands: [], hooks: [], rules: [] },
@@ -297,7 +371,7 @@ function buildSidecarContent(spec: ComponentSpec, eccCommit: string): string {
   return `${schemaComment(spec.sidecarAbs)}\n${dumpYaml(data)}`;
 }
 
-// ── Copy logic ────────────────────────────────────────────────────────────────
+// ── Copy / write logic ────────────────────────────────────────────────────────
 
 async function pathExists(p: string): Promise<boolean> {
   try { await stat(p); return true; } catch { return false; }
@@ -309,26 +383,27 @@ async function vendorOne(
   opts: VendorOptions,
 ): Promise<VendorResult> {
   const exists = await pathExists(spec.destAbs);
-  if (exists && !opts.force) {
-    return { spec, status: 'skipped-exists' };
-  }
-  if (opts.dryRun) {
-    return { spec, status: 'dry-run' };
-  }
+  if (exists && !opts.force) return { spec, status: 'skipped-exists' };
+  if (opts.dryRun) return { spec, status: 'dry-run' };
 
   await mkdir(dirname(spec.destAbs), { recursive: true });
 
   if (spec.layout === 'folder') {
-    // Copy folder, excluding any existing SOURCE.yaml (our own addition)
+    // Skills: copy folder excluding any pre-existing SOURCE.yaml
+    const { cp } = await import('node:fs/promises');
     await cp(spec.upstreamAbs, spec.destAbs, {
       recursive: true,
-      filter: (src) => basename(src) !== 'SOURCE.yaml',
+      filter: (src: string) => basename(src) !== 'SOURCE.yaml',
     });
+  } else if (spec.rewriteImports) {
+    // Hook scripts needing lib: rewrite require('../lib/X') → require('./lib/X')
+    let content = await readFile(spec.upstreamAbs, 'utf8');
+    content = content.replaceAll("require('../lib/", "require('./lib/");
+    await writeFile(spec.destAbs, content, 'utf8');
   } else {
     await copyFile(spec.upstreamAbs, spec.destAbs);
   }
 
-  // Write sidecar (always fresh — no schema comment needed for existing ones)
   await mkdir(dirname(spec.sidecarAbs), { recursive: true });
   await writeFile(spec.sidecarAbs, buildSidecarContent(spec, eccCommit), 'utf8');
 
@@ -339,7 +414,8 @@ async function vendorOne(
 
 async function loadModulePaths(moduleId: string): Promise<Map<string, string[]>> {
   const raw = await import(MODULES_JSON, { with: { type: 'json' } });
-  const modules: Array<{ id: string; paths: string[] }> = (raw as { default: { modules: Array<{ id: string; paths: string[] }> } }).default.modules;
+  const modules: Array<{ id: string; paths: string[] }> =
+    (raw as { default: { modules: Array<{ id: string; paths: string[] }> } }).default.modules;
   const result = new Map<string, string[]>();
   for (const mod of modules) {
     if (moduleId === 'all') {
@@ -356,7 +432,7 @@ async function loadModulePaths(moduleId: string): Promise<Map<string, string[]>>
 const program = new Command();
 program
   .name('vendor-batch')
-  .description('Bulk-vendor ECC components into claudekit/')
+  .description('Bulk-vendor ECC components into claudekit/ (Option B: bundle lib)')
   .option('--module <id>', 'Module ID from install-modules.json, or "all"')
   .option('--path <path>', 'Single upstream path (e.g. skills/python-patterns)')
   .option('--dry-run', 'Print what would be vendored without writing files', false)
@@ -372,16 +448,11 @@ if (!opts.module && !opts.path) {
 
 const sources = await loadUpstreamSources();
 const eccSource = sources['ecc'];
-if (!eccSource) {
-  console.error('Error: "ecc" entry not found in dependencies.yaml');
+if (!eccSource?.pinned_commit) {
+  console.error('Error: ecc.pinned_commit not set in dependencies.yaml');
   process.exit(1);
 }
-const eccCommit = eccSource.pinned_commit ?? '';
-if (!eccCommit) {
-  console.error('Error: ecc.pinned_commit is not set in dependencies.yaml');
-  process.exit(1);
-}
-
+const eccCommit = eccSource.pinned_commit;
 const vendorOpts: VendorOptions = { dryRun: opts.dryRun, force: opts.force };
 
 // Build component list
@@ -390,7 +461,7 @@ let specs: ComponentSpec[] = [];
 if (opts.module) {
   const moduleMap = await loadModulePaths(opts.module);
   if (moduleMap.size === 0) {
-    console.error(`Error: module "${opts.module}" not found (or all modules excluded)`);
+    console.error(`Error: module "${opts.module}" not found (or excluded)`);
     process.exit(1);
   }
   for (const [modId, paths] of moduleMap) {
@@ -413,24 +484,24 @@ if (specs.length === 0) {
 
 console.log(`\n${opts.dryRun ? '[DRY RUN] ' : ''}Vendoring ${specs.length} components...`);
 
-// Run
-let vendored = 0;
-let skipped = 0;
-let dryCount = 0;
+let vendored = 0, skipped = 0, dryCount = 0;
 
 for (const spec of specs) {
   const result = await vendorOne(spec, eccCommit, vendorOpts);
   const icon = result.status === 'vendored' ? '✓' : result.status === 'dry-run' ? '~' : '·';
-  console.log(`  ${icon} ${result.status.padEnd(14)} ${spec.type}/${spec.id}`);
+  const rewriteTag = spec.rewriteImports ? ' [import-rewrite]' : '';
+  console.log(`  ${icon} ${result.status.padEnd(14)} ${spec.type}/${spec.id}${rewriteTag}`);
   if (result.status === 'vendored') vendored++;
   else if (result.status === 'skipped-exists') skipped++;
   else dryCount++;
 }
 
-console.log(`\nDone.`);
+console.log('\nDone.');
 if (opts.dryRun) {
-  console.log(`  Would vendor: ${dryCount}`);
+  const rewrites = specs.filter((s) => s.rewriteImports).length;
+  console.log(`  Would vendor:        ${dryCount}`);
+  console.log(`  Import rewrites:     ${rewrites}`);
 } else {
   console.log(`  Vendored:  ${vendored}`);
-  console.log(`  Skipped:   ${skipped}  (already exist — use --force to overwrite)`);
+  console.log(`  Skipped:   ${skipped}  (use --force to overwrite)`);
 }
