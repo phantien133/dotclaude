@@ -1,218 +1,209 @@
 # CLAUDE.md — dotclaude
 
-Repo cá nhân quản lý cấu hình Claude Code. Khi mở Claude Code ở folder này, các thông tin dưới đây là context chính.
+Repo cá nhân quản lý Claude Code config (claudekit core + preset manifests + TS
+installer). Khi mở Claude Code ở folder này, các thông tin dưới đây là context chính.
 
 ## Owner & Communication
 
-- Owner: phantien133 (phanqtien@gmail.com) — senior full-stack engineer
-- Giao tiếp: **tiếng Việt** cho mọi response. **Tiếng Anh** cho code, file names, identifiers, commit messages.
+- Owner: phantien133 (phanqtien@gmail.com) — senior full-stack engineer.
+- Giao tiếp: **tiếng Việt** cho mọi response. **Tiếng Anh** cho code, file names,
+  identifiers, commit messages.
 - Trả lời ngắn gọn, thực hành được ngay — không cần giải thích cơ bản.
 
-## Mục đích repo
+## Trạng thái hiện tại (2026-05-08)
 
-Một nguồn duy nhất, có thể tái sử dụng, cho mọi cấu hình Claude Code cá nhân:
+Phase 0, 0.5, 1 hoàn thành. Phase 2 chưa bắt đầu.
 
-- **User-level** (`packages/user/`) → cài vào `~/.claude/` — baseline cá nhân, áp dụng mọi project.
-- **Project presets** (`packages/presets/<stack>/`) → cài vào `<repo>/.claude/` — stack-specific.
+```
+✓ Phase 0   — Wipe skeleton (packages/ + scripts/ bash, vendor/ → upstream/)
+✓ Phase 0.5 — pnpm + TypeScript + tsx + zod + vitest bootstrap
+✓ Phase 1   — claudekit/ + presets/ + 1 component vendored + validate/list/sync commands
+☐ Phase 2   — Install pipeline (user symlink, project copy, manifest, deps resolver)
+☐ Phase 3   — Lifecycle (uninstall, upgrade, audit)
+☐ Phase 4   — Marketplace + plugin packaging (self-hosted)
+```
 
-Tôn trọng nguồn gốc: external plugins (ECC, marketplace) khai báo trong `dependencies.yaml`, không vendor lậu.
+Xem `docs/redesign-plan.md` Section 5 cho chi tiết per phase.
 
-## Decisions đã chốt
-
-| Quyết định | Chi tiết | Lý do |
-|---|---|---|
-| Tên repo | `dotclaude` | Theo dotfiles convention; map trực quan với `.claude/` |
-| Two-layer model | user (`~/.claude/`) + preset (`<repo>/.claude/`) | Tách config bền (user) và config theo stack (preset) |
-| ECC integration | External dependency, không fork/copy | Giữ kết nối nguồn, version-pinning rõ ràng |
-| Bỏ `framework-language` ở user level | Module này kéo skills của ~15 ngôn ngữ | Skills nên ở preset, đúng stack mới load |
-| User-level modules | `rules-core`, `agents-core`, `commands-core`, `hooks-runtime`, `platform-configs`, `workflow-quality`, `database` | Baseline cross-stack, không bias ngôn ngữ |
-| Symlink mặc định cho preset | `--copy` chỉ khi cần self-contained | Update ECC tự động lan, đỡ phình repo |
-| Folder location hiện tại | Workspace tạm cho skeleton phase | Move target: `/Users/tienphan/workspace/phantien133/dotclaude/` |
-| Git remote | `git@github.com:phantien133/dotclaude.git` | Set sẵn, chưa push |
-| Git author | `phantien133 <phanqtien@gmail.com>` | Personal identity, KHÔNG dùng email công ty trong repo này |
-
-## Architecture
-
-Xem `docs/architecture.md` cho chi tiết. Tóm tắt:
+## Architecture (sau redesign)
 
 ```
 dotclaude/
-├── dependencies.yaml          # Nguồn external (ECC, plugins) + commit pinning
-├── packages/
-│   ├── user/                  # → ~/.claude/
-│   │   ├── deps.yaml          # ECC modules
-│   │   ├── rules/, agents/, commands/, hooks/, skills/   # Personal overlays
-│   └── presets/               # → <repo>/.claude/
-│       ├── typescript-fullstack/
-│       ├── python-django/
-│       └── go-backend/
-├── scripts/install.sh         # Entry: ./scripts/install.sh user|preset|list
-├── vendor/                    # (Phase 2) ECC submodule
-└── docs/                      # ADR, design notes
+├── CLAUDE.md / README.md / dependencies.yaml
+├── package.json + tsconfig.json + vitest.config.ts + pnpm-lock.yaml
+│
+├── claudekit/                      # Core kit, type-first (CQ-1a)
+│   ├── agents/<n>.md + <n>.source.yaml
+│   ├── skills/<n>/SKILL.md + SOURCE.yaml
+│   ├── {commands,hooks,rules}/
+│   ├── private/                    # GITIGNORED
+│   └── private.example/            # TRACKED skeleton
+│
+├── presets/                        # Pure manifest (CQ-3c)
+│   ├── {core,framework,purpose}/<name>.yaml + .md
+│   ├── private/ + private.example/
+│   └── schema/*.schema.json        # Generated từ zod
+│
+├── plugins/                        # Phase 4
+├── upstream/                       # Submodules (CQ-7) — sync_source + docs
+└── scripts/                        # 100% TS qua tsx (CQ-10 revised)
+    ├── install.ts                  # Entry: validate | list | user | project
+    ├── sync-from-upstream.ts
+    ├── generate-schemas.ts
+    └── lib/{schema,yaml,paths,sidecar,preset,upstream,logger}.ts
 ```
 
-## Vendor layout
+## Decisions chốt qua 12 CQ
 
-`vendor/` chứa 4 git submodule — đã setup xong:
+Source-of-truth chi tiết: `docs/clarifying-questions.md` (Decisions log cuối file).
 
-| Path | Repo | Role | Size |
-|---|---|---|---|
-| `vendor/everything-claude-code` | `affaan-m/everything-claude-code` | **runtime** (installer dùng) | ~39MB |
-| `vendor/anthropic-cookbook` | `anthropics/anthropic-cookbook` | docs (API + Claude Code patterns) | ~199MB |
-| `vendor/anthropic-skills` | `anthropics/skills` | docs (skill format reference) | ~11MB |
-| `vendor/mcp-servers` | `modelcontextprotocol/servers` | docs (MCP server collection) | ~1.6MB |
-
-Khi clone repo dotclaude lần đầu:
-```bash
-git clone --recursive git@github.com:phantien133/dotclaude.git
-# hoặc nếu đã clone không recursive:
-git submodule update --init --recursive
-```
-
-Update toàn bộ vendor về latest:
-```bash
-git submodule update --remote --merge
-# rồi commit hash mới
-```
-
-## Move plan
-
-Repo hiện ở workspace tạm `claude-code-guides/dotclaude/`. Target cuối: `/Users/tienphan/workspace/phantien133/dotclaude/`.
-
-Khi sẵn sàng move:
-```bash
-mkdir -p /Users/tienphan/workspace/phantien133
-mv /Users/tienphan/workspace/hilab/claude-code-guides/dotclaude /Users/tienphan/workspace/phantien133/dotclaude
-```
-
-Submodule paths là **relative trong repo** (xem `.gitmodules`) → `mv` toàn bộ folder không break gì. Chỉ cần verify sau khi move:
-```bash
-cd /Users/tienphan/workspace/phantien133/dotclaude
-git status
-git submodule status
-./scripts/install.sh list
-```
-
-Sau khi move, có thể mở Claude session mới ở folder mới để tiếp tục.
+| CQ | Decision |
+|---|---|
+| 1a | Top-level core: `claudekit/` |
+| 1b | Layout: type-first ECC style, naming prefix theo domain |
+| 1c | Import mode: copy thuần, owner kiểm soát |
+| 1d | Modify tracking: edit thẳng + sidecar `modified` flag + `modifications` text |
+| 2 | Sidecar YAML: file `<n>.source.yaml`, folder `SOURCE.yaml` (excluded khi install) |
+| 3a-d | Preset YAML + companion MD, folder theo kind, `extends:` ngay Phase 1 |
+| 4a-d | `private/` per top package, mirror public, manual cloud-sync bootstrap |
+| 5a-e | User+Project Phase 1, user=symlink default project=copy default, backup-then-overwrite, idempotent MUST, manifest YAML tracking |
+| 6a-c | Marketplace self-hosted (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin, defer Phase 4 |
+| 7 | `vendor/` → `upstream/`, ECC role: sync_source |
+| 9 | Migration: wipe & rewrite |
+| 10 | 100% TS + pnpm + tsx (revised từ Bun) |
+| 11 | YAML cho file owner control, JSON cho convention bên ngoài |
+| 12 | Sidecar `dependencies.required/optional/external`, resolver auto-include verbose |
 
 ## Workflow phổ biến
 
-### Cài user-level baseline
+### Setup máy mới
 
 ```bash
-./scripts/install.sh user --dry-run    # xem plan
-./scripts/install.sh user              # apply thật
-./scripts/install.sh user --skip-ecc   # chỉ overlay personal files, không gọi ECC installer
+git clone --recursive git@github.com:phantien133/dotclaude.git
+cd dotclaude
+pnpm install
+pnpm typecheck && pnpm test
+# Phase 2 (sắp có): pnpm init-private + restore private content từ cloud sync
 ```
 
-### Cài preset cho repo cụ thể
+### Vendor 1 component mới từ upstream
 
 ```bash
-cd /path/to/your-project
-~/path/to/dotclaude/scripts/install.sh preset typescript-fullstack
-~/path/to/dotclaude/scripts/install.sh preset python-django --copy   # copy thay vì symlink
+# Copy file/folder
+cp upstream/everything-claude-code/agents/<name>.md claudekit/agents/<name>.md
+
+# Get pin
+git -C upstream/everything-claude-code rev-parse HEAD
+
+# Tạo sidecar (template từ component khác)
+$EDITOR claudekit/agents/<name>.source.yaml
+
+# Verify
+pnpm typecheck && pnpm test
 ```
 
-### Thêm preset mới
+Xem `docs/PROVENANCE.md` cho schema sidecar + workflow chi tiết.
 
-1. `mkdir packages/presets/<stack>` → tạo `deps.yaml`, `README.md`, `CLAUDE.md.template`, `skills/`.
-2. `deps.yaml`: liệt kê `ecc_skills` cần thiết cho stack đó.
-3. Test: `./scripts/install.sh preset <stack> --dry-run` ở repo thử nghiệm.
-4. Commit.
-
-### Thêm agent/skill cá nhân
-
-- **Cross-stack** → `packages/user/agents/` hoặc `packages/user/skills/`.
-- **Stack-specific** → `packages/presets/<stack>/skills/`.
-- Format theo ECC convention: markdown + YAML frontmatter (`name`, `description`, `tools`, `model`).
-- Reference: `everything-claude-code/CONTRIBUTING.md`, `everything-claude-code/docs/SKILL-DEVELOPMENT-GUIDE.md`.
-
-### Update ECC version
-
-1. `cd vendor/everything-claude-code && git pull origin main` (sau Phase 2) hoặc cập nhật path local.
-2. Cập nhật `pinned_commit` trong `dependencies.yaml` root: `git -C vendor/everything-claude-code rev-parse HEAD`.
-3. Re-run `./scripts/install.sh user` để verify modules còn hợp lệ.
-4. Commit `dependencies.yaml` + `.gitmodules`.
-
-### Test installer
+### Tạo preset mới
 
 ```bash
-# Smoke test parse
-./scripts/install.sh list
-./scripts/install.sh user --dry-run --skip-ecc
-./scripts/install.sh preset typescript-fullstack --dry-run
+KIND=core; NAME=my-baseline
+cp presets/core/personal-baseline.yaml presets/$KIND/$NAME.yaml
+cp presets/core/personal-baseline.md   presets/$KIND/$NAME.md
+$EDITOR presets/$KIND/$NAME.yaml
+pnpm validate $NAME --kind $KIND
 ```
 
-## Nguyên tắc khi sửa code trong repo này
+Xem `docs/PRESETS.md` cho schema + authoring guide.
 
-1. **Không hardcode** ECC URL/commit ở package level — chỉ trong `dependencies.yaml` root.
-2. **Awk parser** trong scripts cố ý tránh dependency `yq`/`python` để self-contained. Khi schema deps.yaml phức tạp hơn, cân nhắc switch sang Python script (chấp nhận thêm dependency).
-3. **Symlink an toàn**: scripts xóa `dst` trước (`rm -rf '$dst'`) — chỉ chạy với CWD `.claude/skills/` của repo, không bao giờ chạy ngoài.
-4. **Dry-run trước**: mọi thay đổi installer test bằng `--dry-run` trước.
-5. **Commit small**: mỗi preset/feature một commit độc lập, conventional commit (`feat:`, `fix:`, `docs:`, `refactor:`).
+### Sync upstream
 
-## Plugin ecosystem references
+```bash
+git submodule update --remote upstream/everything-claude-code
+git -C upstream/everything-claude-code rev-parse HEAD  # update dependencies.yaml pinned_commit
+pnpm sync agents/code-reviewer                         # diff per-component
+# Owner merge thủ công, update sidecar.source.commit nếu adopt
+```
 
-> Caveat: kiến thức của tôi đến ~01/2026, star counts thay đổi liên tục — verify trước khi adopt. Đặt vào `dependencies.yaml` với commit pinning nếu thực sự dùng.
+### Regenerate JSON Schema
 
-### Collections để tham khảo / port
+```bash
+pnpm schema:generate   # idempotent, commit kết quả vào git
+```
 
-| Repo | Mô tả | Khi nào hữu ích |
-|---|---|---|
-| [`everything-claude-code/everything-claude-code`](https://github.com/everything-claude-code/everything-claude-code) | ECC — đã vendor | Source of truth cho user-level baseline |
-| [`anthropics/anthropic-cookbook`](https://github.com/anthropics/anthropic-cookbook) | Official Anthropic examples (API + Claude Code patterns) | Khi build skill mới hoặc MCP server, reference patterns chuẩn |
-| [`anthropics/skills`](https://github.com/anthropics/skills) | Official Anthropic skills collection (nếu có repo này) | Skills mẫu chất lượng cao, theo chuẩn Anthropic |
-| [`hesreallyhim/awesome-claude-code`](https://github.com/hesreallyhim/awesome-claude-code) | Awesome list — agents, skills, hooks, MCP, articles | Discover tools mới |
-| [`wshobson/agents`](https://github.com/wshobson/agents) | Bộ sưu tập agent đa dạng (~100+ specialized agents) | Port agent có sẵn vào `packages/user/agents/` |
-| [`modelcontextprotocol/servers`](https://github.com/modelcontextprotocol/servers) | Official MCP server collection | Khi cần extend agent với tool mới qua MCP |
+Sau khi sửa `scripts/lib/schema.ts`, chạy lệnh này để JSON Schema không drift.
 
-### Tools / frameworks build agent
+## Nguyên tắc khi sửa code
 
-| Tool | Mô tả | Use case |
-|---|---|---|
-| [`promptfoo/promptfoo`](https://github.com/promptfoo/promptfoo) | Eval framework cho LLM prompts/agents | Test agent quality khi viết mới hoặc thay đổi |
-| [`ryoppippi/ccusage`](https://github.com/ryoppippi/ccusage) | Track Claude Code usage/cost | Bật khi dev nhiều, monitor token cost |
-| [`jlowin/fastmcp`](https://github.com/jlowin/fastmcp) | Build MCP server bằng Python (FastAPI-style) | Khi cần custom MCP cho domain riêng |
-| [`modelcontextprotocol/typescript-sdk`](https://github.com/modelcontextprotocol/typescript-sdk) | MCP TS SDK chính thức | Build MCP server bằng TypeScript |
-| [`anthropics/claude-code`](https://github.com/anthropics/claude-code) | CLI repo chính thức | Theo dõi release notes, hook API thay đổi |
+1. **Schema-first**: thay đổi shape data → sửa zod schema trước, regen JSON Schema,
+   rồi cập nhật consumer. Test phải pass.
+2. **Sidecar sync**: edit component trong `claudekit/` → set `modified: true` +
+   update `modifications:` text. Đừng quên.
+3. **Strict TS**: `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess` ở
+   tsconfig — code phải xử lý `undefined` rõ. Không cast bừa.
+4. **Conventional commits**: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`. Body
+   tiếng Việt OK, header English.
+5. **Commit small**: 1 commit cho 1 việc — easier để revert.
+6. **Verify destructive trước**: trước khi `git rm` / `rm -rf` / submodule deinit,
+   confirm với owner (không tự ý).
 
-### Pattern để adopt
+## Common pitfalls
 
-- **Skill format** → ECC `skills/*/SKILL.md` cấu trúc: When to Use, How It Works, Examples.
-- **Agent format** → ECC `agents/*.md` với YAML frontmatter (`name`, `description`, `tools`, `model`).
-- **Hook format** → ECC `hooks/` JSON config, hook scripts trong `scripts/hooks/`.
-
-Khi tìm thấy repo phù hợp, evaluation checklist trước khi adopt:
-1. License compatible (MIT/Apache prefer).
-2. Maintenance active (commits trong 6 tháng gần nhất).
-3. Test/CI present.
-4. Conform với format ECC hoặc dễ port.
-5. Star count + community signal (issues responsive, không phải abandoned).
-
-## Open questions / TODO
-
-- [ ] Move repo ra standalone (`~/dotclaude/`) sau khi skeleton ổn định.
-- [ ] Vendor ECC submodule (Phase 2).
-- [ ] `scripts/update.sh` — automate ECC pull + commit pin refresh.
-- [ ] Lockfile `dependencies.lock.yaml` cho reproducible install.
-- [ ] Preset `extends:` inheritance (vd `nestjs-prisma extends typescript-fullstack`).
-- [ ] CI: validate `deps.yaml` references tồn tại trong ECC; lint markdown.
-- [ ] Settings.json strategy — overlay vs merge JSON ở user level.
-- [ ] Khi nào setup remote (GitHub) + private/public.
+- **`pnpm list` vs `pnpm run list`**: built-in pnpm `list` chiếm ưu tiên. Dùng
+  `pnpm run list` để gọi script preset list.
+- **Date trong YAML**: js-yaml mặc định parse `2026-05-08` thành Date. Repo dùng
+  `lib/yaml.ts` với `CORE_SCHEMA` để giữ string. Đừng `import yaml from 'js-yaml'`
+  trực tiếp — dùng `import { loadYaml, dumpYaml } from './lib/yaml.ts'`.
+- **Sidecar path**: file-component sidecar = `<name>.source.yaml` cùng dir;
+  folder-component = `SOURCE.yaml` BÊN TRONG folder. Installer phải EXCLUDE
+  `SOURCE.yaml` khi copy folder ra target.
 
 ## References trong repo
 
 - `README.md` — quickstart công khai
-- `docs/architecture.md` — design decisions sâu
-- `dependencies.yaml` — nguồn external
-- `packages/*/deps.yaml` — module/skill list cho từng package
-- `packages/*/README.md` — chi tiết từng package
+- `docs/architecture.md` — design decisions sau redesign
+- `docs/redesign-plan.md` — 5-phase plan (in progress)
+- `docs/clarifying-questions.md` — 12 CQ + decisions log
+- `docs/PROVENANCE.md` — sidecar schema + sync workflow
+- `docs/PRESETS.md` — preset schema + authoring guide
+- `docs/PRIVATE.md` — private/ convention + bootstrap
+- `docs/INSTALL.md` — installer usage
+- `dependencies.yaml` — upstream sources (4 submodules) + pinned commits
+
+## Plugin ecosystem references
+
+Khi cần port pattern hoặc mở rộng kit (verify trước khi adopt — license, maintenance,
+test/CI):
+
+| Repo | Mục đích |
+|---|---|
+| `everything-claude-code/everything-claude-code` | ECC — đã vendor (sync source) |
+| `anthropics/anthropic-cookbook` | API + Claude Code patterns (docs) |
+| `anthropics/skills` | Skill format reference (docs) |
+| `modelcontextprotocol/servers` | MCP server collection (docs) |
+| `hesreallyhim/awesome-claude-code` | Awesome list — discover tools |
+| `wshobson/agents` | 100+ specialized agents để port |
+| `promptfoo/promptfoo` | Eval framework cho prompts/agents |
+| `jlowin/fastmcp` | MCP server (Python, FastAPI-style) |
+| `modelcontextprotocol/typescript-sdk` | MCP TS SDK chính thức |
+
+## Open questions / TODO
+
+- [ ] Phase 2 — Install pipeline (next).
+- [ ] Phase 3 — Lifecycle (uninstall, upgrade, audit).
+- [ ] Phase 4 — Marketplace + plugin packaging.
+- [ ] Lockfile strategy chi tiết (manifest đã 1 phần).
+- [ ] CI: pnpm typecheck + test + schema regen drift check.
+- [ ] Settings.json deep-merge với array policy (replace vs concat per field).
+- [ ] Setup remote GitHub (private/public) + push sau Phase 2.
 
 ## Session lineage
 
-Skeleton này build từ session ngày 2026-05-07. Highlights để Claude session tiếp theo nhanh nắm bối cảnh:
-
-- ECC manifests đã đọc: `everything-claude-code/manifests/{install-modules,install-profiles,install-components}.json`.
-- ECC `installer.sh` mặc định target `claude` = `~/.claude/`. Không có target "claude-project" sẵn → preset dùng symlink/copy thủ công thay vì gọi ECC installer.
-- Profile ECC `developer` đã loại sẵn business-content/social-distribution/media-generation/swift-apple/supply-chain-domain — đó là baseline gần với mong muốn user, nhưng vẫn kéo `framework-language` (đa ngôn ngữ) → quyết định dùng `--modules` thay profile để fine-grain.
-- Workspace cha (`claude-code-guides/`) cố ý KHÔNG init git — chỉ là workspace chứa nhiều repo độc lập.
+- 2026-05-07: skeleton (`packages/` + bash scripts) build từ session đầu, chưa verify.
+- 2026-05-08:
+  - Redesign plan + 12 CQ chốt (Section 5 redesign-plan.md).
+  - Phase 0 wipe skeleton (commit `d5045f7`).
+  - Phase 0.5 TS+pnpm+tsx bootstrap (commit `5865a1d`).
+  - Phase 1 in-progress: claudekit/agents/code-reviewer + skills/coding-standards
+    vendored, presets/core/personal-baseline tạo, validate/list/sync subcommands
+    chạy, 15 vitest tests pass.

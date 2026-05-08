@@ -1,83 +1,97 @@
 # dotclaude
 
-Personal Claude Code configuration packages — reusable across user level (`~/.claude/`) and project level (`.claude/`).
+Personal Claude Code configuration kit — owner-controlled core (`claudekit/`),
+preset manifests (`presets/`), and TypeScript installer.
 
-Owner: phantien133 (phanqtien@gmail.com)
+> Owner: phantien133 (phanqtien@gmail.com).
+> Currently in Phase 1 of redesign — see `docs/redesign-plan.md` for status.
 
 ## Mục tiêu
 
-- Một nguồn duy nhất cho mọi cấu hình Claude Code cá nhân (rules, agents, commands, hooks, skills).
-- Tách rõ **user-level** (cài vào `~/.claude/`) và **project-level** (cài vào `.claude/` của repo cụ thể).
-- Tôn trọng nguồn gốc: mọi external plugin (ECC, marketplace skills…) khai báo trong `dependencies.yaml` với commit/tag pinning, không copy-paste mất nguồn.
-- Dễ install, dễ update, dễ kế thừa giữa các dự án tương đương.
+- **`claudekit/`** — bộ core đầy đủ (agents, skills, commands, hooks, rules) do
+  owner sở hữu. Vendor từ upstream (ECC, anthropic-skills, ...) với provenance per
+  component qua sidecar YAML.
+- **`presets/`** — pure manifest YAML trỏ vào component IDs trong claudekit/. Không
+  chứa code component.
+- **`upstream/`** — git submodules (ECC + 3 docs sources) đóng vai trò sync source +
+  reference. Không phải runtime.
+- **`scripts/`** — TypeScript installer (chạy qua `tsx`) đọc preset → install vào
+  user/project target.
+
+## Quickstart
+
+### Prerequisites
+
+- Node ≥ 20
+- pnpm ≥ 9 (`corepack enable` hoặc `brew install pnpm`)
+
+### Setup
+
+```bash
+git clone --recursive git@github.com:phantien133/dotclaude.git
+cd dotclaude
+pnpm install
+pnpm typecheck
+pnpm test
+```
+
+### Subcommands hiện có (Phase 1)
+
+```bash
+pnpm run list                              # List presets (public + private)
+pnpm validate personal-baseline --kind core # Schema + reference + sidecar check
+pnpm sync agents/code-reviewer             # Diff sidecar.commit ↔ upstream HEAD
+pnpm schema:generate                       # Regen JSON Schema từ zod
+```
+
+> `pnpm list` (không có `run`) gọi pnpm builtin → dùng `pnpm run list` cho preset list.
+
+### Subcommands sắp có (Phase 2+)
+
+```bash
+pnpm install:user <preset>                 # → ~/.claude/ (default symlink)
+pnpm install:project <preset>              # → <cwd>/.claude/ (default copy)
+pnpm init-private                          # Copy private.example/ → private/
+pnpm uninstall <preset>                    # Phase 3
+pnpm upgrade <preset>                      # Phase 3
+```
+
+Xem `docs/INSTALL.md` cho usage chi tiết.
 
 ## Cấu trúc
 
 ```
 dotclaude/
-├── README.md                  # File này
-├── dependencies.yaml          # Nguồn external (ECC, plugins) + pinned commits
-├── packages/
-│   ├── user/                  # Baseline cho ~/.claude/
-│   │   ├── deps.yaml          # ECC modules cần cài cho user level
-│   │   ├── rules/             # Rules cá nhân (override hoặc bổ sung ECC)
-│   │   ├── agents/            # Agents tự viết
-│   │   ├── commands/          # Slash commands cá nhân
-│   │   ├── hooks/             # Hooks tự viết
-│   │   └── skills/            # Skills tự viết, dùng cross-project
-│   └── presets/               # Project-level templates
-│       ├── typescript-fullstack/
-│       │   ├── deps.yaml      # ECC skills + custom skills
-│       │   ├── CLAUDE.md.template
-│       │   └── skills/        # Skills riêng cho preset này
-│       ├── python-django/
-│       └── go-backend/
-├── scripts/
-│   ├── install.sh             # Entry point — gọi install-user hoặc install-preset
-│   ├── install-user.sh        # Cài package user vào ~/.claude/
-│   └── install-preset.sh      # Cài preset vào .claude/ của repo hiện tại
-├── vendor/                    # (Plan) ECC sẽ ở đây dạng submodule, xem docs/architecture.md
-└── docs/                      # Notes, ADR, design decisions
+├── claudekit/<type>/              # Core kit (CQ-1a) — type-first, copy với sidecar
+│   └── private/                   # GITIGNORED overlays
+├── presets/<kind>/                # Pure manifest (CQ-3c)
+│   ├── core/                      # cross-stack baseline
+│   ├── framework/                 # framework-specific
+│   ├── purpose/                   # task-specific
+│   ├── private/                   # GITIGNORED
+│   └── schema/                    # JSON Schema generated từ zod
+├── plugins/                       # Phase 4 (preset → plugin bundle)
+├── upstream/<repo>/               # Submodules (sync source + docs)
+├── scripts/                       # TS installer
+└── docs/                          # Architecture, plan, CQ, guides
 ```
 
-## Quickstart
+Xem `docs/architecture.md` cho design decisions; `docs/redesign-plan.md` cho 5-phase
+implementation plan.
 
-### Cài đặt user-level baseline
+## Documentation
 
-```bash
-./scripts/install.sh user --dry-run
-./scripts/install.sh user
-```
+| Doc | Nội dung |
+|---|---|
+| `docs/architecture.md` | Design decisions sau redesign |
+| `docs/redesign-plan.md` | 5-phase plan (in progress) |
+| `docs/clarifying-questions.md` | 12 CQ với decisions log |
+| `docs/PROVENANCE.md` | Sidecar schema + sync workflow |
+| `docs/PRESETS.md` | Preset schema + authoring guide |
+| `docs/PRIVATE.md` | private/ convention + bootstrap multi-machine |
+| `docs/INSTALL.md` | Installer usage |
 
-Script sẽ:
-1. Resolve ECC modules trong `packages/user/deps.yaml`
-2. Gọi `everything-claude-code/install.sh --modules <ids>` để cài ECC modules vào `~/.claude/`
-3. Overlay file riêng từ `packages/user/{rules,agents,commands,hooks,skills}/` vào `~/.claude/`
+## License
 
-### Cài đặt preset cho repo hiện tại
-
-```bash
-cd /path/to/your-project
-~/path/to/dotclaude/scripts/install.sh preset typescript-fullstack
-```
-
-Sẽ tạo `.claude/` ở project root với skills/CLAUDE.md từ preset.
-
-## Tôn trọng nguồn gốc
-
-`dependencies.yaml` ở root khai báo:
-- Mọi external plugin source (ECC URL, commit pinned)
-- Path local nếu đang dev
-- Version constraint
-
-Mỗi `packages/*/deps.yaml` chỉ tham chiếu các source ID đã khai báo ở root — không hardcode URL/path lặp lại.
-
-Khi update ECC: chỉnh `pinned_commit` trong `dependencies.yaml`, chạy `scripts/update.sh` (TODO).
-
-## Roadmap
-
-- [ ] Vendor ECC vào `vendor/everything-claude-code/` dưới dạng submodule (xem `docs/architecture.md`)
-- [ ] `scripts/update.sh` — pull latest ECC, refresh pinned commits
-- [ ] CI check: validate deps.yaml references tồn tại
-- [ ] Preset cho `monorepo-pnpm`, `nestjs-prisma`, `next-app-router`
-- [ ] Test harness: dry-run install + diff với baseline
+MIT (cho dotclaude scripts + schema + docs). Vendored components giữ license gốc của
+upstream — xem `<component>.source.yaml` hoặc `<skill>/SOURCE.yaml`.

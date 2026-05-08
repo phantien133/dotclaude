@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=../schema/preset.schema.json
+name: personal-baseline
+kind: core
+description: Cross-stack baseline cho mọi project — code review + coding standards.
+version: 0.1.0
+extends: []
+components:
+  agents:
+    - code-reviewer
+  skills: []
+  commands: []
+  hooks: []
+  rules: []
+settings_patch: {}
+tags:
+  - baseline
+  - cross-stack

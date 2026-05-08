@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "schema:generate": "tsx scripts/generate-schemas.ts",
     "install:user": "tsx scripts/install.ts user",
     "install:project": "tsx scripts/install.ts project",
     "validate": "tsx scripts/install.ts validate",
