@@ -1,7 +1,5 @@
 # Architecture & Design Decisions
 
-> Updated 2026-05-08. All phases (0–4) are complete.
-
 ## Goals
 
 `dotclaude` is a personal repo that manages the **complete Claude Code kit** — an owner-controlled source of truth:
@@ -105,7 +103,6 @@ dotclaude/
 | CQ-5a/b/c/d/e | User+Project install; neither scope has a hardcoded default mode — installer always prompts `symlink/copy` when no flag is passed. Pass `--symlink` or `--copy` to skip prompt. Folder components respect the chosen mode (copy uses `copyFolderExcluding`, excludes `SOURCE.yaml`). Backup-then-overwrite; idempotent; manifest YAML tracking | docs/INSTALL.md |
 | CQ-6 | Self-hosted marketplace (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin | |
 | CQ-7 | `vendor/` → `upstream/`, ECC role: sync_source | |
-| CQ-9 | Migration: wipe & rewrite | |
 | CQ-10 | 100% TS + pnpm + tsx | |
 | CQ-11 | YAML for owner-controlled files; JSON for external conventions (settings.json, package.json, JSON Schema, plugin manifest) | |
 | CQ-12 | Sidecar has `dependencies.required/optional/external`; resolver auto-includes required, skips optional by default, warn-only for external | docs/PROVENANCE.md |
@@ -167,10 +164,3 @@ pnpm publish-plugin <preset-name>
 
 Evaluation checklist before adopting: license compatible (MIT/Apache preferred), maintenance active, test/CI present, conforms to ECC format or easy to port, positive community signal.
 
-## Open questions / TODO
-
-- [ ] Create `phantien133/claudekit-marketplace` GitHub repo and push first plugin bundle.
-- [ ] Lockfile strategy: manifest partially covers this. Standalone `dependencies.lock.yaml` for cross-machine reproducibility?
-- [ ] CI: pnpm typecheck + test + schema regen verification (prevent drift).
-- [ ] Settings.json deep-merge array policy (replace vs concat per field).
-- [ ] Set up remote GitHub (private/public) + push.

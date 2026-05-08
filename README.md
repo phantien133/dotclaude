@@ -61,9 +61,9 @@ See `docs/INSTALL.md` for detailed usage.
 
 ```
 dotclaude/
-├── claudekit/<type>/              # Core kit (CQ-1a) — type-first, copy with sidecar
+├── claudekit/<type>/              # Core kit — type-first, copy with sidecar
 │   └── private/                   # GITIGNORED overlays
-├── presets/<kind>/                # Pure manifest (CQ-3c)
+├── presets/<kind>/                # Pure manifest
 │   ├── core/                      # cross-stack baseline
 │   ├── framework/                 # framework-specific
 │   ├── purpose/                   # task-specific
