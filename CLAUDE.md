@@ -166,6 +166,9 @@ No sidecar files (*.source.yaml / SOURCE.yaml) are included in the bundle.
 
 - **`pnpm list` vs `pnpm run list`**: pnpm built-in `list` takes priority. Use
   `pnpm run list` to call the preset list script.
+- **`pnpm install` vs `pnpm install:project`**: `pnpm install <name>` is intercepted
+  by pnpm as an npm install command. Use `pnpm install:project <preset>` or
+  `pnpm install:user <preset>` to invoke the dotclaude installer.
 - **Date in YAML**: js-yaml by default parses `2026-05-08` as a Date object. This repo uses
   `lib/yaml.ts` with `CORE_SCHEMA` to keep it as a string. Do not `import yaml from 'js-yaml'`
   directly — use `import { loadYaml, dumpYaml } from './lib/yaml.ts'`.

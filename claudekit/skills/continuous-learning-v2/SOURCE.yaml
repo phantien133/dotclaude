@@ -9,13 +9,12 @@ source:
   ref: main
 imported_at: 2026-05-08
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: "config.json: observer.enabled set to true (was false upstream)"
 notes: >-
   Instinct-based learning system v2.1. Hooks observe every tool call,
   background observer (Haiku) clusters patterns into atomic instincts.
-  Project-scoped by default (git remote hash). Observer disabled by default
-  in config.json — enable manually post-install.
+  Project-scoped by default (git remote hash).
 dependencies:
   required:
     agents: []
