@@ -22,8 +22,13 @@ upstream/everything-claude-code/node_modules/
 # Backup files from installer (CQ-5c — backup-then-overwrite default)
 *.bak.*
 
-# Manifest installer (CQ-5e — track per-target, not committed to the repo)
-.dotclaude-manifest.yaml
+# Installer-managed project Claude config (CQ-5e)
+# .dotclaude-manifest.yaml: per-target installer manifest, not repo
+# settings.local.json: machine-local permissions
+# skills/: installer-managed symlinks, recreated via pnpm install:project --force
+.claude/.dotclaude-manifest.yaml
+.claude/settings.local.json
+.claude/skills/
 
 # TypeScript / Bun
 node_modules/
