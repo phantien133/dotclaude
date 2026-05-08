@@ -22,9 +22,7 @@ All phases complete.
 ✓ Phase 4   — Marketplace + plugin packaging (self-hosted)
 ```
 
-See `docs/redesign-plan.md` Section 5 for per-phase details.
-
-## Architecture (post-redesign)
+## Architecture
 
 ```
 dotclaude/
@@ -43,18 +41,21 @@ dotclaude/
 │   ├── private/ + private.example/
 │   └── schema/*.schema.json        # Generated from zod
 │
-├── plugins/                        # Phase 4
+├── plugins/                        # Build artifacts for marketplace
+├── marketplace.json                # Local marketplace index
 ├── upstream/                       # Submodules (CQ-7) — sync_source + docs
-└── scripts/                        # 100% TS via tsx (CQ-10 revised)
-    ├── install.ts                  # Entry: validate | list | user | project
+└── scripts/                        # 100% TS via tsx (CQ-10)
+    ├── install.ts                  # Entry: validate | list | user | project | uninstall | upgrade | audit
     ├── sync-from-upstream.ts
     ├── generate-schemas.ts
-    └── lib/{schema,yaml,paths,sidecar,preset,upstream,logger}.ts
+    ├── build-plugin.ts + publish-plugin.ts
+    ├── init-private.ts + clean-backups.ts
+    └── lib/{schema,yaml,paths,sidecar,preset,resolver,fs-ops,manifest,settings-merge,lifecycle,marketplace,plugin-build,upstream,logger}.ts
 ```
 
 ## Decisions from 12 CQs
 
-Full source of truth: `docs/clarifying-questions.md` (Decisions log at end of file).
+See `docs/architecture.md` for full decisions. Key choices:
 
 | CQ | Decision |
 |---|---|
@@ -63,10 +64,10 @@ Full source of truth: `docs/clarifying-questions.md` (Decisions log at end of fi
 | 1c | Import mode: plain copy, owner-controlled |
 | 1d | Modify tracking: edit in-place + sidecar `modified` flag + `modifications` text |
 | 2 | Sidecar YAML: file `<n>.source.yaml`, folder `SOURCE.yaml` (excluded on install) |
-| 3a-d | Preset YAML + companion MD, folder by kind, `extends:` from Phase 1 |
+| 3a-d | Preset YAML + companion MD, folder by kind, `extends:` supported |
 | 4a-d | `private/` per top package, mirrors public, manual cloud-sync bootstrap |
-| 5a-e | User+Project Phase 1, user=symlink default, project=copy default, backup-then-overwrite, idempotent MUST, manifest YAML tracking |
-| 6a-c | Self-hosted marketplace (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin, defer to Phase 4 |
+| 5a-e | User+Project install; user=symlink default, project=copy default, backup-then-overwrite, idempotent, manifest YAML tracking |
+| 6a-c | Self-hosted marketplace (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin |
 | 7 | `vendor/` → `upstream/`, ECC role: sync_source |
 | 9 | Migration: wipe & rewrite |
 | 10 | 100% TS + pnpm + tsx (revised from Bun) |
@@ -82,7 +83,7 @@ git clone --recursive git@github.com:phantien133/dotclaude.git
 cd dotclaude
 pnpm install
 pnpm typecheck && pnpm test
-# Phase 2 (upcoming): pnpm init-private + restore private content from cloud sync
+# Then: pnpm init-private + restore private content from cloud sync
 ```
 
 ### Vendor a new component from upstream
@@ -175,9 +176,7 @@ No sidecar files (*.source.yaml / SOURCE.yaml) are included in the bundle.
 ## References in Repo
 
 - `README.md` — public quickstart
-- `docs/architecture.md` — design decisions post-redesign
-- `docs/redesign-plan.md` — 5-phase plan (in progress)
-- `docs/clarifying-questions.md` — 12 CQs + decisions log
+- `docs/architecture.md` — design decisions + layout
 - `docs/PROVENANCE.md` — sidecar schema + sync workflow
 - `docs/PRESETS.md` — preset schema + authoring guide
 - `docs/PRIVATE.md` — private/ convention + bootstrap
@@ -213,9 +212,8 @@ test/CI):
 
 - 2026-05-07: skeleton (`packages/` + bash scripts) built in first session, not yet verified.
 - 2026-05-08:
-  - Redesign plan + 12 CQs finalized (Section 5 redesign-plan.md).
+  - Redesign plan + 12 CQs finalized.
   - Phase 0 wipe skeleton (commit `d5045f7`).
   - Phase 0.5 TS+pnpm+tsx bootstrap (commit `5865a1d`).
-  - Phase 1 in-progress: claudekit/agents/code-reviewer + skills/coding-standards
-    vendored, presets/core/personal-baseline created, validate/list/sync subcommands
-    working, 15 vitest tests pass.
+  - Phase 1: claudekit/agents/code-reviewer + skills/coding-standards vendored, presets/core/personal-baseline created, validate/list/sync subcommands working.
+  - Phases 2–4: install pipeline, lifecycle, marketplace + plugin packaging complete (commit `040b335`).

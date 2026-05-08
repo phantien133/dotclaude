@@ -112,7 +112,7 @@ Resolver semantics when composing:
 
 ## settings_patch
 
-Not applied in Phase 1 (validate/list only). Phase 2 implements deep-merge:
+Applied on install via deep-merge into the target's `~/.claude/settings.json`:
 
 ```yaml
 settings_patch:
@@ -125,9 +125,9 @@ settings_patch:
 Note: the target `settings.json` is JSON. The preset YAML object is deep-merged with the
 existing JSON (via the `deepmerge` package) and written back as JSON.
 
-Conflict policy (to be finalized in Phase 2):
+Conflict policy:
 - Object: deep-merge.
-- Array: concat or replace depending on the field — will be implemented with a policy table.
+- Array: concat or replace depending on the field (policy table in `lib/settings-merge.ts`).
 - Scalar conflict: child wins, warning is logged.
 
 ## File reference

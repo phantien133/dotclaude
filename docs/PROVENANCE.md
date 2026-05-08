@@ -128,7 +128,7 @@ pnpm sync agents/code-reviewer
 `pnpm sync` is DIFF-only — it does not auto-apply (Phase 1). Advanced auto-merge may be
 added later via an `--apply` flag (Phase 5+).
 
-## Dependency resolution (Phase 2 will implement fully)
+## Dependency resolution
 
 The resolver reads the `dependencies` block of each installed component:
 
