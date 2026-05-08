@@ -1,75 +1,75 @@
 # PRESETS — Schema & Authoring Guide
 
-> Preset là **pure manifest** trỏ vào component IDs trong `claudekit/`. Không chứa code.
+> A preset is a **pure manifest** pointing to component IDs in `claudekit/`. It contains no component code.
 >
-> Schema TS-first (zod, `scripts/lib/schema.ts → PresetSchema`) → generate ra JSON
-> Schema cho IDE validation (`presets/schema/preset.schema.json`).
+> Schema is TS-first (zod, `scripts/lib/schema.ts → PresetSchema`) → generates a JSON
+> Schema for IDE validation (`presets/schema/preset.schema.json`).
 
-## Cấu trúc thư mục (CQ-3c)
+## Directory structure (CQ-3c)
 
 ```
 presets/
-├── core/<name>.yaml + <name>.md       # baseline cross-stack
+├── core/<name>.yaml + <name>.md       # cross-stack baseline
 ├── framework/<name>.yaml + <name>.md  # framework-specific (Next.js, Django, ...)
 ├── purpose/<name>.yaml + <name>.md    # task-specific (onboarding, hardening, ...)
-├── private/                           # GITIGNORED — owner riêng (xem PRIVATE.md)
+├── private/                           # GITIGNORED — owner private (see PRIVATE.md)
 ├── private.example/                   # TRACKED skeleton
-└── schema/                            # JSON Schema được generate
+└── schema/                            # Generated JSON Schema
 ```
 
-Path canonical của 1 preset = `presets/<kind>/<name>.yaml`. Mỗi preset có 2 file:
+The canonical path for a preset is `presets/<kind>/<name>.yaml`. Each preset has two files:
 
 - `.yaml` — machine-readable, schema-validated.
 - `.md` — human docs (when to use, rationale, examples).
 
-Tên file PHẢI sync 1-1 (lint trong validate command).
+Filenames MUST be kept in sync 1-to-1 (enforced by the validate command).
 
 ## Schema (CQ-3a/b/d)
 
 ```yaml
 # yaml-language-server: $schema=../schema/preset.schema.json
-name: typescript-fullstack            # lowercase kebab-case, match filename
-kind: framework                        # core | framework | purpose, match folder
-description: ...                       # 1 dòng, hiển thị trong list
+name: typescript-fullstack            # lowercase kebab-case, matches filename
+kind: framework                        # core | framework | purpose, matches folder
+description: ...                       # one line, shown in list output
 version: 0.1.0                         # SemVer X.Y.Z
 extends: []                            # parent preset names (CQ-3b)
 components:
-  agents: []                           # IDs trong claudekit/agents/
-  skills: []                           # IDs trong claudekit/skills/
+  agents: []                           # IDs in claudekit/agents/
+  skills: []                           # IDs in claudekit/skills/
   commands: []
   hooks: []
   rules: []
-settings_patch: {}                     # deep-merge vào ~/.claude/settings.json
-tags: []                               # filter qua `pnpm run list --tag <t>`
+settings_patch: {}                     # deep-merged into ~/.claude/settings.json
+tags: []                               # filterable via `pnpm run list --tag <t>`
 ```
 
 ### Field details
 
-- **`name`**: lowercase kebab-case (`personal-baseline`, `nextjs-app`). Match
-  filename strip `.yaml`.
-- **`kind`**: `core | framework | purpose` — match folder.
+- **`name`**: lowercase kebab-case (`personal-baseline`, `nextjs-app`). Must match
+  the filename with `.yaml` stripped.
+- **`kind`**: `core | framework | purpose` — must match the folder.
   - `core`: cross-stack baseline.
-  - `framework`: bound đến 1 framework cụ thể.
-  - `purpose`: tập trung mục đích nhất định (onboarding, security audit, ...).
-- **`description`**: 1 dòng tóm tắt khi nào dùng.
-- **`version`**: SemVer. Bump khi thêm/bớt component, đổi behavior.
-- **`extends`**: array tên parent preset. Resolver merge tree (CQ-3b):
-  - Multiple inheritance OK: `extends: [base-typescript, base-postgres]`.
-  - Diamond detect + dedupe.
-  - Circular detect → throw.
-  - Phase 1 chỉ append (không có `override`/`exclude`).
-- **`components`**: 5 keys cố định (agents/skills/commands/hooks/rules), array
-  string IDs.
-  - Resolver lookup public trước, fallback private (CQ-4b).
-  - Component sidecar's `dependencies.required` được auto-pulled (CQ-12).
-- **`settings_patch`**: object deep-merge vào `~/.claude/settings.json` của target.
-  Object YAML → serialize JSON khi apply.
-- **`tags`**: tự do, dùng để filter trong list.
+  - `framework`: bound to a specific framework.
+  - `purpose`: focused on a particular goal (onboarding, security audit, ...).
+- **`description`**: one-line summary of when to use this preset.
+- **`version`**: SemVer. Bump when adding/removing components or changing behavior.
+- **`extends`**: array of parent preset names. The resolver merges the tree (CQ-3b):
+  - Multiple inheritance is OK: `extends: [base-typescript, base-postgres]`.
+  - Diamond detection + deduplication.
+  - Circular detection → throws.
+  - Phase 1 appends only (no `override`/`exclude` support yet).
+- **`components`**: 5 fixed keys (agents/skills/commands/hooks/rules), each an array
+  of string IDs.
+  - Resolver looks up public first, then falls back to private (CQ-4b).
+  - The component sidecar's `dependencies.required` are auto-pulled (CQ-12).
+- **`settings_patch`**: object deep-merged into the target's `~/.claude/settings.json`.
+  The YAML object is serialized to JSON on apply.
+- **`tags`**: free-form strings, used for filtering in the list command.
 
-## Tạo preset mới
+## Creating a new preset
 
 ```bash
-# 1. Chọn kind + name
+# 1. Choose kind + name
 KIND=core
 NAME=my-baseline
 
@@ -77,12 +77,12 @@ NAME=my-baseline
 cp presets/core/personal-baseline.yaml presets/$KIND/$NAME.yaml
 cp presets/core/personal-baseline.md   presets/$KIND/$NAME.md
 
-# 3. Edit YAML — đổi name/description/components/tags
+# 3. Edit YAML — update name/description/components/tags
 
 # 4. Validate
 pnpm validate $NAME --kind $KIND
 
-# 5. Verify list shows it
+# 5. Verify it appears in the list
 pnpm run list
 
 # 6. Commit
@@ -97,7 +97,7 @@ kind: framework
 description: Next.js App Router preset (extends personal-baseline)
 version: 0.1.0
 extends:
-  - personal-baseline    # tự kéo agents+skills của baseline
+  - personal-baseline    # pulls in all agents+skills from the baseline automatically
 components:
   skills:
     - web-frontend-patterns
@@ -105,14 +105,14 @@ components:
     - format-on-save
 ```
 
-Resolver semantics khi compose:
-1. Recursive resolve extends → merge components (set union per type).
-2. settings_patch: deep-merge left-to-right, child wins on conflict.
-3. Dedupe component theo `<type>:<id>`.
+Resolver semantics when composing:
+1. Recursively resolve extends → merge components (set union per type).
+2. `settings_patch`: deep-merge left-to-right; child wins on conflict.
+3. Deduplicate components by `<type>:<id>`.
 
-## Settings_patch
+## settings_patch
 
-Phase 1 chưa apply (validate/list only). Phase 2 implement deep-merge:
+Not applied in Phase 1 (validate/list only). Phase 2 implements deep-merge:
 
 ```yaml
 settings_patch:
@@ -122,17 +122,17 @@ settings_patch:
         command: "pnpm prettier --write \"$FILE_PATH\""
 ```
 
-Lưu ý: settings.json target là JSON. Preset YAML → nội dung YAML object → installer
-deep-merge với existing JSON (qua `deepmerge` package) → write JSON.
+Note: the target `settings.json` is JSON. The preset YAML object is deep-merged with the
+existing JSON (via the `deepmerge` package) and written back as JSON.
 
-Conflict policy (Phase 2 quyết định cụ thể, plan đề xuất):
+Conflict policy (to be finalized in Phase 2):
 - Object: deep-merge.
-- Array: nối (concat) hoặc replace tuỳ field — sẽ implement với policy table.
-- Scalar conflict: child wins, log warning.
+- Array: concat or replace depending on the field — will be implemented with a policy table.
+- Scalar conflict: child wins, warning is logged.
 
 ## File reference
 
 - `scripts/lib/schema.ts → PresetSchema` — zod schema.
 - `scripts/lib/preset.ts` — locate/load/list helpers.
-- `presets/schema/preset.schema.json` — generated JSON Schema cho IDE.
-- `presets/core/personal-baseline.yaml` — first preset Phase 1.
+- `presets/schema/preset.schema.json` — generated JSON Schema for IDE.
+- `presets/core/personal-baseline.yaml` — first preset (Phase 1).

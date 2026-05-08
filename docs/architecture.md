@@ -1,23 +1,23 @@
 # Architecture & Design Decisions
 
-> Updated 2026-05-08 sau Phase 0 + Phase 1 redesign. Skeleton model
-> (`packages/` + bash installer) đã wipe (xem `redesign-plan.md` Section 5.2).
+> Updated 2026-05-08 after Phase 0 + Phase 1 redesign. The skeleton model
+> (`packages/` + bash installer) has been wiped (see `redesign-plan.md` Section 5.2).
 
-## Mục tiêu sau redesign
+## Goals after redesign
 
-`dotclaude` là repo cá nhân quản lý **trọn bộ kit Claude Code** — không chỉ là wrapper
-cho upstream, mà là source-of-truth do owner kiểm soát:
+`dotclaude` is a personal repo that manages the **complete Claude Code kit** — not just
+a wrapper around upstream, but an owner-controlled source of truth:
 
-1. **`claudekit/`** — bộ core đầy đủ (agents, skills, commands, hooks, rules) với
-   provenance per-component. Owner copy nội dung từ upstream, có thể edit, track
-   nguồn qua sidecar.
-2. **`presets/`** — pure manifest (YAML) trỏ vào component IDs trong claudekit/.
-   Không chứa code component.
-3. **`scripts/`** — TypeScript installer (chạy qua tsx) đọc preset → install vào
-   target user/project, manifest tracking, deps resolution.
-4. **`upstream/`** — submodules (ECC + 3 docs sources) đóng vai trò sync source +
-   docs reference, KHÔNG còn là runtime dependency.
-5. **`plugins/`** — placeholder cho Phase 4 (preset → plugin bundle, publish lên
+1. **`claudekit/`** — full core kit (agents, skills, commands, hooks, rules) with
+   per-component provenance. Owner copies content from upstream, can edit it, and tracks
+   origin via sidecars.
+2. **`presets/`** — pure manifests (YAML) pointing to component IDs in `claudekit/`.
+   Contains no component code.
+3. **`scripts/`** — TypeScript installer (run via tsx) reads a preset → installs into
+   the user/project target, with manifest tracking and dependency resolution.
+4. **`upstream/`** — submodules (ECC + 3 docs sources) acting as sync source and
+   docs reference; NO LONGER a runtime dependency.
+5. **`plugins/`** — placeholder for Phase 4 (preset → plugin bundle, publish to
    self-hosted marketplace).
 
 ## Layout
@@ -35,21 +35,21 @@ dotclaude/
 │   ├── commands/              # File-component
 │   ├── hooks/                 # File-component (script)
 │   ├── rules/                 # File-component
-│   ├── private/               # GITIGNORED (CQ-4a) — mirror cấu trúc public
-│   └── private.example/       # TRACKED skeleton, hướng dẫn init private
+│   ├── private/               # GITIGNORED (CQ-4a) — mirrors public structure
+│   └── private.example/       # TRACKED skeleton, guides private/ init
 │
 ├── presets/                   # Pure manifest (CQ-3c)
-│   ├── core/<name>.yaml + .md       # baseline cross-stack
+│   ├── core/<name>.yaml + .md       # cross-stack baseline
 │   ├── framework/<name>.yaml + .md  # framework-specific
 │   ├── purpose/<name>.yaml + .md    # task-specific
 │   ├── private/                     # GITIGNORED
 │   ├── private.example/             # TRACKED
-│   └── schema/                      # JSON Schema được generate từ zod
+│   └── schema/                      # JSON Schema generated from zod
 │       ├── preset.schema.json
 │       ├── sidecar.schema.json
 │       └── manifest.schema.json
 │
-├── plugins/                   # Phase 4 build artifacts (rỗng đến Phase 4)
+├── plugins/                   # Phase 4 build artifacts (empty until Phase 4)
 │
 ├── upstream/                  # Submodules (sync source + docs)
 │   ├── everything-claude-code/    role: sync_source
@@ -72,35 +72,35 @@ dotclaude/
 │   └── tests/                 # Vitest (schema + fixtures)
 │
 └── docs/
-    ├── architecture.md        # File này
+    ├── architecture.md        # This file
     ├── redesign-plan.md       # 5-phase plan (in progress)
-    ├── clarifying-questions.md  # Decisions log của 12 CQ
+    ├── clarifying-questions.md  # Decisions log for 12 CQs
     ├── PROVENANCE.md          # Sidecar schema + sync workflow
-    ├── PRESETS.md             # Preset schema + writing guide
+    ├── PRESETS.md             # Preset schema + authoring guide
     ├── PRIVATE.md             # private/ convention + bootstrap
     └── INSTALL.md             # Installer usage
 ```
 
-## Decisions chính (chốt qua 12 CQ)
+## Key decisions (settled through 12 CQs)
 
 | # | Decision | Reference |
 |---|---|---|
 | CQ-1a | Top-level core: `claudekit/` (explicit, brandable) | clarifying-questions.md |
-| CQ-1b | Internal layout: type-first (ECC style), naming prefix `web-`, `python-`, ... cho domain | |
-| CQ-1c | Import mode: copy thuần — owner kiểm soát nội dung | |
-| CQ-1d | Modify tracking: edit thẳng + sidecar `modified` flag | |
-| CQ-2 | Sidecar YAML — file-component `<name>.source.yaml`, folder-component `SOURCE.yaml` (excluded khi install) | docs/PROVENANCE.md |
-| CQ-3a/b/c/d | Preset: YAML + companion MD, schema validation qua header `# yaml-language-server: $schema=...`, folder theo kind, `extends:` ngay Phase 1 | docs/PRESETS.md |
-| CQ-4a/b/c/d | `private/` per top package, mirror public, `private.example/` skeleton tracked, manual cloud-sync bootstrap | docs/PRIVATE.md |
+| CQ-1b | Internal layout: type-first (ECC style), domain naming prefix `web-`, `python-`, ... | |
+| CQ-1c | Import mode: plain copy — owner controls content | |
+| CQ-1d | Modify tracking: edit in place + sidecar `modified` flag | |
+| CQ-2 | Sidecar YAML — file-component `<name>.source.yaml`, folder-component `SOURCE.yaml` (excluded on install) | docs/PROVENANCE.md |
+| CQ-3a/b/c/d | Preset: YAML + companion MD, schema validation via `# yaml-language-server: $schema=...` header, folder per kind, `extends:` from Phase 1 | docs/PRESETS.md |
+| CQ-4a/b/c/d | `private/` per top package, mirrors public, `private.example/` skeleton tracked, manual cloud-sync bootstrap | docs/PRIVATE.md |
 | CQ-5a/b/c/d/e | User+Project Phase 1; user=symlink default, project=copy default; backup-then-overwrite; idempotent MUST; manifest YAML tracking | docs/INSTALL.md |
-| CQ-6 | Marketplace self-hosted (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin, defer Phase 4 | redesign-plan.md §5.6 |
+| CQ-6 | Self-hosted marketplace (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin, deferred to Phase 4 | redesign-plan.md §5.6 |
 | CQ-7 | `vendor/` → `upstream/`, ECC role: sync_source | |
-| CQ-9 | Migration: wipe & rewrite (không migrate skeleton cũ) | |
-| CQ-10 | 100% TS + pnpm + tsx (revised từ Bun do toolchain) | |
-| CQ-11 | YAML cho file owner control; JSON cho convention bên ngoài (settings.json, package.json, JSON Schema, plugin manifest) | |
-| CQ-12 | Sidecar có `dependencies.required/optional/external`; resolver auto-include required, skip optional default, warn-only external | docs/PROVENANCE.md |
+| CQ-9 | Migration: wipe & rewrite (no migration of old skeleton) | |
+| CQ-10 | 100% TS + pnpm + tsx (revised from Bun due to toolchain) | |
+| CQ-11 | YAML for owner-controlled files; JSON for external conventions (settings.json, package.json, JSON Schema, plugin manifest) | |
+| CQ-12 | Sidecar has `dependencies.required/optional/external`; resolver auto-includes required, skips optional by default, warn-only for external | docs/PROVENANCE.md |
 
-## Resolver flow (Phase 2 sẽ implement đầy đủ)
+## Resolver flow (Phase 2 will implement fully)
 
 ```
 preset.yaml
@@ -114,7 +114,7 @@ preset.yaml
      ↓ probe dependencies.external (which/version check, warn-only)
   ↓ merge settings_patch (deep-merge left-fold)
   ↓ build InstallPlan { ops, settingsPatch, externalDeps, depLog }
-  ↓ apply qua fs-ops (symlink/copy with backup)
+  ↓ apply via fs-ops (symlink/copy with backup)
   ↓ write manifest.yaml at target
 ```
 
@@ -122,7 +122,7 @@ preset.yaml
 
 | Risk | Status | Phase |
 |---|---|---|
-| R1 — destructive `rm -rf` trong installer | Resolved (skeleton wipe) | 0 |
+| R1 — destructive `rm -rf` in installer | Resolved (skeleton wipe) | 0 |
 | R2 — awk parser fragile | Resolved (TS + zod) | 0.5 |
 | R3 — `rsync -a` no cleanup | Will be resolved (manifest tracking) | 2 |
 | R4 — `pinned_commit: null` | Resolved (sidecar source.commit + dependencies.yaml pinned) | 0 + 1 |
@@ -131,39 +131,39 @@ preset.yaml
 
 ## Non-goals
 
-- Không publish dotclaude lên npm.
-- Không thay thế upstream ECC — claudekit/ là copy có ownership, sync khi muốn.
-- Không quản lý Claude Code binary install (chỉ config).
-- Không auto-install external deps (npm/binary) — chỉ probe + warn.
+- Do not publish dotclaude to npm.
+- Do not replace upstream ECC — `claudekit/` is an owned copy, synced on demand.
+- Do not manage Claude Code binary installation (config only).
+- Do not auto-install external deps (npm/binary) — probe and warn only.
 
 ## Plugin ecosystem references
 
-Khi cần port pattern hoặc mở rộng kit, tham khảo (chưa adopt mặc định, đặt vào
-`dependencies.yaml` với commit pinning nếu thực sự dùng):
+When porting patterns or extending the kit, refer to the following (not adopted by default;
+add to `dependencies.yaml` with commit pinning if actually used):
 
-| Repo | Mục đích |
+| Repo | Purpose |
 |---|---|
-| `everything-claude-code/everything-claude-code` | ECC (đã vendor — sync source) |
+| `everything-claude-code/everything-claude-code` | ECC (vendored — sync source) |
 | `anthropics/anthropic-cookbook` | API + Claude Code patterns (docs) |
 | `anthropics/skills` | Skill format reference (docs) |
 | `modelcontextprotocol/servers` | MCP server collection (docs) |
 | `hesreallyhim/awesome-claude-code` | Awesome list — discover tools |
-| `wshobson/agents` | 100+ specialized agents để port |
-| `promptfoo/promptfoo` | Eval framework cho prompts/agents |
-| `jlowin/fastmcp` | Build MCP server (Python, FastAPI-style) |
-| `modelcontextprotocol/typescript-sdk` | MCP TS SDK chính thức |
+| `wshobson/agents` | 100+ specialized agents to port |
+| `promptfoo/promptfoo` | Eval framework for prompts/agents |
+| `jlowin/fastmcp` | Build MCP servers (Python, FastAPI-style) |
+| `modelcontextprotocol/typescript-sdk` | Official MCP TypeScript SDK |
 
-Evaluation checklist trước khi adopt: License compatible (MIT/Apache prefer),
-maintenance active (commits 6 tháng gần), test/CI present, conform format ECC
-hoặc dễ port, community signal.
+Evaluation checklist before adopting: license compatible (MIT/Apache preferred),
+maintenance active (commits within 6 months), test/CI present, conforms to ECC format
+or easy to port, positive community signal.
 
 ## Open questions / TODO
 
 - [ ] Phase 2 — Install pipeline.
 - [ ] Phase 3 — Lifecycle (uninstall, upgrade, audit).
 - [ ] Phase 4 — Marketplace + plugin packaging.
-- [ ] Lockfile strategy: manifest đã 1 phần. Standalone `dependencies.lock.yaml`
-      cần cho cross-machine reproducibility?
-- [ ] CI: pnpm typecheck + test + schema regen verify (không drift).
-- [ ] Settings.json strategy chi tiết: deep-merge với array policy (replace vs concat).
-- [ ] Khi nào setup remote (GitHub) + private/public.
+- [ ] Lockfile strategy: manifest partially covers this. Is a standalone `dependencies.lock.yaml`
+      needed for cross-machine reproducibility?
+- [ ] CI: pnpm typecheck + test + schema regen verification (prevent drift).
+- [ ] Detailed settings.json strategy: deep-merge with array policy (replace vs concat).
+- [ ] When to set up remote (GitHub) + private/public split.

@@ -1,13 +1,13 @@
 # claudekit/private/ — Private overlays for personal/company-specific kit
 
-`claudekit/private/` mirror cấu trúc public của `claudekit/`. Folder này là
-**gitignored** ở repo root (`.gitignore` rule `/claudekit/private/`).
+`claudekit/private/` mirrors the public structure of `claudekit/`. This folder is
+**gitignored** at the repo root (`.gitignore` rule `/claudekit/private/`).
 
 ```
 claudekit/private/
 ├── agents/
 │   └── <my-private-agent>.md
-│   └── <my-private-agent>.source.yaml   # nếu vendor từ upstream
+│   └── <my-private-agent>.source.yaml   # if vendored from upstream
 ├── skills/
 │   └── <my-private-skill>/
 │       ├── SKILL.md
@@ -17,39 +17,37 @@ claudekit/private/
 └── rules/
 ```
 
-## Khi nào đặt component vào `private/`?
+## When to place a component in `private/`?
 
-- **Company-specific**: agents/skills chứa workflow nội bộ, project name riêng
-  của công ty.
-- **Secrets-adjacent**: prompt mà nhắc tên hệ thống nội bộ, URL không public,
-  username, ...
-- **Personal experiments** chưa muốn share: agents đang try.
-- **Forks chưa polished**: bản chỉnh đang test, sẽ promote lên public sau.
+- **Company-specific**: agents/skills containing internal workflows, company project names.
+- **Secrets-adjacent**: prompts referencing internal system names, non-public URLs, usernames, etc.
+- **Personal experiments** not ready to share: agents under trial.
+- **Unpolished forks**: edited versions under test, to be promoted to public later.
 
 ## Resolver behavior
 
-Khi preset reference component ID phẳng (`code-reviewer`), installer:
+When a preset references a flat component ID (`code-reviewer`), the installer:
 
-1. Search `claudekit/<type>/<id>` (public) trước.
-2. Fallback `claudekit/private/<type>/<id>` nếu không thấy.
-3. Throw nếu cả 2 đều không có.
+1. Searches `claudekit/<type>/<id>` (public) first.
+2. Falls back to `claudekit/private/<type>/<id>` if not found.
+3. Throws if neither is found.
 
-→ Có thể override component public bằng cách KHÔNG đặt cùng tên public; private
-chỉ kick in khi public miss. Nếu muốn override, đặt tên private khác và sửa
-preset reference.
+→ You cannot override a public component by placing one with the same name in private;
+private only kicks in when the public lookup misses. To use a private override, give it a
+different name and update the preset reference.
 
-## Bootstrap máy mới
+## Bootstrap on a new machine
 
-Repo dotclaude **không quản lý distribution của private/**. Khi clone repo trên
-máy mới:
+The dotclaude repo **does not manage distribution of `private/`**. When cloning on a
+new machine:
 
-1. Init skeleton: `pnpm init-private` (copy `claudekit/private.example/` →
-   `claudekit/private/` + tương tự cho `presets/`).
-2. Copy nội dung private từ nguồn riêng (iCloud / Dropbox / 1Password / USB
-   drive). Xem `docs/PRIVATE.md` để biết convention owner đang dùng.
+1. Init skeleton: `pnpm init-private` (copies `claudekit/private.example/` →
+   `claudekit/private/` and similarly for `presets/`).
+2. Copy private content from your personal source (iCloud / Dropbox / 1Password / USB
+   drive). See `docs/PRIVATE.md` for the convention the owner uses.
 
-## Format component trong private
+## Component format in private
 
-Hoàn toàn giống public — cùng frontmatter agent/skill convention. Nếu component
-là vendored từ upstream với modification, vẫn cần sidecar `<name>.source.yaml`
-hoặc `SOURCE.yaml` (cho skill folder) để track provenance.
+Identical to public — same frontmatter agent/skill convention. If a component is
+vendored from upstream with modifications, a sidecar `<name>.source.yaml` or
+`SOURCE.yaml` (for skill folders) is still required to track provenance.

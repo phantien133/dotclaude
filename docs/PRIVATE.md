@@ -1,13 +1,13 @@
 # PRIVATE — Convention & Bootstrap
 
-## Mục đích
+## Purpose
 
-`private/` chứa overlays riêng tư của owner — thứ KHÔNG nên public:
+`private/` holds owner-private overlays — content that should NOT be public:
 
-- Company-specific agents/skills (workflow nội bộ, project name, URL không public).
-- Personal experiments chưa polish (đang try, sẽ promote hoặc drop).
-- Forks của upstream chưa stable.
-- Preset cho project nội bộ với tooling specific.
+- Company-specific agents/skills (internal workflows, project names, non-public URLs).
+- Personal experiments not yet polished (under trial, will be promoted or dropped).
+- Unstable forks of upstream components.
+- Presets for internal projects with specific tooling.
 
 ## Layout (CQ-4a/b)
 
@@ -25,7 +25,7 @@ presets/private/                       # GITIGNORED
 └── purpose/
 
 claudekit/private.example/             # TRACKED skeleton
-├── README.md (hướng dẫn)
+├── README.md (guide)
 └── {agents,skills,commands,hooks,rules}/.gitkeep
 
 presets/private.example/               # TRACKED skeleton
@@ -33,7 +33,7 @@ presets/private.example/               # TRACKED skeleton
 └── {core,framework,purpose}/.gitkeep
 ```
 
-## .gitignore rules (đã set)
+## .gitignore rules (already set)
 
 ```gitignore
 /claudekit/private/
@@ -41,30 +41,30 @@ presets/private.example/               # TRACKED skeleton
 /plugins/private/
 ```
 
-Rule absolute (`/` đầu) → chỉ ignore folder ngay root, không ảnh hưởng nested folder
-tên `private` ở chỗ khác.
+Absolute rules (leading `/`) — only ignore the folder at repo root, no effect on nested
+folders named `private` elsewhere.
 
 ## Resolver behavior
 
-Khi preset reference component ID phẳng (`code-reviewer`):
+When a preset references a flat component ID (`code-reviewer`):
 
-1. Search `claudekit/<type>/<id>` (public) trước.
-2. Fallback `claudekit/private/<type>/<id>` nếu không thấy public.
-3. Throw nếu cả 2 đều miss.
+1. Search `claudekit/<type>/<id>` (public) first.
+2. Fallback to `claudekit/private/<type>/<id>` if not found in public.
+3. Throw if both miss.
 
-→ Public component CÙNG TÊN với private = public win. Để override, đặt tên private
-khác và sửa preset reference.
+→ A public component with the SAME NAME as a private one wins. To override, give the
+private component a different name and update the preset reference.
 
-Same logic cho preset: `presets/<kind>/<name>.yaml` public trước, private fallback.
+Same logic for presets: `presets/<kind>/<name>.yaml` public first, private fallback.
 
-## Bootstrap máy mới (CQ-4d)
+## Bootstrap on a new machine (CQ-4d)
 
-Repo dotclaude **không quản lý distribution** của private/. Owner tự lo qua:
+The dotclaude repo does **not manage distribution** of `private/`. The owner handles it via:
 
 - iCloud / Dropbox / Google Drive sync folder.
-- 1Password Secure Note với attachments.
-- USB drive (cho machine không có cloud).
-- Repo private riêng (`dotclaude-private`) — không recommend default vì tăng cấp setup.
+- 1Password Secure Note with attachments.
+- USB drive (for machines without cloud access).
+- Separate private repo (`dotclaude-private`) — not recommended by default as it adds setup complexity.
 
 ### Bootstrap flow
 
@@ -73,49 +73,49 @@ Repo dotclaude **không quản lý distribution** của private/. Owner tự lo 
 git clone --recursive git@github.com:phantien133/dotclaude.git
 cd dotclaude
 
-# 2. Init private skeleton từ private.example/
-pnpm init-private    # sẽ implement Phase 2 — copy private.example/ → private/
+# 2. Init private skeleton from private.example/
+pnpm init-private    # to be implemented in Phase 2 — copies private.example/ → private/
 
-# 3. Restore nội dung từ nguồn riêng
+# 3. Restore private content from personal source
 cp -r ~/Documents/dotclaude-backup/claudekit/private/* claudekit/private/
 cp -r ~/Documents/dotclaude-backup/presets/private/*   presets/private/
 
 # 4. Verify
 pnpm typecheck
-pnpm run list                    # xem private presets có hiện không
+pnpm run list                    # check that private presets appear
 pnpm validate <my-private-preset> --kind core
 ```
 
 ### Backup recommendation
 
-Sau mỗi lần thêm/sửa private content:
+After each addition or edit to private content:
 
 ```bash
-# Backup tổng quát
+# General backup
 rsync -av --delete claudekit/private/ ~/Documents/dotclaude-backup/claudekit/private/
 rsync -av --delete presets/private/   ~/Documents/dotclaude-backup/presets/private/
 
-# Hoặc dùng cloud sync folder làm target
+# Or use a cloud sync folder as the target
 ```
 
-## Convention khi viết private content
+## Convention for private content
 
-- Format hoàn toàn giống public (cùng frontmatter agent/skill convention).
-- Vendored từ upstream + modified → vẫn cần sidecar (dùng để track + sync sau này).
-- Naming có thể tự do hơn public, nhưng tránh trùng tên với public (resolver public-first).
+- Identical format to public (same frontmatter agent/skill convention).
+- Vendored from upstream and modified → still requires a sidecar (for tracking and future sync).
+- Naming can be more relaxed than public, but avoid duplicating public names (resolver is public-first).
 
-## Khi nào promote private → public?
+## When to promote private → public?
 
-- Component đã stable + generic (không còn company-specific).
-- Sẵn sàng share + accept feedback.
-- Nội dung KHÔNG còn secret/internal references.
+- Component is stable and generic (no longer company-specific).
+- Ready to share and accept feedback.
+- Content has NO remaining secret or internal references.
 
 ```bash
 # Move file
 git mv claudekit/private/agents/foo.md claudekit/agents/foo.md
 git mv claudekit/private/agents/foo.source.yaml claudekit/agents/foo.source.yaml
 
-# Update sidecar — strip company-specific paths trong source nếu có
+# Update sidecar — strip any company-specific paths in source if present
 
 # Commit
 git commit -m "feat: promote agent foo from private to public"

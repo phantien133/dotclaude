@@ -1,18 +1,17 @@
 # CLAUDE.md — dotclaude
 
-Repo cá nhân quản lý Claude Code config (claudekit core + preset manifests + TS
-installer). Khi mở Claude Code ở folder này, các thông tin dưới đây là context chính.
+Personal repo for managing Claude Code config (claudekit core + preset manifests + TS
+installer). When opening Claude Code in this folder, the information below is the primary context.
 
 ## Owner & Communication
 
 - Owner: phantien133 (phanqtien@gmail.com) — senior full-stack engineer.
-- Giao tiếp: **tiếng Việt** cho mọi response. **Tiếng Anh** cho code, file names,
-  identifiers, commit messages.
-- Trả lời ngắn gọn, thực hành được ngay — không cần giải thích cơ bản.
+- Communication: **English** for all responses, code, file names, identifiers, and commit messages.
+- Keep answers concise and actionable — no need to explain basics.
 
-## Trạng thái hiện tại (2026-05-08)
+## Current Status (2026-05-08)
 
-Phase 0, 0.5, 1 hoàn thành. Phase 2 chưa bắt đầu.
+Phase 0, 0.5, 1 complete. Phase 2 not yet started.
 
 ```
 ✓ Phase 0   — Wipe skeleton (packages/ + scripts/ bash, vendor/ → upstream/)
@@ -23,9 +22,9 @@ Phase 0, 0.5, 1 hoàn thành. Phase 2 chưa bắt đầu.
 ☐ Phase 4   — Marketplace + plugin packaging (self-hosted)
 ```
 
-Xem `docs/redesign-plan.md` Section 5 cho chi tiết per phase.
+See `docs/redesign-plan.md` Section 5 for per-phase details.
 
-## Architecture (sau redesign)
+## Architecture (post-redesign)
 
 ```
 dotclaude/
@@ -42,51 +41,51 @@ dotclaude/
 ├── presets/                        # Pure manifest (CQ-3c)
 │   ├── {core,framework,purpose}/<name>.yaml + .md
 │   ├── private/ + private.example/
-│   └── schema/*.schema.json        # Generated từ zod
+│   └── schema/*.schema.json        # Generated from zod
 │
 ├── plugins/                        # Phase 4
 ├── upstream/                       # Submodules (CQ-7) — sync_source + docs
-└── scripts/                        # 100% TS qua tsx (CQ-10 revised)
+└── scripts/                        # 100% TS via tsx (CQ-10 revised)
     ├── install.ts                  # Entry: validate | list | user | project
     ├── sync-from-upstream.ts
     ├── generate-schemas.ts
     └── lib/{schema,yaml,paths,sidecar,preset,upstream,logger}.ts
 ```
 
-## Decisions chốt qua 12 CQ
+## Decisions from 12 CQs
 
-Source-of-truth chi tiết: `docs/clarifying-questions.md` (Decisions log cuối file).
+Full source of truth: `docs/clarifying-questions.md` (Decisions log at end of file).
 
 | CQ | Decision |
 |---|---|
 | 1a | Top-level core: `claudekit/` |
-| 1b | Layout: type-first ECC style, naming prefix theo domain |
-| 1c | Import mode: copy thuần, owner kiểm soát |
-| 1d | Modify tracking: edit thẳng + sidecar `modified` flag + `modifications` text |
-| 2 | Sidecar YAML: file `<n>.source.yaml`, folder `SOURCE.yaml` (excluded khi install) |
-| 3a-d | Preset YAML + companion MD, folder theo kind, `extends:` ngay Phase 1 |
-| 4a-d | `private/` per top package, mirror public, manual cloud-sync bootstrap |
-| 5a-e | User+Project Phase 1, user=symlink default project=copy default, backup-then-overwrite, idempotent MUST, manifest YAML tracking |
-| 6a-c | Marketplace self-hosted (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin, defer Phase 4 |
+| 1b | Layout: type-first ECC style, naming prefix by domain |
+| 1c | Import mode: plain copy, owner-controlled |
+| 1d | Modify tracking: edit in-place + sidecar `modified` flag + `modifications` text |
+| 2 | Sidecar YAML: file `<n>.source.yaml`, folder `SOURCE.yaml` (excluded on install) |
+| 3a-d | Preset YAML + companion MD, folder by kind, `extends:` from Phase 1 |
+| 4a-d | `private/` per top package, mirrors public, manual cloud-sync bootstrap |
+| 5a-e | User+Project Phase 1, user=symlink default, project=copy default, backup-then-overwrite, idempotent MUST, manifest YAML tracking |
+| 6a-c | Self-hosted marketplace (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin, defer to Phase 4 |
 | 7 | `vendor/` → `upstream/`, ECC role: sync_source |
 | 9 | Migration: wipe & rewrite |
-| 10 | 100% TS + pnpm + tsx (revised từ Bun) |
-| 11 | YAML cho file owner control, JSON cho convention bên ngoài |
+| 10 | 100% TS + pnpm + tsx (revised from Bun) |
+| 11 | YAML for owner-controlled files, JSON for external conventions |
 | 12 | Sidecar `dependencies.required/optional/external`, resolver auto-include verbose |
 
-## Workflow phổ biến
+## Common Workflows
 
-### Setup máy mới
+### New machine setup
 
 ```bash
 git clone --recursive git@github.com:phantien133/dotclaude.git
 cd dotclaude
 pnpm install
 pnpm typecheck && pnpm test
-# Phase 2 (sắp có): pnpm init-private + restore private content từ cloud sync
+# Phase 2 (upcoming): pnpm init-private + restore private content from cloud sync
 ```
 
-### Vendor 1 component mới từ upstream
+### Vendor a new component from upstream
 
 ```bash
 # Copy file/folder
@@ -95,16 +94,16 @@ cp upstream/everything-claude-code/agents/<name>.md claudekit/agents/<name>.md
 # Get pin
 git -C upstream/everything-claude-code rev-parse HEAD
 
-# Tạo sidecar (template từ component khác)
+# Create sidecar (use another component as template)
 $EDITOR claudekit/agents/<name>.source.yaml
 
 # Verify
 pnpm typecheck && pnpm test
 ```
 
-Xem `docs/PROVENANCE.md` cho schema sidecar + workflow chi tiết.
+See `docs/PROVENANCE.md` for sidecar schema + detailed workflow.
 
-### Tạo preset mới
+### Create a new preset
 
 ```bash
 KIND=core; NAME=my-baseline
@@ -114,7 +113,7 @@ $EDITOR presets/$KIND/$NAME.yaml
 pnpm validate $NAME --kind $KIND
 ```
 
-Xem `docs/PRESETS.md` cho schema + authoring guide.
+See `docs/PRESETS.md` for schema + authoring guide.
 
 ### Sync upstream
 
@@ -122,88 +121,87 @@ Xem `docs/PRESETS.md` cho schema + authoring guide.
 git submodule update --remote upstream/everything-claude-code
 git -C upstream/everything-claude-code rev-parse HEAD  # update dependencies.yaml pinned_commit
 pnpm sync agents/code-reviewer                         # diff per-component
-# Owner merge thủ công, update sidecar.source.commit nếu adopt
+# Manually merge, update sidecar.source.commit if adopting
 ```
 
 ### Regenerate JSON Schema
 
 ```bash
-pnpm schema:generate   # idempotent, commit kết quả vào git
+pnpm schema:generate   # idempotent, commit result to git
 ```
 
-Sau khi sửa `scripts/lib/schema.ts`, chạy lệnh này để JSON Schema không drift.
+After editing `scripts/lib/schema.ts`, run this to keep JSON Schema in sync.
 
-## Nguyên tắc khi sửa code
+## Code Editing Principles
 
-1. **Schema-first**: thay đổi shape data → sửa zod schema trước, regen JSON Schema,
-   rồi cập nhật consumer. Test phải pass.
-2. **Sidecar sync**: edit component trong `claudekit/` → set `modified: true` +
-   update `modifications:` text. Đừng quên.
-3. **Strict TS**: `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess` ở
-   tsconfig — code phải xử lý `undefined` rõ. Không cast bừa.
-4. **Conventional commits**: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`. Body
-   tiếng Việt OK, header English.
-5. **Commit small**: 1 commit cho 1 việc — easier để revert.
-6. **Verify destructive trước**: trước khi `git rm` / `rm -rf` / submodule deinit,
-   confirm với owner (không tự ý).
+1. **Schema-first**: changing data shape → edit zod schema first, regen JSON Schema,
+   then update consumers. Tests must pass.
+2. **Sidecar sync**: editing a component in `claudekit/` → set `modified: true` +
+   update `modifications:` text. Don't forget.
+3. **Strict TS**: `exactOptionalPropertyTypes` + `noUncheckedIndexedAccess` in
+   tsconfig — code must handle `undefined` explicitly. No arbitrary casts.
+4. **Conventional commits**: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`. English headers.
+5. **Commit small**: 1 commit per change — easier to revert.
+6. **Verify before destructive ops**: before `git rm` / `rm -rf` / submodule deinit,
+   confirm with owner — do not act unilaterally.
 
-## Common pitfalls
+## Common Pitfalls
 
-- **`pnpm list` vs `pnpm run list`**: built-in pnpm `list` chiếm ưu tiên. Dùng
-  `pnpm run list` để gọi script preset list.
-- **Date trong YAML**: js-yaml mặc định parse `2026-05-08` thành Date. Repo dùng
-  `lib/yaml.ts` với `CORE_SCHEMA` để giữ string. Đừng `import yaml from 'js-yaml'`
-  trực tiếp — dùng `import { loadYaml, dumpYaml } from './lib/yaml.ts'`.
-- **Sidecar path**: file-component sidecar = `<name>.source.yaml` cùng dir;
-  folder-component = `SOURCE.yaml` BÊN TRONG folder. Installer phải EXCLUDE
-  `SOURCE.yaml` khi copy folder ra target.
+- **`pnpm list` vs `pnpm run list`**: pnpm built-in `list` takes priority. Use
+  `pnpm run list` to call the preset list script.
+- **Date in YAML**: js-yaml by default parses `2026-05-08` as a Date object. This repo uses
+  `lib/yaml.ts` with `CORE_SCHEMA` to keep it as a string. Do not `import yaml from 'js-yaml'`
+  directly — use `import { loadYaml, dumpYaml } from './lib/yaml.ts'`.
+- **Sidecar path**: file-component sidecar = `<name>.source.yaml` in same dir;
+  folder-component = `SOURCE.yaml` INSIDE the folder. Installer must EXCLUDE
+  `SOURCE.yaml` when copying a folder to a target.
 
-## References trong repo
+## References in Repo
 
-- `README.md` — quickstart công khai
-- `docs/architecture.md` — design decisions sau redesign
+- `README.md` — public quickstart
+- `docs/architecture.md` — design decisions post-redesign
 - `docs/redesign-plan.md` — 5-phase plan (in progress)
-- `docs/clarifying-questions.md` — 12 CQ + decisions log
+- `docs/clarifying-questions.md` — 12 CQs + decisions log
 - `docs/PROVENANCE.md` — sidecar schema + sync workflow
 - `docs/PRESETS.md` — preset schema + authoring guide
 - `docs/PRIVATE.md` — private/ convention + bootstrap
 - `docs/INSTALL.md` — installer usage
 - `dependencies.yaml` — upstream sources (4 submodules) + pinned commits
 
-## Plugin ecosystem references
+## Plugin Ecosystem References
 
-Khi cần port pattern hoặc mở rộng kit (verify trước khi adopt — license, maintenance,
+When porting patterns or extending the kit (verify before adopting — license, maintenance,
 test/CI):
 
-| Repo | Mục đích |
+| Repo | Purpose |
 |---|---|
-| `everything-claude-code/everything-claude-code` | ECC — đã vendor (sync source) |
+| `everything-claude-code/everything-claude-code` | ECC — vendored (sync source) |
 | `anthropics/anthropic-cookbook` | API + Claude Code patterns (docs) |
 | `anthropics/skills` | Skill format reference (docs) |
 | `modelcontextprotocol/servers` | MCP server collection (docs) |
 | `hesreallyhim/awesome-claude-code` | Awesome list — discover tools |
-| `wshobson/agents` | 100+ specialized agents để port |
-| `promptfoo/promptfoo` | Eval framework cho prompts/agents |
+| `wshobson/agents` | 100+ specialized agents to port |
+| `promptfoo/promptfoo` | Eval framework for prompts/agents |
 | `jlowin/fastmcp` | MCP server (Python, FastAPI-style) |
-| `modelcontextprotocol/typescript-sdk` | MCP TS SDK chính thức |
+| `modelcontextprotocol/typescript-sdk` | Official MCP TypeScript SDK |
 
-## Open questions / TODO
+## Open Questions / TODO
 
 - [ ] Phase 2 — Install pipeline (next).
 - [ ] Phase 3 — Lifecycle (uninstall, upgrade, audit).
 - [ ] Phase 4 — Marketplace + plugin packaging.
-- [ ] Lockfile strategy chi tiết (manifest đã 1 phần).
+- [ ] Lockfile strategy details (manifest already partially handles this).
 - [ ] CI: pnpm typecheck + test + schema regen drift check.
-- [ ] Settings.json deep-merge với array policy (replace vs concat per field).
-- [ ] Setup remote GitHub (private/public) + push sau Phase 2.
+- [ ] Settings.json deep-merge with array policy (replace vs concat per field).
+- [ ] Set up remote GitHub (private/public) + push after Phase 2.
 
-## Session lineage
+## Session Lineage
 
-- 2026-05-07: skeleton (`packages/` + bash scripts) build từ session đầu, chưa verify.
+- 2026-05-07: skeleton (`packages/` + bash scripts) built in first session, not yet verified.
 - 2026-05-08:
-  - Redesign plan + 12 CQ chốt (Section 5 redesign-plan.md).
+  - Redesign plan + 12 CQs finalized (Section 5 redesign-plan.md).
   - Phase 0 wipe skeleton (commit `d5045f7`).
   - Phase 0.5 TS+pnpm+tsx bootstrap (commit `5865a1d`).
   - Phase 1 in-progress: claudekit/agents/code-reviewer + skills/coding-standards
-    vendored, presets/core/personal-baseline tạo, validate/list/sync subcommands
-    chạy, 15 vitest tests pass.
+    vendored, presets/core/personal-baseline created, validate/list/sync subcommands
+    working, 15 vitest tests pass.

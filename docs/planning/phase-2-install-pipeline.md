@@ -1,20 +1,20 @@
 # Phase 2 — Install Pipeline
 
-> **Status**: PLANNING — cần co-plan cùng owner trước khi implement.
+> **Status**: PLANNING — needs co-planning with owner before implementation.
 >
-> **Prereq**: Phase 1 hoàn thành (commit `bf32a83`). Schema, sidecar, preset, validate,
-> list, sync đều xanh. 15 tests pass.
+> **Prereq**: Phase 1 complete (commit `bf32a83`). Schema, sidecar, preset, validate,
+> list, and sync all green. 15 tests pass.
 
 ## Goal
 
-Cài 1 preset vào `~/.claude/` (user) hoặc `<cwd>/.claude/` (project) được — idempotent,
-có manifest, có backup.
+Install a preset into `~/.claude/` (user) or `<cwd>/.claude/` (project) — idempotent,
+with manifest tracking and backup support.
 
 ## Scope Phase 2
 
 | Deliverable | File(s) |
 |---|---|
-| Resolver: extends tree + dep recursive | `scripts/lib/resolver.ts` |
+| Resolver: extends tree + recursive deps | `scripts/lib/resolver.ts` |
 | FS ops: symlink / copy / backup | `scripts/lib/fs-ops.ts` |
 | Settings merge | `scripts/lib/settings-merge.ts` |
 | Manifest read/write atomic | `scripts/lib/manifest.ts` |
@@ -22,29 +22,29 @@ có manifest, có backup.
 | Install project command | `scripts/install.ts project` |
 | Init private skeleton | `scripts/init-private.ts` |
 | Clean backups | `scripts/clean-backups.ts` |
-| Tests đầy đủ | `scripts/tests/*.test.ts` |
+| Full test suite | `scripts/tests/*.test.ts` |
 
 ---
 
-## Milestones (cần review cùng owner)
+## Milestones (to review with owner)
 
 ### M1 — Resolver (pure, no fs)
 
-**Input**: preset name → **Output**: `InstallPlan` (danh sách component + settings patch)
+**Input**: preset name → **Output**: `InstallPlan` (component list + settings patch)
 
 Steps:
 
-- [ ] **M1.1** — `scripts/lib/resolver.ts`: `resolvePreset(name, kind?)` — load YAML, validate zod, trả `Preset`.
-- [ ] **M1.2** — `resolveExtends(preset)` — đệ quy theo `extends[]`, detect circular (Set visited), diamond dedupe theo `<type>:<id>`.
-- [ ] **M1.3** — `resolveComponents(preset)` — với mỗi component ID, lookup `claudekit/<type>/<id>` trước, fallback `claudekit/private/<type>/<id>`. Throw nếu miss cả 2.
-- [ ] **M1.4** — `resolveDependencies(components, opts)` — đọc sidecar của từng component, kéo `required` deps vào plan (recursive), skip/include `optional` theo flag, probe `external` deps (system binary / npm / python_pkg) qua shell.
-- [ ] **M1.5** — `buildInstallPlan(preset, opts)` — merge toàn bộ: deduped components, merged settings_patch, external warnings, dep log.
+- [ ] **M1.1** — `scripts/lib/resolver.ts`: `resolvePreset(name, kind?)` — load YAML, validate with zod, return `Preset`.
+- [ ] **M1.2** — `resolveExtends(preset)` — recurse through `extends[]`, detect circular (Set visited), diamond dedupe by `<type>:<id>`.
+- [ ] **M1.3** — `resolveComponents(preset)` — for each component ID, look up `claudekit/<type>/<id>` first, fallback to `claudekit/private/<type>/<id>`. Throw if both miss.
+- [ ] **M1.4** — `resolveDependencies(components, opts)` — read each component's sidecar, pull `required` deps into plan (recursive), skip/include `optional` per flag, probe `external` deps (system binary / npm / python_pkg) via shell.
+- [ ] **M1.5** — `buildInstallPlan(preset, opts)` — merge everything: deduped components, merged settings_patch, external warnings, dep log.
 - [ ] **M1.6** — Tests `scripts/tests/resolver.test.ts`:
-  - extends linear, diamond, circular-detect.
-  - component public hit, private fallback, missing-throw.
+  - extends: linear, diamond, circular-detect.
+  - component: public hit, private fallback, missing-throw.
   - deps: required auto-include recursive, optional skip/include, external probe mock, circular-dep-detect, dedupe.
 
-**Done when**: `pnpm test resolver` xanh 100%.
+**Done when**: `pnpm test resolver` is 100% green.
 
 ---
 
@@ -53,23 +53,23 @@ Steps:
 Steps:
 
 - [ ] **M2.1** — `scripts/lib/fs-ops.ts`:
-  - `backup(path)` → tạo `<path>.bak.<ISO-timestamp>` nếu path tồn tại.
+  - `backup(path)` → create `<path>.bak.<ISO-timestamp>` if path exists.
   - `ensureDir(dir)` → `mkdir -p`.
-  - `applySymlink(src, dst)` → `rm dst nếu tồn tại; ln -s src dst`.
-  - `applyCopy(src, dst)` → `cp -r` (file) hoặc `copyFolder(src, dst, exclude=['SOURCE.yaml'])` (folder).
-  - Guard: dst phải nằm trong target root (prevent path traversal).
+  - `applySymlink(src, dst)` → remove dst if it exists; `ln -s src dst`.
+  - `applyCopy(src, dst)` → `cp -r` (file) or `copyFolder(src, dst, exclude=['SOURCE.yaml'])` (folder).
+  - Guard: dst must be within target root (prevent path traversal).
 - [ ] **M2.2** — `scripts/lib/settings-merge.ts`:
   - `mergeSettings(existing, patch)` → deep-merge (object merge, array concat). Object/scalar conflict: patch wins + log warning.
-  - `loadSettings(path)` → `JSON.parse`, trả `{}` nếu không tồn tại.
-  - `writeSettings(path, merged)` → backup trước, rồi write.
+  - `loadSettings(path)` → `JSON.parse`, return `{}` if file does not exist.
+  - `writeSettings(path, merged)` → backup first, then write.
 - [ ] **M2.3** — `scripts/lib/manifest.ts`:
-  - Schema `ManifestSchema` trong `schema.ts` (YAML format).
-  - `loadManifest(path)` → `null` nếu không tồn tại.
+  - Schema `ManifestSchema` in `schema.ts` (YAML format).
+  - `loadManifest(path)` → `null` if file does not exist.
   - `writeManifest(path, manifest)` → write-tmp + rename (atomic).
-  - `mergeManifest(old, newEntries)` → merge entries (multi-preset chồng). Track `auto_included: true` + `required_by: [...]` cho deps được kéo tự động.
+  - `mergeManifest(old, newEntries)` → merge entries (multi-preset stacking). Track `auto_included: true` + `required_by: [...]` for automatically pulled dependencies.
 - [ ] **M2.4** — Tests `scripts/tests/settings-merge.test.ts`, `manifest.test.ts`.
 
-**Done when**: `pnpm test settings-merge manifest` xanh.
+**Done when**: `pnpm test settings-merge manifest` is green.
 
 ---
 
@@ -79,27 +79,27 @@ Steps:
 
 - [ ] **M3.1** — `scripts/install.ts user <preset> [flags]` — wire commander subcommand.
   - Flags: `--copy | --symlink`, `--force | --skip-existing | --prompt`, `--include-optional`, `--dry-run`, `--target <path>` (override default `~/.claude`).
-- [ ] **M3.2** — Default mode: **symlink** (CQ-5b). `--copy` để standalone.
+- [ ] **M3.2** — Default mode: **symlink** (CQ-5b). `--copy` for standalone use.
 - [ ] **M3.3** — Flow:
   1. `buildInstallPlan(preset, opts)`.
-  2. Print plan nếu `--dry-run` (exit 0 sau print).
+  2. Print plan if `--dry-run` (exit 0 after print).
   3. Backup `settings.json`.
-  4. Apply fs ops từ plan (symlink hoặc copy) với conflict policy.
-  5. Apply settings_patch qua `mergeSettings`.
-  6. Update manifest `~/.claude/.dotclaude-manifest.yaml`.
-- [ ] **M3.4** — Idempotent re-run: nếu component đã cài đúng mode → skip, chỉ update timestamp manifest.
-- [ ] **M3.5** — Smoke test thật với `personal-baseline --dry-run` → output đúng.
-- [ ] **M3.6** — Smoke test install thật → kiểm tra file tại `~/.claude/agents/code-reviewer.md` + sidecar KHÔNG ở target + manifest tồn tại.
+  4. Apply fs ops from plan (symlink or copy) with conflict policy.
+  5. Apply settings_patch via `mergeSettings`.
+  6. Update manifest at `~/.claude/.dotclaude-manifest.yaml`.
+- [ ] **M3.4** — Idempotent re-run: if a component is already installed in the correct mode → skip, only update manifest timestamp.
+- [ ] **M3.5** — Smoke test with `personal-baseline --dry-run` → verify output is correct.
+- [ ] **M3.6** — Smoke test real install → verify file at `~/.claude/agents/code-reviewer.md` + sidecar NOT in target + manifest exists.
 
 ---
 
 ### M4 — `install:project` command
 
 - [ ] **M4.1** — `scripts/install.ts project <preset> [flags]`.
-  - Default mode: **copy** (CQ-5b cho project).
+  - Default mode: **copy** (CQ-5b for project installs).
   - Target: `<cwd>/.claude/`.
-  - Warn nếu `<cwd>` không có `.git/`.
-- [ ] **M4.2** — Smoke test với `personal-baseline --dry-run` ở repo test.
+  - Warn if `<cwd>` has no `.git/`.
+- [ ] **M4.2** — Smoke test with `personal-baseline --dry-run` in a test repo.
 
 ---
 
@@ -107,59 +107,102 @@ Steps:
 
 - [ ] **M5.1** — `scripts/init-private.ts`:
   - Copy `claudekit/private.example/` → `claudekit/private/` + `presets/private.example/` → `presets/private/`.
-  - Idempotent (skip nếu private đã có nội dung thực, không chỉ `.gitkeep`).
+  - Idempotent (skip if `private/` already has real content, not just `.gitkeep`).
 - [ ] **M5.2** — `scripts/clean-backups.ts`:
-  - Scan `*.bak.YYYY*` cũ hơn `--days` ngày (default 30).
-  - `--dry-run` list, không `--dry-run` thì xóa.
-  - Scan `~/.claude/` + `<target>/.claude/` nếu được chỉ định.
+  - Scan for `*.bak.YYYY*` files older than `--days` days (default: 30).
+  - `--dry-run` lists without deleting; without `--dry-run` deletes them.
+  - Scans `~/.claude/` + `<target>/.claude/` if specified.
 
 ---
 
 ### M6 — Docs update
 
-- [ ] Update `docs/INSTALL.md` — thêm `install:user` + `install:project` + flags.
+- [ ] Update `docs/INSTALL.md` — add `install:user` + `install:project` + flags.
 - [ ] Update `README.md` quickstart.
 
 ---
 
-## Open questions Phase 2 (cần quyết trước khi implement)
+## Decisions Phase 2
 
-### Q2-1 — Manifest location khi project install
+### Q2-1 — Should the project install manifest be gitignored automatically?
 
-Manifest của project install để ở `<cwd>/.claude/.dotclaude-manifest.yaml` — nhưng `.dotclaude-manifest.yaml` có track trong repo của project không? Hay gitignore?
-- Option A: gitignore per-project (owner tự add vào `.gitignore` của project).
-- Option B: dotclaude tự thêm vào `.gitignore` của project khi install.
+**Decision**: Do NOT auto-add to the project target's `.gitignore`.
+Installer only **suggests and highlights** it for the user (clear warning printed after install).
 
-### Q2-2 — Conflict policy default
+```
+[warn] Consider adding to your project .gitignore:
+       .claude/.dotclaude-manifest.yaml
+```
 
-Khi file đã tồn tại ở target, default policy là gì?
-- Option A: `backup-then-overwrite` (safe nhất, tự động).
-- Option B: `skip-existing` (idempotent nhất, nhưng stale nếu component update).
-- Option C: `prompt` (safe, nhưng không headless-friendly).
+**Impl note**: log warning after every `install:project` run. Do not modify any project file.
 
-### Q2-3 — Symlink source là absolute hay relative?
+---
 
-Symlink `~/.claude/agents/code-reviewer.md` → `/Users/tienphan/workspace/.../claudekit/agents/code-reviewer.md` (absolute).
-Nếu dotclaude repo move, symlink broken. Cần document rõ hay có migration helper?
+### Q2-2 — Conflict policy
 
-### Q2-4 — settings_patch array policy
+**Decision**: interactive prompt when a conflict occurs; policy saved as shared config.
 
-Khi merge 2 preset có cùng key là array (vd `hooks.PostToolUse`), policy là gì?
-- `concat`: append tất cả.
-- `replace`: preset child thắng.
-- `unique-merge`: concat nhưng dedupe theo `matcher`?
+Flow:
+1. First conflict encountered (file already exists at target) → prompt user:
+   ```
+   [conflict] ~/.claude/agents/code-reviewer.md already exists.
+   How to handle? (b)ackup-overwrite / (s)kip / (o)verwrite / (a)lways-backup / (A)lways-skip
+   ```
+2. If user selects `always-*` → save to config (`~/.claude/.dotclaude-config.yaml` or
+   dotclaude repo `config.yaml`) as the default for future runs.
+3. If `--force` flag is present → backup-overwrite without prompting. `--skip-existing` → skip without prompting.
 
-Đây là decision ảnh hưởng runtime behavior nhiều nhất.
+**Config schema** (add to `scripts/lib/schema.ts`):
+```yaml
+conflict_policy: backup-overwrite | skip | overwrite | prompt   # default: prompt
+```
 
-### Q2-5 — Install skill folder: copy hay symlink?
+---
 
-Skill là folder. Khi install:
-- Symlink toàn bộ folder `~/.claude/skills/coding-standards → /.../claudekit/skills/coding-standards`.
-  - Pro: update tự động. Con: `SOURCE.yaml` vẫn expose trong folder (nhưng Claude không đọc file lạ).
-- Copy folder, exclude `SOURCE.yaml`.
-  - Pro: clean target. Con: phải re-install để update.
+### Q2-3 — Symlink absolute path
 
-Quyết định ảnh hưởng `fs-ops.ts` + docs.
+**Context**: created symlinks use absolute paths tied to the current dotclaude repo location.
+If the repo is moved → symlinks break.
+
+**Decision**: **B — add a `pnpm fix-symlinks` helper**.
+
+`scripts/fix-symlinks.ts`: scan target, detect broken (dangling) symlinks, repoint them to
+the current dotclaude repo path. `package.json` script: `"fix-symlinks": "tsx scripts/fix-symlinks.ts"`.
+
+---
+
+### Q2-4 — settings_patch array merge policy
+
+**Decision**: same as Q2-2 — interactive when a conflict occurs, configurable default.
+
+Specifically for array merge when two presets patch the same key:
+- First conflict → prompt:
+  ```
+  [conflict] settings_patch: hooks.PostToolUse — both preset-A and preset-B define entries.
+  How to merge arrays? (c)oncat / (r)eplace-with-new / (k)eep-existing
+  ```
+- Save policy to config by key path (e.g. `hooks.PostToolUse: concat`).
+- Default if not configured: `concat` (safest — no hook from any preset is lost).
+
+**Config schema**:
+```yaml
+array_merge_policy:
+  default: concat               # concat | replace | keep
+  overrides:
+    "hooks.PostToolUse": concat
+```
+
+---
+
+### Q2-5 — Install skill folder: copy or symlink?
+
+**Decision**: **symlink folder**.
+
+`~/.claude/skills/coding-standards` → `/.../claudekit/skills/coding-standards/` (directory symlink).
+Live-updates when `SKILL.md` is edited. `SOURCE.yaml` is visible in the target — acceptable
+since Claude Code does not read unknown files.
+
+**Impl note**: `fs-ops.ts::applySkill(src, dst)` uses `fs.symlink(src, dst, 'dir')`, not `cp -r`.
 
 ---
 
@@ -167,7 +210,7 @@ Quyết định ảnh hưởng `fs-ops.ts` + docs.
 
 | Risk | Mitigation |
 |---|---|
-| Path traversal trong fs-ops | Guard: dst phải có prefix = target root; throw nếu không. |
-| Circular preset extends | Detect với Set visited; throw rõ ràng. |
-| settings.json corrupt khi interrupted | Backup trước; write-tmp + rename atomic. |
-| Symlink broken khi move repo | Document rõ trong INSTALL.md; Phase 3 có `audit` để detect. |
+| Path traversal in fs-ops | Guard: dst must have prefix = target root; throw if not. |
+| Circular preset extends | Detect with Set visited; throw with a clear error. |
+| settings.json corruption on interruption | Backup first; write-tmp + atomic rename. |
+| Symlink broken when repo is moved | Document clearly in INSTALL.md; Phase 3 `audit` will detect dangling symlinks. |

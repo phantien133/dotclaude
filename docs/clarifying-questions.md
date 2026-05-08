@@ -1,192 +1,145 @@
 # Clarifying Questions — Redesign
 
-> Câu hỏi cần owner trả lời trước khi generate plan thật trong [redesign-plan.md](./redesign-plan.md).
+> Questions for the owner to answer before generating the full plan in [redesign-plan.md](./redesign-plan.md).
 >
-> Mỗi CQ ghi rõ: **Vấn đề** (cái gì cần chốt), **Vì sao** (tại sao quan trọng),
-> **Options** (lựa chọn + trade-off), **Recommendation** (đề xuất nếu có), **Status**.
+> Each CQ specifies: **Problem** (what needs to be decided), **Why** (why it matters),
+> **Options** (choices + trade-offs), **Recommendation** (suggested approach if any), **Status**.
 >
-> Status: `pending` (chưa hỏi) / `asking` (đang hỏi) / `answered` (đã chốt) / `blocked` (chờ CQ khác).
+> Status: `pending` (not asked) / `asking` (in progress) / `answered` (decided) / `blocked` (waiting on another CQ).
 
-Workflow: hỏi từng CQ một bằng AskUserQuestion. Khi answered → ghi câu trả lời + lý do
-ngắn vào `Decision` của CQ đó. Khi đủ → generate plan ở `redesign-plan.md`.
+Workflow: ask each CQ one at a time using AskUserQuestion. When answered → record the answer + brief rationale in that CQ's `Decision`. When complete → generate the plan in `redesign-plan.md`.
 
 ---
 
-## CQ-1 — Layout của core
+## CQ-1 — Core layout
 
-Liên quan: REQ-1 (bộ claudekit core).
+Related: REQ-1 (claudekit core bundle).
 
-### CQ-1a — Tên + vị trí top-level của core
+### CQ-1a — Top-level name + location of core
 
-**Vấn đề**: Bộ kit core đặt ở đâu trong repo, gọi tên là gì?
+**Problem**: Where does the core kit live in the repo, and what is it called?
 
-**Vì sao**: Tên + vị trí ảnh hưởng đến mọi import path, script paths, docs, plugin
-manifest. Đổi sau này tốn refactor.
+**Why**: Name + location affects all import paths, script paths, docs, and plugin manifests. Renaming later is costly.
 
 **Options**:
-- **A. `core/`** — ngắn, ở root.
-- **B. `kit/`** — ngắn hơn, generic.
-- **C. `claudekit/`** — explicit, brandable, match tên owner gọi.
-- **D. `packages/core/`** — giữ pattern monorepo của skeleton hiện tại.
+- **A. `core/`** — short, at root.
+- **B. `kit/`** — shorter, generic.
+- **C. `claudekit/`** — explicit, brandable, matches what the owner calls it.
+- **D. `packages/core/`** — preserves the monorepo pattern from the current skeleton.
 
-**Trade-off**: A/B/C flat ở root, dễ navigate, phù hợp khi presets/plugins cũng flat.
-D phù hợp nếu repo sẽ có nhiều "package" độc lập sau này. Owner đã nói preset là pure
-manifest → khó coi là "package" thực sự → flat ở root có vẻ hợp lý hơn.
+**Trade-off**: A/B/C are flat at root, easy to navigate, suitable when presets/plugins are also flat.
+D fits if the repo will have many independent "packages" later. The owner said presets are pure manifests → hard to call them true "packages" → flat at root seems more appropriate.
 
-**Recommendation**: A (`core/`) — ngắn, rõ ý, phù hợp pattern flat với `presets/` +
-`plugins/` cùng level.
+**Recommendation**: A (`core/`) — short, clear, fits the flat pattern alongside `presets/` + `plugins/`.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **C — `claudekit/`**. Top-level layout `claudekit/ + presets/ + plugins/
-+ scripts/`. Owner chọn explicit/brandable hơn ngắn. Mọi path sau này dùng
-`claudekit/<type>/<name>` làm canonical reference.
+**Decision**: **C — `claudekit/`**. Top-level layout: `claudekit/ + presets/ + plugins/ + scripts/`. The owner preferred explicit/brandable over brevity. All paths going forward use `claudekit/<type>/<name>` as the canonical reference.
 
 ---
 
-### CQ-1b — Cấu trúc bên trong core
+### CQ-1b — Internal structure of core
 
-**Vấn đề**: Cách group component bên trong core: phẳng theo loại, group theo domain,
-hay hybrid?
+**Problem**: How to group components inside core: flat by type, grouped by domain, or hybrid?
 
-**Vì sao**: Cấu trúc này quyết định cách presets reference tới component (ID phẳng vs
-ID có namespace) và cách scale khi có nhiều domain (web/python/go/...).
+**Why**: This determines how presets reference components (flat ID vs namespaced ID) and how the repo scales when many domains (web/python/go/...) are added.
 
 **Options**:
-- **A. Type-first** (giống ECC): `core/agents/`, `core/skills/`, `core/commands/`,
-  `core/hooks/`, `core/rules/`. Component reference bằng ID phẳng (`code-reviewer`,
+- **A. Type-first** (like ECC): `core/agents/`, `core/skills/`, `core/commands/`,
+  `core/hooks/`, `core/rules/`. Components referenced by flat ID (`code-reviewer`,
   `coding-standards`).
 - **B. Domain-first**: `core/web/{agents,skills}/`, `core/python/{agents,skills}/`,
-  `core/common/{agents,skills}/`. Reference cần namespace (`web/coding-standards`).
-- **C. Hybrid**: top-level type, sub-folder domain bên trong (`core/skills/web/`,
+  `core/common/{agents,skills}/`. References require namespace (`web/coding-standards`).
+- **C. Hybrid**: top-level type, sub-folder domain inside (`core/skills/web/`,
   `core/skills/python/`, `core/agents/common/`).
 
-**Trade-off**: A đơn giản nhưng dễ tên trùng giữa các domain. B mirror đẹp với rule sets
-nhưng presets phải gọi qua namespace dài. C cân bằng — type là khái niệm chính của
-Claude (theo convention `~/.claude/{agents,skills,commands,hooks}`), domain là chi tiết
-phụ → install vẫn flatten ra `~/.claude/agents/<name>.md`.
+**Trade-off**: A is simple but name collisions across domains are possible. B mirrors rule sets nicely but presets must use long namespaced references. C balances — type is the primary Claude concept (matching `~/.claude/{agents,skills,commands,hooks}` convention), domain is a secondary detail → install still flattens to `~/.claude/agents/<name>.md`.
 
-**Recommendation**: C (Hybrid) vì khớp Claude convention khi install (top-level type)
-và vẫn group được theo domain trong source repo. Nhưng nếu owner thấy ECC pattern A
-quen thuộc và đủ thì A cũng được — đặc biệt khi naming kỷ luật bằng prefix
-(`web-coding-standards`, `python-coding-standards`).
+**Recommendation**: C (Hybrid) because it matches Claude's install convention (top-level type) while still grouping by domain in the source repo. But if the owner is comfortable with ECC's pattern A and naming discipline with prefixes (`web-coding-standards`, `python-coding-standards`), A works too.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — Type-first (ECC style)**. Phẳng theo loại, naming prefix
-(`web-`, `python-`, `go-`, ...) để tránh trùng. Convention sẽ được ghi rõ trong style
-guide của repo. Lý do chọn A: khớp ECC quen thuộc, installer đơn giản (1 cấp), preset
-reference IDs phẳng dễ đọc.
+**Decision**: **A — Type-first (ECC style)**. Flat by type, naming prefixes (`web-`, `python-`, `go-`, ...) to avoid collisions. The convention will be documented in the repo's style guide. Rationale: familiar ECC pattern, simple single-level installer, flat preset reference IDs are easy to read.
 
-**Hệ quả**:
-- Cần style guide naming prefix khi import component có domain.
-- Component cross-stack: tên gốc, không prefix (vd `code-reviewer`).
-- Khi 1 component chỉ có 1 phiên bản trong toàn repo → không prefix.
+**Implications**:
+- A naming-prefix style guide is needed when importing domain-specific components.
+- Cross-stack components: keep original name, no prefix (e.g. `code-reviewer`).
+- When only one version of a component exists in the repo → no prefix needed.
 
 ---
 
-### CQ-1c — Copy vào core hay symlink/submodule giữ nguyên upstream
+### CQ-1c — Copy into core vs symlink/submodule keeping upstream
 
-**Vấn đề**: Khi import 1 component từ ECC/anthropic-skills vào core, copy nội dung vào
-repo dotclaude hay giữ submodule + symlink?
+**Problem**: When importing a component from ECC/anthropic-skills into core, copy the content into the dotclaude repo or keep a submodule + symlink?
 
-**Vì sao**: Owner ghi "**tự sở hữu nội dung**" và "có thể clone với chỉnh sửa" → khả
-năng cao là copy. Nhưng cần xác nhận vì copy đồng nghĩa với mất link upstream auto-update.
+**Why**: The owner wrote "**own the content**" and "can clone with modifications" → likely copy. But needs confirmation because copying means losing the upstream auto-update link.
 
 **Options**:
-- **A. Copy file vào `core/`**, lưu metadata nguồn riêng. Update là thao tác thủ công
-  (re-pull upstream, diff, cherry-pick).
-- **B. Giữ submodule trong `vendor/`, symlink vào `core/`**. Update chỉ cần `git submodule
-  update --remote`. Nhưng modify component sẽ break symlink.
-- **C. Hybrid**: copy với component cần modify, symlink với component dùng nguyên.
+- **A. Copy files into `core/`**, store source metadata separately. Updates are manual (re-pull upstream, diff, cherry-pick).
+- **B. Keep submodule in `vendor/`, symlink into `core/`**. Updates only need `git submodule update --remote`. But modifying a component breaks the symlink.
+- **C. Hybrid**: copy for components that need modification, symlink for components used as-is.
 
-**Trade-off**: A cho ownership đầy đủ + tự do modify, đổi lại trách nhiệm sync. B
-auto-update nhưng không modify được. C phức tạp, 2 cơ chế song song.
+**Trade-off**: A gives full ownership + freedom to modify, at the cost of sync responsibility. B auto-updates but modifications are not possible. C is complex, two mechanisms in parallel.
 
-**Recommendation**: A — vì owner đã ghi "tự sở hữu" và sẵn sàng modify. Submodule chỉ
-giữ làm reference đọc khi sync (không phải runtime).
+**Recommendation**: A — the owner has stated "own the content" and is willing to modify. The submodule is kept only as a read reference for syncing (not a runtime dependency).
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — Copy thuần**. claudekit/ là source of truth. Provenance lưu trong
-sidecar `<name>.source.json` (commit gốc, modified flag, ...). Cần `scripts/sync-from-upstream.sh`
-để pull upstream → diff → owner quyết merge/skip.
+**Decision**: **A — Pure copy**. `claudekit/` is the source of truth. Provenance stored in sidecar `<name>.source.json` (original commit, modified flag, ...). A `scripts/sync-from-upstream.sh` script is needed to pull upstream → diff → let the owner decide merge/skip.
 
-**Hệ quả**:
-- Vendor/upstream submodule giữ làm "source để diff", không phải runtime (xác nhận thêm ở CQ-7).
-- Không có symlink trong claudekit/ → portable cross-machine, không phụ thuộc absolute path.
+**Implications**:
+- Vendor/upstream submodule kept as a "source for diffing", not a runtime dependency (confirmed further in CQ-7).
+- No symlinks in `claudekit/` → portable cross-machine, no dependency on absolute paths.
 
 ---
 
-### CQ-1d — Cách handle modify component upstream
+### CQ-1d — How to handle modifying vendored components
 
-**Vấn đề**: Khi 1 component được clone rồi modify, làm sao track diff với upstream để
-sau này merge update?
+**Problem**: When a component is cloned and then modified, how to track the diff against upstream so future updates can be merged?
 
-**Vì sao**: Nếu upstream sửa cùng phần → conflict. Cần biết phần nào đã modify.
+**Why**: If upstream modifies the same section → conflict. Need to know which parts were modified.
 
 **Options**:
-- **A. Patch file**: lưu `.patch` trong `core/<type>/<name>.patch`, file gốc unchanged,
-  apply patch khi install. Update = re-apply patch lên upstream mới.
-- **B. Edit thẳng + diff trong metadata**: file modify trực tiếp, metadata ghi
-  `modified: true` + summary. Khi sync upstream chạy `git diff` thủ công.
-- **C. Branch theo component**: mỗi component modify là 1 branch trong dotclaude track
-  upstream của nó. Phức tạp, không khuyến nghị.
+- **A. Patch file**: store a `.patch` in `core/<type>/<name>.patch`, original file unchanged, apply patch during install. Updates = re-apply patch on new upstream.
+- **B. Edit directly + diff in metadata**: modify file directly, metadata records `modified: true` + summary. When syncing upstream, run `git diff` manually.
+- **C. Per-component branch**: each modified component is a branch in dotclaude tracking its upstream. Complex, not recommended.
 
-**Trade-off**: A thuần tuý, dễ rebase nhưng khó đọc/edit. B simple, dễ edit nhưng phải
-nhớ bookkeeping. C overkill cho personal repo.
+**Trade-off**: A is clean and easy to rebase, but harder to read/edit. B is simple and easy to edit, but requires manual bookkeeping. C is overkill for a personal repo.
 
-**Recommendation**: B — pragmatic cho personal repo. Metadata sidecar đã track nguồn +
-commit gốc + flag modified, thế là đủ. Khi nào upstream sửa nhiều mới cần A.
+**Recommendation**: B — pragmatic for a personal repo. The sidecar metadata already tracks source + original commit + modified flag; that is sufficient. Option A only becomes necessary when upstream changes frequently.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **B — Edit thẳng + sidecar flag**. File trong claudekit/ là file thực dùng.
-Sidecar ghi `modified: bool` + `modifications: <text>`. Sync workflow dùng `git diff
-<source_commit>..upstream <source_path>` để show diff, owner quyết merge thủ công từng
-phần.
+**Decision**: **B — Edit directly + sidecar flag**. Files in `claudekit/` are the actual used files. Sidecar records `modified: bool` + `modifications: <text>`. Sync workflow uses `git diff <source_commit>..upstream <source_path>` to show the diff; the owner decides which parts to merge manually.
 
-**Hệ quả**:
-- Sidecar bắt buộc có field `source_commit` chính xác để diff hoạt động.
-- Khi modify, owner phải nhớ update `modifications` field (có thể tự nhắc qua hook
-  PostToolUse trên sidecar's directory).
-- Không cần lưu snapshot riêng — git history của upstream submodule là đủ.
+**Implications**:
+- Sidecar must have an accurate `source_commit` field for diffs to work.
+- When modifying, the owner must remember to update the `modifications` field (a PostToolUse hook on the sidecar's directory could remind).
+- No separate snapshot needed — git history of the upstream submodule is sufficient.
 
 ---
 
 ## CQ-2 — Provenance metadata format
 
-Liên quan: REQ-1.
+Related: REQ-1.
 
-**Vấn đề**: Ghi nguồn upstream của mỗi component ở đâu, format gì?
+**Problem**: Where and in what format should the upstream source of each component be recorded?
 
-**Vì sao**: Owner yêu cầu "**file ghi chú nguồn riêng biệt cho từng phần**" → cần thống
-nhất format để installer/script đọc được + người đọc dễ hiểu.
+**Why**: The owner requires "**a separate note file per component**" → need a consistent format that installer/scripts can read and humans can understand.
 
 **Options**:
-- **A. Per-file frontmatter**: thêm field `source:` vào YAML frontmatter có sẵn của
-  agent/skill/command. Chỉ work cho file md có frontmatter. Hooks (json) + commands
-  không có frontmatter sẽ phải dùng format khác → không thống nhất.
-- **B. Sidecar file**: mỗi component có file `<name>.source.json` cạnh nó (vd
-  `core/agents/code-reviewer.md` + `core/agents/code-reviewer.source.json`). Format
-  thống nhất, cover mọi loại file. Đổi lại tăng số file.
-- **C. Manifest tập trung**: 1 file `core/PROVENANCE.json` liệt kê toàn bộ. 1 chỗ scan
-  nhanh nhưng dễ drift khi sửa file mà quên update manifest.
-- **D. Hybrid B+C**: sidecar mỗi file (source of truth), 1 manifest tổng được generate
-  từ sidecar (source of read-only).
+- **A. Per-file frontmatter**: add a `source:` field to the existing YAML frontmatter of agent/skill/command. Only works for `.md` files with frontmatter. Hooks (JSON) + commands have no frontmatter → inconsistent.
+- **B. Sidecar file**: each component has a `<name>.source.json` file alongside it (e.g. `core/agents/code-reviewer.md` + `core/agents/code-reviewer.source.json`). Consistent format, covers all file types. Trade-off: doubles the file count.
+- **C. Centralized manifest**: a single `core/PROVENANCE.json` listing everything. Easy to scan but prone to drift when files are edited without updating the manifest.
+- **D. Hybrid B+C**: per-file sidecar (source of truth), one generated summary manifest (read-only).
 
-**Recommendation**: B (sidecar) — owner ghi rõ "riêng biệt cho từng phần" → mỗi
-component có file source riêng đúng tinh thần. D có thể thêm sau nếu cần lookup nhanh.
+**Recommendation**: B (sidecar) — the owner explicitly said "separate per component" → a per-component source file matches the intent. D can be added later if fast lookup is needed.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **Sidecar YAML**, layout phân biệt theo loại component:
-- File-component (agent/command/hook/rule, mỗi component là 1 file): sidecar
-  `<name>.source.yaml` cạnh file. Vd `claudekit/agents/code-reviewer.md` +
-  `claudekit/agents/code-reviewer.source.yaml`.
-- Folder-component (skill, mỗi component là folder): sidecar `SOURCE.yaml` **bên trong**
-  folder skill. Vd `claudekit/skills/coding-standards/{SKILL.md, assets/, SOURCE.yaml}`.
-  Installer phải **exclude `SOURCE.yaml`** khi copy folder sang target.
+**Decision**: **Sidecar YAML**, with layout differentiated by component type:
+- File-component (agent/command/hook/rule, one file per component): sidecar `<name>.source.yaml` alongside the file. E.g. `claudekit/agents/code-reviewer.md` + `claudekit/agents/code-reviewer.source.yaml`.
+- Folder-component (skill, one folder per component): sidecar `SOURCE.yaml` **inside** the skill folder. E.g. `claudekit/skills/coding-standards/{SKILL.md, assets/, SOURCE.yaml}`. The installer must **exclude `SOURCE.yaml`** when copying the folder to a target.
 
 **Fields**:
 ```yaml
@@ -198,29 +151,26 @@ source:
 imported_at: 2026-05-07
 license: MIT
 modified: false
-modifications: null   # text mô tả khi modified: true
+modifications: null   # text description when modified: true
 notes: null
 ```
 
-**Hệ quả**:
-- Cần dependency parser YAML (yq hoặc Python/Node) → installer KHÔNG còn pure-bash
-  awk như skeleton cũ. Chấp nhận trade-off.
-- Installer khi copy skill folder phải dùng `rsync --exclude=SOURCE.yaml` hoặc filter
-  thủ công.
-- Có thể có 1 file index `claudekit/MANIFEST.yaml` được generate từ tất cả sidecar
-  (Phase 2 nếu cần lookup nhanh).
+**Implications**:
+- Requires a YAML parser (yq or Python/Node) → installer can no longer be pure-bash awk like the old skeleton. This trade-off is accepted.
+- When copying a skill folder, installer must use `rsync --exclude=SOURCE.yaml` or a manual filter.
+- An index file `claudekit/MANIFEST.yaml` generated from all sidecars could be added (Phase 2 if fast lookup is needed).
 
 ---
 
 ## CQ-3 — Preset format & schema
 
-Liên quan: REQ-2.
+Related: REQ-2.
 
-### CQ-3a — Schema JSON cho preset
+### CQ-3a — JSON schema for preset
 
-**Vấn đề**: Preset JSON gồm field gì?
+**Problem**: What fields should a preset JSON contain?
 
-**Đề xuất**:
+**Proposed**:
 ```json
 {
   "name": "typescript-fullstack",
@@ -243,8 +193,7 @@ Liên quan: REQ-2.
 
 **Status**: answered (2026-05-07)
 
-**Decision** — Schema phase 1 (revised 2026-05-07: format chuyển từ JSON → YAML để dễ
-đọc khi viết tay):
+**Decision** — Phase 1 schema (revised 2026-05-07: format switched from JSON → YAML for easier hand-editing):
 ```yaml
 # yaml-language-server: $schema=../../schema/preset.schema.json
 name: typescript-fullstack
@@ -262,54 +211,46 @@ settings_patch: {}
 tags: []
 ```
 
-**Note format**: schema file `preset.schema.json` vẫn là JSON Schema (chuẩn cross-IDE).
-Preset YAML dùng comment header `# yaml-language-server: $schema=...` để VS Code YAML
-extension validate.
+**Format note**: the schema file `preset.schema.json` remains JSON Schema (cross-IDE standard).
+Preset YAML uses the header comment `# yaml-language-server: $schema=...` so the VS Code YAML extension validates it.
 
-Field bao gồm:
-- `target_levels`: **KHÔNG**. Owner tự nhớ level phù hợp.
-- `settings_patch`: **CÓ**. Snippet JSON deep-merge vào settings.json target. Installer
-  phải implement deep-merge + conflict policy.
-- `mcp_servers`: **defer Phase 2**. Phase 1 chưa kéo MCP qua preset.
-- `extends`: **CÓ ngay** (xem CQ-3b bên dưới).
-- `tags`: **CÓ**. Array string để filter (`claudekit list --tag fullstack`).
+Fields included:
+- `target_levels`: **NO**. The owner manages the appropriate level manually.
+- `settings_patch`: **YES**. JSON snippet deep-merged into the target `settings.json`. Installer must implement deep-merge + conflict policy.
+- `mcp_servers`: **defer Phase 2**. Phase 1 does not pull MCP via preset.
+- `extends`: **YES immediately** (see CQ-3b below).
+- `tags`: **YES**. String array for filtering (`claudekit list --tag fullstack`).
 
-### CQ-3b — `extends:` ngay hay phase 2?
+### CQ-3b — `extends:` now or Phase 2?
 
-**Vấn đề**: Implement inheritance giữa các preset ngay đợt redesign, hay defer?
+**Problem**: Implement inheritance between presets in the initial redesign, or defer?
 
-**Trade-off**: Implement ngay → schema phức tạp hơn, nhưng tránh refactor sau. Defer →
-phase đầu nhanh, schema gọn.
+**Trade-off**: Implement now → more complex schema, but avoids later refactoring. Defer → faster initial phase, simpler schema.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **CÓ ngay**. Field `extends: [<preset-name>, ...]` từ phase 1.
+**Decision**: **Include immediately**. Field `extends: [<preset-name>, ...]` from Phase 1.
 
-**Edge cases cần handle khi implement** (note để generate plan tính tới):
+**Edge cases to handle during implementation** (noted for the plan):
 - Multiple inheritance: `extends: ["base-typescript", "base-postgres"]` → merge tree.
-- Diamond inheritance: A→B, A→C, B→D, C→D → tránh apply D 2 lần.
-- Circular dependency: detect + abort với error rõ ràng.
-- Component conflict: 2 parent đều list `code-reviewer` → idempotent, OK; 2 parent có
-  `settings_patch` cùng key khác value → conflict, cần policy (last-wins / error).
-- Override / exclude: child có cách "remove" component từ parent không? Phase 1 đề
-  xuất KHÔNG (chỉ append), giữ schema gọn. Owner xác nhận khi gặp use case thật.
+- Diamond inheritance: A→B, A→C, B→D, C→D → avoid applying D twice.
+- Circular dependency: detect + abort with a clear error.
+- Component conflict: two parents both list `code-reviewer` → idempotent, OK; two parents have `settings_patch` with the same key but different values → conflict, needs policy (last-wins / error).
+- Override / exclude: can a child "remove" a component from a parent? Phase 1 proposal: NO (append only), keeping the schema simple. The owner can reconsider when a real use case arises.
 
 **Status**: answered (2026-05-07)
 
-### CQ-3c — Phân loại theo `kind` (framework/core/purpose)
+### CQ-3c — Classification by `kind` (framework/core/purpose)
 
-**Vấn đề**: Trục framework/core/purpose nằm trong field `kind` (flat presets/), hay
-folder riêng (`presets/framework/`, `presets/core/`, `presets/purpose/`)?
+**Problem**: Should the framework/core/purpose axis live in the `kind` field (flat `presets/`), or in separate folders (`presets/framework/`, `presets/core/`, `presets/purpose/`)?
 
-**Trade-off**: Field `kind` flat — dễ scan, đỡ navigate. Folder — nhiều preset thì gọn
-mắt nhưng path dài.
+**Trade-off**: `kind` field flat — easy to scan, less navigation. Folders — cleaner when there are many presets, but longer paths.
 
-**Recommendation**: Flat `presets/<name>.json` + field `kind` — đơn giản, dễ list. Khi
-nhiều preset (>20) mới cần group folder.
+**Recommendation**: Flat `presets/<name>.json` + `kind` field — simple, easy to list. Folder grouping only when there are many presets (>20).
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **Folder theo kind**. Layout:
+**Decision**: **Folder by kind**. Layout:
 ```
 presets/
 ├── core/
@@ -317,234 +258,203 @@ presets/
 ├── purpose/
 └── README.md
 ```
-Path canonical của preset = `presets/<kind>/<name>.json`. Kind field trong JSON vẫn
-giữ (redundant với path nhưng cần cho schema validation + extends reference).
+The canonical path of a preset is `presets/<kind>/<name>.json`. The `kind` field in JSON is kept (redundant with the path but needed for schema validation + extends references).
 
-**Hệ quả**:
-- Đổi kind = `mv` file giữa folder.
-- Extends reference: chốt cụ thể khi implement (name-only auto search vs qualified
-  `core/base-typescript`).
+**Implications**:
+- Changing kind = `mv` the file between folders.
+- Extends reference: exact behavior to be finalized during implementation (name-only auto-search vs qualified `core/base-typescript`).
 
-### CQ-3d — Markdown song song JSON
+### CQ-3d — Markdown alongside JSON
 
-**Vấn đề**: Mỗi preset có cần `.md` đi kèm `.json` không, vai trò gì?
+**Problem**: Does each preset need a `.md` alongside the `.json`, and what is its role?
 
 **Options**:
-- **A. Chỉ JSON**: installer-readable, README chung ở `presets/README.md`.
-- **B. JSON + MD**: JSON cho installer, MD cho human docs (rationale, when to use).
-- **C. MD frontmatter + body**: 1 file duy nhất, frontmatter là JSON-equivalent,
-  body là docs. Installer đọc frontmatter.
+- **A. JSON only**: installer-readable, shared README at `presets/README.md`.
+- **B. JSON + MD**: JSON for installer, MD for human docs (rationale, when to use).
+- **C. MD with frontmatter + body**: single file, frontmatter equivalent to JSON, body is docs. Installer reads frontmatter.
 
-**Recommendation**: C — 1 file `<name>.md` với frontmatter YAML. Match Claude
-convention (agents/skills cũng frontmatter + body). Installer parse frontmatter (có thể
-JSON hoặc YAML).
+**Recommendation**: C — single `<name>.md` with YAML frontmatter. Matches Claude convention (agents/skills also use frontmatter + body). Installer parses frontmatter (JSON or YAML).
 
 **Status**: answered (2026-05-07)
 
-**Decision** (revised 2026-05-07: JSON → YAML): **YAML + MD per preset**. Mỗi preset
-có 2 file cùng tên khác đuôi:
+**Decision** (revised 2026-05-07: JSON → YAML): **YAML + MD per preset**. Each preset has two files with the same name but different extensions:
 ```
-presets/<kind>/<name>.yaml   # installer đọc, schema-validated qua zod + JSON Schema
+presets/<kind>/<name>.yaml   # installer reads this, schema-validated via zod + JSON Schema
 presets/<kind>/<name>.md     # human docs: when to use, rationale, examples
 ```
 
-Installer chỉ đọc YAML qua `js-yaml` + zod. MD chỉ docs. Tên file phải sync 1-1 (lint
-script verify). Owner đã reject option "frontmatter MD" để tách biệt rõ machine vs human.
+The installer only reads YAML via `js-yaml` + zod. MD is docs only. File names must be 1-1 in sync (a lint script verifies). The owner rejected the "frontmatter MD" option to keep machine vs human files clearly separated.
 
 ---
 
 ## CQ-4 — `private/` placement
 
-Liên quan: REQ-3.
+Related: REQ-3.
 
-### CQ-4a — Đặt `private/` ở cấp nào?
+### CQ-4a — Which level for `private/`?
 
-**Vấn đề**: "Mỗi phần có folder private" — phần là cấp nào?
+**Problem**: "Each section has a private folder" — which level is a "section"?
 
 **Options**:
-- **A. Root**: 1 folder `private/` ở root, mirror full structure
-  (`private/core/agents/...`, `private/presets/...`).
+- **A. Root**: one `private/` folder at root, mirroring the full structure (`private/core/agents/...`, `private/presets/...`).
 - **B. Per package**: `core/private/`, `presets/private/`, `plugins/private/`.
 - **C. Per component type**: `core/agents/private/`, `core/skills/private/`, ...
-  Mirror sâu nhất.
+  Deepest mirroring.
 
-**Trade-off**: A — 1 chỗ ignore, dễ git, scan rõ. B — gần component nhưng phải nhớ
-nhiều rule ignore. C — sát file nhất nhưng đụng vào structure mỗi loại.
+**Trade-off**: A — one place to gitignore, easy git, clear to scan. B — close to components but requires remembering multiple ignore rules. C — closest to files but modifies the structure of each type.
 
-**Recommendation**: A. 1 quy tắc gitignore (`/private/`) cover toàn bộ. Installer scan
-`private/<mirror-path>` parallel với public path. Đơn giản nhất khi grow.
+**Recommendation**: A. One gitignore rule (`/private/`) covers everything. Installer scans `private/<mirror-path>` in parallel with public path. Simplest when growing.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **B — mỗi top package có private/**. Layout:
+**Decision**: **B — `private/` under each top-level package**. Layout:
 ```
 claudekit/private/   (gitignored)
 presets/private/     (gitignored)
-plugins/private/     (gitignored, sau này)
+plugins/private/     (gitignored, later)
 ```
-.gitignore khai mỗi rule riêng.
+Each gitignore rule declared separately.
 
-### CQ-4b — Cấu trúc trong `private/`
+### CQ-4b — Structure inside `private/`
 
-**Vấn đề**: `private/` mirror cấu trúc public (vd `private/core/agents/foo.md`) hay
-free-form?
+**Problem**: Should `private/` mirror the public structure (e.g. `private/core/agents/foo.md`) or be free-form?
 
-**Recommendation**: Mirror — installer dùng cùng logic, chỉ swap base path. Free-form
-gây ad-hoc khó tự động.
+**Recommendation**: Mirror — the installer uses the same logic, just swaps the base path. Free-form leads to ad-hoc structures that are hard to automate.
 
 **Status**: answered (2026-05-07)
 
 **Decision**: **Mirror public**. `claudekit/private/{agents,skills,commands,hooks,rules}/`
-+ `presets/private/{core,framework,purpose}/`. Installer khi resolve component ID:
-search public path trước, sau đó fallback private path. Preset reference được private
-component bằng ID phẳng.
++ `presets/private/{core,framework,purpose}/`. When resolving a component ID, installer searches the public path first, then falls back to the private path. Presets reference private components by flat ID.
 
 ### CQ-4c — `private.example/` template
 
-**Vấn đề**: Có cần thư mục `private.example/` (track git, có example) để hướng dẫn
-người clone repo cách dùng `private/` không?
+**Problem**: Is a `private.example/` directory (tracked in git, with examples) needed to guide repo cloners on how to use `private/`?
 
-**Trade-off**: Có — dev mới biết cách init. Không — repo cá nhân, owner biết rồi.
+**Trade-off**: Yes — new contributors know how to initialize. No — it's a personal repo, the owner already knows.
 
-**Recommendation**: Có nhưng tối giản. 1 file `private/.gitkeep` + `private.example/README.md`
-giải thích. Khi open source / share thì hữu ích.
+**Recommendation**: Yes, but minimal. One `private/.gitkeep` + `private.example/README.md` explaining the convention. Useful when open-sourcing or sharing.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **Có private.example/** ở mỗi top package. Skeleton tối thiểu:
+**Decision**: **Yes, `private.example/`** at each top-level package. Minimal skeleton:
 ```
 claudekit/private.example/
-├── README.md         # giải thích convention + ví dụ usecase
+├── README.md         # explains convention + example use cases
 └── agents/.gitkeep   # mirror skeleton
 presets/private.example/
 ├── README.md
 └── framework/.gitkeep
 ```
-+ `scripts/init-private.sh` copy mọi `private.example/` → `private/` cho máy mới.
++ `scripts/init-private.sh` copies all `private.example/` → `private/` for new machines.
 
-### CQ-4d — Multi-machine bootstrap cho `private/`
+### CQ-4d — Multi-machine bootstrap for `private/`
 
-**Vấn đề**: `private/` không track git → bootstrap máy mới thì lấy nội dung từ đâu?
+**Problem**: `private/` is not tracked in git → when setting up a new machine, where does the content come from?
 
 **Options**:
 - **A. Manual copy** (USB / cloud sync / 1Password file).
-- **B. Repo private riêng** `dotclaude-private` → clone vào `private/`.
-- **C. Symlink từ dotfiles repo** owner đã có.
-- **D. Chưa cần lo, giải quyết sau**.
+- **B. Separate private repo** `dotclaude-private` → clone into `private/`.
+- **C. Symlink from the owner's existing dotfiles repo**.
+- **D. Don't worry about it, solve later**.
 
-**Recommendation**: B — clean separation, version-control được, rotate dễ. Submodule
-hoặc git clone manual đều OK.
+**Recommendation**: B — clean separation, version-controlled, easy to rotate. Either submodule or manual git clone works.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — Manual copy / cloud sync**. Owner đồng bộ private content qua
-phương tiện riêng (iCloud/Dropbox/USB/1Password). Repo dotclaude KHÔNG quản lý
-distribution. `docs/PRIVATE.md` ghi convention + nhắc nhở backup.
+**Decision**: **A — Manual copy / cloud sync**. The owner syncs private content via their own preferred medium (iCloud/Dropbox/USB/1Password). The dotclaude repo does NOT manage distribution. `docs/PRIVATE.md` documents the convention and backup reminder.
 
-**Hệ quả**: không có submodule cho private, không có script auto-sync. Nếu sau này
-owner muốn versioning thì refactor sang B.
+**Implications**: no submodule for private, no auto-sync script. If the owner wants versioning later, refactor to option B.
 
 ---
 
 ## CQ-5 — Install levels & semantics
 
-Liên quan: REQ-4.
+Related: REQ-4.
 
-### CQ-5a — Levels cần support
+### CQ-5a — Levels to support
 
-**Vấn đề**: Phase đầu cover những level nào?
+**Problem**: Which levels should the initial phase cover?
 
-**Levels theo Claude convention**:
+**Levels per Claude convention**:
 - User: `~/.claude/{agents,skills,commands,hooks/scripts}/`, `~/.claude/settings.json`,
   `~/.claude.json` (MCP).
 - Project: `<repo>/.claude/...`, `<repo>/.mcp.json`, `<repo>/CLAUDE.md`.
 - Plugin: `~/.claude/plugins/<name>/...` (Claude plugin model).
-- Plugin marketplace: `~/.claude/plugins.json` hoặc command `/plugin install`.
+- Plugin marketplace: `~/.claude/plugins.json` or command `/plugin install`.
 
 **Options**:
-- **A. Phase 1 chỉ user + project**, plugin/marketplace ở phase sau.
-- **B. Cover tất cả ngay**, complexity cao.
+- **A. Phase 1: user + project only**, plugin/marketplace in a later phase.
+- **B. Cover all immediately**, high complexity.
 
-**Recommendation**: A — phase 1 user + project (đa số use case). Plugin/marketplace
-treat ở CQ-6 và phase sau.
+**Recommendation**: A — Phase 1 user + project (covers most use cases). Plugin/marketplace addressed in CQ-6 and a later phase.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — User + Project only**. Phase 1 cover `~/.claude/` + `<repo>/.claude/`.
-Plugin/MCP defer.
+**Decision**: **A — User + Project only**. Phase 1 covers `~/.claude/` + `<repo>/.claude/`. Plugin/MCP deferred.
 
 ### CQ-5b — Copy vs symlink default
 
-**Vấn đề**: Action mặc định khi install — copy hay symlink?
+**Problem**: What is the default action when installing — copy or symlink?
 
 **Options**:
-- **A. Copy default**: `--symlink` flag để override. An toàn, không phụ thuộc dotclaude
-  path. Nhưng sửa core không tự áp dụng.
-- **B. Symlink default**: `--copy` flag. Sửa core auto áp dụng. Phụ thuộc absolute path.
-- **C. Hybrid theo target**: user level symlink (dev workflow), project level copy
-  (project standalone, có thể commit `.claude/`).
+- **A. Copy default**: `--symlink` flag to override. Safe, no dependency on dotclaude path. But edits to core are not reflected automatically.
+- **B. Symlink default**: `--copy` flag. Core edits apply automatically. Depends on absolute path.
+- **C. Hybrid by target**: user level symlinks (dev workflow), project level copies (project standalone, committable `.claude/`).
 
-**Recommendation**: C — match thực tế dùng. User dùng cá nhân nên live link tiện. Project
-copy để share với teammate / CI mà không cần dotclaude.
+**Recommendation**: C — matches actual usage. User (personal) benefits from live links. Project copies allow sharing with teammates / CI without needing dotclaude.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **C — Hybrid**. User level mặc định symlink, project level mặc định copy.
-Flags `--copy` / `--symlink` override. Khi symlink, lưu absolute path tới
-`/<dotclaude-root>/claudekit/...`.
+**Decision**: **C — Hybrid**. User level defaults to symlink, project level defaults to copy. Flags `--copy` / `--symlink` override. When symlinking, the absolute path to `/<dotclaude-root>/claudekit/...` is stored.
 
 ### CQ-5c — Conflict policy
 
-**Vấn đề**: File đã tồn tại ở target thì xử lý sao?
+**Problem**: How to handle a file that already exists at the target?
 
 **Options**:
-- **A. Skip with warning**: an toàn, không destroy.
-- **B. Overwrite**: idempotent rerun, mất file thủ công của user.
-- **C. Backup-then-overwrite**: tạo `<file>.bak`, an toàn + rerun OK.
-- **D. Prompt interactive**: chậm, không scriptable.
+- **A. Skip with warning**: safe, does not destroy.
+- **B. Overwrite**: idempotent re-run, but destroys user's manual edits.
+- **C. Backup-then-overwrite**: creates `<file>.bak`, safe + re-run OK.
+- **D. Interactive prompt**: slow, not scriptable.
 
-**Recommendation**: C default + flag `--force` (skip backup) + `--skip-existing`.
+**Recommendation**: C default + `--force` flag (skip backup) + `--skip-existing`.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **Backup-then-overwrite default**. Backup naming
-`<file>.bak.<YYYYMMDD-HHMMSS>` để không đụng nhau. Flags:
-- `--force`: overwrite không backup (idempotent re-run sạch sẽ)
-- `--skip-existing`: bỏ qua file đã có
-- `--prompt`: hỏi y/n từng file
+**Decision**: **Backup-then-overwrite default**. Backup naming: `<file>.bak.<YYYYMMDD-HHMMSS>` to avoid collisions. Flags:
+- `--force`: overwrite without backup (clean idempotent re-run)
+- `--skip-existing`: skip files that already exist
+- `--prompt`: ask y/n per file
 
-Có script `scripts/clean-backups.sh` xoá `.bak.*` cũ hơn N ngày.
+A `scripts/clean-backups.sh` script removes `.bak.*` files older than N days.
 
 ### CQ-5d — Idempotent + uninstall
 
-**Vấn đề**: Re-run install lần 2 phải an toàn (idempotent). Có cần `uninstall`?
+**Problem**: Running install a second time must be safe (idempotent). Is `uninstall` needed?
 
-**Recommendation**: Idempotent là MUST. Uninstall — nice-to-have phase 2 (cần manifest
-tracking ở CQ-5e trước).
+**Recommendation**: Idempotent is a MUST. Uninstall — nice-to-have in Phase 2 (requires manifest tracking from CQ-5e first).
 
 **Status**: answered (2026-05-07)
 
-**Decision**: Idempotent **MUST** ở Phase 1. Uninstall **defer Phase 2**.
+**Decision**: Idempotent **MUST** in Phase 1. Uninstall **defer to Phase 2**.
 
 ### CQ-5e — Install manifest tracking
 
-**Vấn đề**: Có cần ghi lại "install này đã put những file gì ở đâu" để uninstall/diff/upgrade
-biết được không?
+**Problem**: Is it necessary to record "what files this install placed where" so uninstall/diff/upgrade know the state?
 
 **Options**:
-- **A. Có**: file `~/.claude/.dotclaude-manifest.json` (hoặc per-target). Liệt kê file
-  installed, source preset, version, timestamp.
-- **B. Không**: stateless, mỗi lần install là full replace. Đơn giản nhưng khó cleanup.
+- **A. Yes**: a `~/.claude/.dotclaude-manifest.json` file (or per-target). Lists installed files, source preset, version, timestamp.
+- **B. No**: stateless, each install is a full replace. Simpler but cleanup is difficult.
 
-**Recommendation**: A. Cần cho uninstall + upgrade smart + audit. Đáng làm phase 1.
+**Recommendation**: A. Required for smart uninstall + upgrade + audit. Worth doing in Phase 1.
 
 **Status**: answered (2026-05-07)
 
-**Decision** (revised 2026-05-07: JSON → YAML): **A — Có manifest ngay Phase 1**. File:
+**Decision** (revised 2026-05-07: JSON → YAML): **A — Include manifest from Phase 1**. Files:
 - User: `~/.claude/.dotclaude-manifest.yaml`
 - Project: `<repo>/.claude/.dotclaude-manifest.yaml`
 
-Schema sơ bộ:
+Preliminary schema:
 ```yaml
 schema_version: 1
 installed_at: 2026-05-07T14:30:12Z
@@ -560,7 +470,7 @@ components:
     source_path: /path/to/dotclaude/claudekit/agents/code-reviewer.md
     source_commit: abc123
     preset: typescript-fullstack
-    auto_included: false      # explicit trong preset.components
+    auto_included: false      # explicit in preset.components
     required_by: []
   - type: skill
     id: coding-standards
@@ -569,7 +479,7 @@ components:
     source_path: /path/to/dotclaude/claudekit/skills/coding-standards/
     source_commit: abc123
     preset: typescript-fullstack
-    auto_included: true       # kéo qua dep, không list trong preset
+    auto_included: true       # pulled in via dependency, not listed in preset
     required_by:
       - "agent:code-reviewer"
 settings_patches:
@@ -585,127 +495,99 @@ external_deps:
       - "hook:format-on-save"
 ```
 
-**Edge cases note plan**:
-- Multi-preset chồng nhau (preset A và B đều install code-reviewer): manifest gộp
-  thành mảng `presets` per component.
-- Reinstall: manifest cập nhật, không append duplicate.
-- File ở target không thuộc manifest: audit command list ra cho owner quyết.
+**Edge cases for the plan**:
+- Multiple presets overlapping (preset A and B both install code-reviewer): manifest stores a `presets` array per component.
+- Reinstall: manifest is updated, not duplicated.
+- Files at target not in manifest: audit command lists them for the owner to decide.
 
 ---
 
 ## CQ-6 — Marketplace & plugin
 
-Liên quan: REQ-5.
+Related: REQ-5.
 
 ### CQ-6a — Marketplace target
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **B — Self-hosted marketplace**. Repo riêng `phantien133/claudekit-marketplace`
-chứa `marketplace.json` index + folder `plugins/`. User add 1 lần qua
-`/plugin marketplace add phantien133/claudekit-marketplace`, sau đó `/plugin install <name>`.
+**Decision**: **B — Self-hosted marketplace**. A separate repo `phantien133/claudekit-marketplace` containing a `marketplace.json` index + `plugins/` folder. Users add it once via `/plugin marketplace add phantien133/claudekit-marketplace`, then install with `/plugin install <name>`.
 
-### CQ-6b — Quan hệ preset ↔ plugin
+### CQ-6b — Preset ↔ plugin relationship
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — 1-1**. Mỗi preset = 1 plugin standalone. Build pipeline: preset
-JSON → resolve toàn bộ components (kể cả qua extends) → đóng gói plugin. Component
-duplicate giữa các plugin — chấp nhận trade-off cho đơn giản (mỗi plugin
-self-contained).
+**Decision**: **A — 1-1**. Each preset = one standalone plugin. Build pipeline: preset JSON → resolve all components (including via extends) → package plugin. Duplicate components across plugins are acceptable as a trade-off for simplicity (each plugin is self-contained).
 
 ### CQ-6c — Phase
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — Phase cuối**. Làm sau khi core + presets + install user/project
-đã ổn và có ít nhất 1-2 preset thật. Trước khi build pipeline plugin, verify Claude
-plugin model hiện tại (đọc docs Anthropic mới nhất + everything-claude-code + cookbook
-để biết format manifest, cách marketplace hoạt động).
+**Decision**: **A — Last phase**. Done after core + presets + user/project install are stable and at least 1-2 real presets exist. Before building the plugin pipeline, verify the current Claude plugin model (read latest Anthropic docs + everything-claude-code + cookbook to understand manifest format and marketplace behavior).
 
 ---
 
-## CQ-7 — Vendor strategy hậu redesign
+## CQ-7 — Vendor strategy post-redesign
 
-Liên quan: REQ-1, R4.
+Related: REQ-1, R4.
 
-**Vấn đề**: Sau khi core là copy có ownership, `vendor/` còn tồn tại không và ở vai trò
-gì?
+**Problem**: After core becomes an owned copy, does `vendor/` still exist and in what role?
 
 **Options**:
-- **A. Bỏ submodule runtime** (everything-claude-code), giữ 3 cái còn lại làm docs ở
-  thư mục khác (vd `references/` thay vì `vendor/`).
-- **B. Giữ submodule ECC như "source of sync"**: dùng để diff/pull khi cần update core.
-  Không phải runtime.
-- **C. Bỏ tất cả submodule**, chỉ ghi link trong docs khi cần xem upstream.
+- **A. Remove the runtime submodule** (everything-claude-code), keep the other 3 as docs in a different directory (e.g. `references/` instead of `vendor/`).
+- **B. Keep ECC submodule as "sync source"**: used to diff/pull when updating core. Not a runtime dependency.
+- **C. Remove all submodules**, just link to upstream in docs when inspection is needed.
 
-**Recommendation**: B + rename `vendor/` → `upstream/` để rõ semantics (không phải
-vendored runtime nữa).
+**Recommendation**: B + rename `vendor/` → `upstream/` to clarify semantics (no longer a vendored runtime).
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — Rename `vendor/` → `upstream/`**. Giữ cả 4 submodule cùng folder
-(everything-claude-code, anthropic-cookbook, anthropic-skills, mcp-servers). ECC role
-chuyển từ runtime → "source để sync" cho `scripts/sync-from-upstream.sh`. 3 cái còn lại
-là docs reference. Tên `upstream/` reflect đúng semantics.
+**Decision**: **A — Rename `vendor/` → `upstream/`**. Keep all 4 submodules in the same folder (everything-claude-code, anthropic-cookbook, anthropic-skills, mcp-servers). ECC's role changes from runtime → "source for syncing" for `scripts/sync-from-upstream.sh`. The other 3 are docs references. The name `upstream/` accurately reflects the semantics.
 
 ---
 
 ## CQ-8 — Phase ordering
 
-**Vấn đề**: Plan chia phase thế nào, làm gì trước?
+**Problem**: How to split the plan into phases, and what to build first?
 
 **Status**: answered (2026-05-07)
 
-**Decision** — 5 phase chính:
+**Decision** — 5 main phases:
 
-- **Phase 0**: Cleanup skeleton (wipe `packages/` + `scripts/`, rename `vendor/` →
-  `upstream/`).
-- **Phase 1**: Core foundation. claudekit/ layout (type-first), sidecar provenance,
-  presets layout (folder theo kind, JSON+MD), private.example/, 1 component thật từ
-  ECC + 1 preset thật, sync-from-upstream script, docs/PRIVATE.md.
-- **Phase 2**: Install pipeline (user symlink + project copy, backup-then-overwrite,
-  manifest tracking, settings_patch deep-merge, extends resolver, init-private).
+- **Phase 0**: Clean up skeleton (wipe `packages/` + `scripts/`, rename `vendor/` → `upstream/`).
+- **Phase 1**: Core foundation. `claudekit/` layout (type-first), sidecar provenance, presets layout (folder by kind, JSON+MD), `private.example/`, 1 real component from ECC + 1 real preset, sync-from-upstream script, `docs/PRIVATE.md`.
+- **Phase 2**: Install pipeline (user symlink + project copy, backup-then-overwrite, manifest tracking, settings_patch deep-merge, extends resolver, init-private).
 - **Phase 3**: Lifecycle (uninstall, upgrade, clean-backups).
-- **Phase 4**: Marketplace + plugin (verify Claude plugin model, build-plugin, repo
-  claudekit-marketplace, publish flow).
+- **Phase 4**: Marketplace + plugin (verify Claude plugin model, build-plugin, claudekit-marketplace repo, publish flow).
 
-**Phase 5+ defer**: mcp_servers, plugin level install, target_levels, extends override/
-exclude, tags filter command.
+**Phase 5+ deferred**: mcp_servers, plugin level install, target_levels, extends override/exclude, tag filter command.
 
 ---
 
-## CQ-10 — Ngôn ngữ implementation cho scripts
+## CQ-10 — Implementation language for scripts
 
-Liên quan: REQ-4 (install scripts), R2 (parser fragile).
+Related: REQ-4 (install scripts), R2 (fragile parser).
 
-**Vấn đề**: Scripts viết bằng Bash, TypeScript, Python, hay hybrid?
+**Problem**: Should scripts be written in Bash, TypeScript, Python, or a hybrid?
 
-**Pain points của Bash cho dotclaude**:
-- YAML parser cần `yq` (external Go binary).
-- JSON Schema validation cần shell out.
-- Deep-merge JSON với conflict policy phức tạp.
-- Resolve `extends` tree (CQ-3b) → đệ quy bash + dedupe + circular detect là pain.
-- Cross-platform: macOS BSD vs Linux GNU khác nhau (`sed -i`, `realpath`, `mktemp`).
-- Test framework yếu (bats/shunit2 nặng).
+**Pain points of Bash for dotclaude**:
+- YAML parsing requires `yq` (external Go binary).
+- JSON Schema validation requires shelling out.
+- Deep-merging JSON with conflict policy is complex.
+- Resolving the `extends` tree (CQ-3b) → recursive bash + dedupe + circular detection is painful.
+- Cross-platform: macOS BSD vs Linux GNU differ (`sed -i`, `realpath`, `mktemp`).
+- Weak test frameworks (bats/shunit2 are heavy).
 
-**TypeScript + Bun ưu**:
-- Lib mature: `zod`, `js-yaml`, `ajv`, `deepmerge`, `commander`.
-- Type-safe schema (preset/manifest/sidecar) → catch lỗi compile-time + IDE autocomplete.
-- Cross-platform tự nhiên.
-- Vitest + fs mocks dễ test.
-- Owner full-stack TS background → familiar, không có learning curve.
-- Bun shebang `#!/usr/bin/env bun` chạy `.ts` trực tiếp.
+**TypeScript + Bun advantages**:
+- Mature libraries: `zod`, `js-yaml`, `ajv`, `deepmerge`, `commander`.
+- Type-safe schemas (preset/manifest/sidecar) → catches errors at compile time + IDE autocomplete.
+- Naturally cross-platform.
+- Easy to test with Vitest + fs mocks.
+- Owner has full-stack TS background → no learning curve.
+- Bun shebang `#!/usr/bin/env bun` runs `.ts` files directly.
 
 **Status**: answered (2026-05-07), revised (2026-05-08)
 
-**Decision** (revised 2026-05-08): **A — 100% TypeScript + pnpm + tsx**. Original decision
-chọn Bun, nhưng tại thời điểm Phase 0.5 owner chưa có Bun cài và Brew chưa có formula
-chính thức (chỉ qua curl-pipe-bash hoặc bun cask third-party). Toolchain hiện có node
-23.7 + pnpm 10.28 → switch sang `pnpm` (package manager) + `tsx` (TS runner) đáp ứng
-cùng mục tiêu mà không cần extra system install. Nếu sau này owner cài Bun, có thể
-revisit (Bun chạy tsx-style scripts trực tiếp, migration shebang `#!/usr/bin/env tsx`
-→ `#!/usr/bin/env bun` rất nhỏ).
+**Decision** (revised 2026-05-08): **A — 100% TypeScript + pnpm + tsx**. The original decision was Bun, but at Phase 0.5 the owner did not have Bun installed and Homebrew did not have an official formula (only via curl-pipe-bash or a third-party cask). The available toolchain — node 23.7 + pnpm 10.28 — was switched to `pnpm` (package manager) + `tsx` (TS runner), achieving the same goals without requiring an extra system install. If the owner installs Bun later, this can be revisited (Bun runs tsx-style scripts directly; migrating the shebang from `#!/usr/bin/env tsx` to `#!/usr/bin/env bun` is trivial).
 
 **Layout**:
 ```
@@ -731,34 +613,28 @@ tsconfig.json
 vitest.config.ts
 ```
 
-**Hệ quả**:
-- Repo cần `node ≥20` + `pnpm ≥9`. README hướng dẫn install (corepack hoặc brew).
-- `package.json` track deps: `zod`, `zod-to-json-schema`, `js-yaml`, `commander`,
-  `deepmerge`, dev: `tsx`, `typescript`, `vitest`, `@types/js-yaml`, `@types/node`.
-- Entry script invocation qua `pnpm` scripts (vd `pnpm install:user <preset>`)
-  hoặc shebang `#!/usr/bin/env -S pnpm exec tsx` nếu cần executable bit. Shebang
-  chuẩn `#!/usr/bin/env tsx` chỉ work khi `tsx` resolvable global → ưu tiên
-  pnpm scripts để portable.
-- Tests trong `scripts/tests/` chạy bằng `pnpm test` (vitest).
-- TypeScript types xuất ra `scripts/lib/types.ts` reusable.
-- CI (Phase 5+) chạy `pnpm test` + `pnpm typecheck`.
-- R2 (awk parser fragile) **được giải quyết hoàn toàn** ở Phase 2.
+**Implications**:
+- Repo requires `node ≥20` + `pnpm ≥9`. README documents installation (corepack or brew).
+- `package.json` tracks deps: `zod`, `zod-to-json-schema`, `js-yaml`, `commander`, `deepmerge`; dev: `tsx`, `typescript`, `vitest`, `@types/js-yaml`, `@types/node`.
+- Entry script invoked via `pnpm` scripts (e.g. `pnpm install:user <preset>`) or shebang `#!/usr/bin/env -S pnpm exec tsx` if an executable bit is needed. The plain shebang `#!/usr/bin/env tsx` only works when `tsx` is globally resolvable → prefer pnpm scripts for portability.
+- Tests in `scripts/tests/` run via `pnpm test` (vitest).
+- TypeScript types exported from `scripts/lib/types.ts` for reuse.
+- CI (Phase 5+) runs `pnpm test` + `pnpm typecheck`.
+- R2 (fragile awk parser) **fully resolved** in Phase 2.
 
 ---
 
-## CQ-12 — Inter-component dependencies trong sidecar
+## CQ-12 — Inter-component dependencies in sidecar
 
-Liên quan: REQ-1 (claudekit core), REQ-4 (install scripts).
+Related: REQ-1 (claudekit core), REQ-4 (install scripts).
 
-**Vấn đề**: Component có thể require component khác (agent require skill, skill require
-hook, hook require external binary). Hiện sidecar chỉ track provenance — preset miss
-component dep → install plan thiếu, target không hoạt động đúng.
+**Problem**: A component may require other components (an agent requires a skill, a skill requires a hook, a hook requires an external binary). Currently the sidecar only tracks provenance — if a preset omits a component dependency, the install plan is incomplete and the target does not work correctly.
 
-**CQ-12a — Schema dependencies**:
+**CQ-12a — Dependencies schema**:
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **B — Full schema ngay (required/optional/external)**. Sidecar mở rộng:
+**Decision**: **B — Full schema immediately (required/optional/external)**. Sidecar extended:
 ```yaml
 source: { ... }
 imported_at: ...
@@ -792,160 +668,112 @@ dependencies:
 **Status**: answered (2026-05-07)
 
 **Decision**: **A — Auto-include verbose**. Behavior:
-- **required**: auto-add vào install plan, log rõ ràng `[deps] <component> requires: + <type>: <id> (auto-included)`.
-- **optional**: skip default. Cần flag `--include-optional` để cài hết. Log mỗi dep
-  optional bị skip để owner biết.
-- **external**: warn-only. Installer chạy `which <binary>` hoặc check version, log
-  FOUND/NOT FOUND. KHÔNG auto-install npm/binary (invasive). Owner cài thủ công.
+- **required**: auto-add to install plan, log clearly: `[deps] <component> requires: + <type>: <id> (auto-included)`.
+- **optional**: skip by default. Requires the `--include-optional` flag to install. Each skipped optional dep is logged so the owner is aware.
+- **external**: warn only. Installer runs `which <binary>` or checks version, logs FOUND/NOT FOUND. Does NOT auto-install npm/binary (invasive). Owner installs manually.
 
 **Resolver behavior**:
-- Recursive resolution: A → B → C (nếu B require C, C cũng auto-add).
-- Circular detection: A → B → A → abort với error rõ.
-- Dedupe: cùng component được nhiều nguồn require → chỉ install 1 lần.
-- Manifest ghi `auto_included: true` cho component được kéo qua dep (không phải
-  explicit trong preset) để uninstall biết phân biệt.
+- Recursive resolution: A → B → C (if B requires C, C is also auto-added).
+- Circular detection: A → B → A → abort with a clear error.
+- Dedupe: same component required by multiple sources → install only once.
+- Manifest records `auto_included: true` for components pulled in via dependency (not explicit in preset) so uninstall can distinguish them.
 
-**Hệ quả implementation**:
-- Schema sidecar zod cần subschema cho dependencies + external.
-- Resolver phải có 2 phase: (1) resolve preset extends + components, (2) resolve
-  component dependencies (recursive).
-- Output dry-run có section `[deps]` rõ ràng để owner review trước khi apply.
-- Phase 5+ có thể auto-install external (`pnpm add prettier` hoặc `brew install jq`)
-  qua flag `--auto-install-external` — defer, tránh invasive default.
+**Implementation implications**:
+- Sidecar zod schema needs sub-schemas for dependencies + external.
+- Resolver must have 2 phases: (1) resolve preset extends + components, (2) resolve component dependencies (recursive).
+- Dry-run output includes a clear `[deps]` section for the owner to review before applying.
+- Phase 5+ could auto-install external deps (`pnpm add prettier` or `brew install jq`) via a `--auto-install-external` flag — deferred to avoid an invasive default.
 
 ---
 
-## CQ-11 — Format chuẩn: JSON vs YAML cho file do owner control
+## CQ-11 — Standard format: JSON vs YAML for owner-controlled files
 
-Liên quan: CQ-3a, CQ-3d, CQ-5e (revise lại).
+Related: CQ-3a, CQ-3d, CQ-5e (revisions).
 
-**Vấn đề**: Khi viết tay (preset, manifest), JSON cồng kềnh hơn YAML. Có nên đổi sang
-YAML cho file mình control?
+**Problem**: When writing by hand (presets, manifests), JSON is more verbose than YAML. Should owner-controlled files switch to YAML?
 
-**Phân loại file**:
+**File classification**:
 
-**Đổi được sang YAML (do dotclaude control)**:
+**Can switch to YAML (dotclaude-controlled)**:
 - `presets/<kind>/<name>.yaml`
 - `~/.claude/.dotclaude-manifest.yaml` + project equivalent
-- `dependencies.yaml` (đã là YAML)
-- Sidecar `<name>.source.yaml`, `SOURCE.yaml` (đã là YAML, CQ-2)
+- `dependencies.yaml` (already YAML)
+- Sidecar `<name>.source.yaml`, `SOURCE.yaml` (already YAML, CQ-2)
 
-**KHÔNG đổi được (convention bên ngoài)**:
+**Cannot switch (external conventions)**:
 - `~/.claude/settings.json`, `~/.claude.json`, `<repo>/.mcp.json` — Claude Code/MCP convention
-- `package.json`, `tsconfig.json` — npm/Bun convention
-- `presets/schema/preset.schema.json` — JSON Schema chuẩn cross-IDE
+- `package.json`, `tsconfig.json` — npm/Node convention
+- `presets/schema/preset.schema.json` — JSON Schema, cross-IDE standard
 - `marketplace.json`, `plugin.json` (Phase 4) — Anthropic plugin convention
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **Đổi sang YAML cho mọi file owner control**. Specifically:
-- Preset machine file: `.json` → `.yaml`. Schema validation qua header `# yaml-language-server: $schema=...` để VS Code YAML extension validate.
+**Decision**: **Switch to YAML for all owner-controlled files**. Specifically:
+- Preset machine file: `.json` → `.yaml`. Schema validation via the `# yaml-language-server: $schema=...` header so the VS Code YAML extension validates.
 - Manifest: `.json` → `.yaml`.
-- `settings_patch` trong preset YAML là YAML object → serialize JSON khi apply vào
-  `settings.json` đích (qua `JSON.stringify`).
+- `settings_patch` in preset YAML is a YAML object → serialized to JSON when applied to the target `settings.json` (via `JSON.stringify`).
 
-**Hệ quả**:
-- Reuse `js-yaml` đã có deps cho cả sidecar + preset + manifest. Không thêm dep mới.
-- TS layer: `loadPreset()` đọc YAML qua js-yaml, validate qua zod. `loadManifest()` cùng pattern.
-- Schema TypeScript-first vẫn nguyên (zod), generate JSON Schema cho IDE preset YAML.
+**Implications**:
+- Reuses `js-yaml` already in deps for sidecar + preset + manifest. No new dependency.
+- TS layer: `loadPreset()` reads YAML via js-yaml, validates via zod. `loadManifest()` follows the same pattern.
+- TypeScript-first schema (zod) remains unchanged; JSON Schema is generated from it for IDE preset YAML validation.
 
 ---
 
-## CQ-9 — Migration từ skeleton hiện tại
+## CQ-9 — Migration from the existing skeleton
 
-**Vấn đề**: Skeleton (`packages/`, `scripts/`, `vendor/`) hiện không khớp design mới.
-Xử lý sao?
+**Problem**: The skeleton (`packages/`, `scripts/`, `vendor/`) does not match the new design. How to handle it?
 
 **Options**:
-- **A. Wipe & rewrite**: xóa `packages/`, `scripts/`, lên cấu trúc mới từ đầu. Giữ
-  `docs/`, `dependencies.yaml` (nếu hợp), `vendor/` (nếu giữ).
-- **B. Migrate dần**: refactor `packages/user/` → `core/`, `packages/presets/` → `presets/`,
-  rewrite scripts. Bảo toàn git history per file.
-- **C. Branch song song**: branch `redesign/v1` làm mới hoàn toàn, `main` skeleton cũ
-  còn đó. Merge khi xong.
+- **A. Wipe & rewrite**: delete `packages/`, `scripts/`, build new structure from scratch. Keep `docs/`, `dependencies.yaml` (if still applicable), `vendor/` (if keeping).
+- **B. Migrate incrementally**: refactor `packages/user/` → `core/`, `packages/presets/` → `presets/`, rewrite scripts. Preserves per-file git history.
+- **C. Parallel branch**: a `redesign/v1` branch rebuilt from scratch, `main` keeps the old skeleton. Merge when done.
 
-**Recommendation**: A. Skeleton chưa verify, content rỗng, git history mới 2 commit →
-wipe sạch và build lại đỡ phức tạp hơn migrate. Vẫn giữ `docs/` (architecture reference)
-và quyết định lại `vendor/` theo CQ-7.
+**Recommendation**: A. The skeleton is unverified, content is empty, git history is only 2 commits → wiping and rebuilding is simpler than migrating. Keep `docs/` (architecture reference) and decide on `vendor/` per CQ-7.
 
 **Status**: answered (2026-05-07)
 
-**Decision**: **A — Wipe & rewrite**. Phase 0 thực hiện:
+**Decision**: **A — Wipe & rewrite**. Phase 0 executes:
 ```bash
 git rm -r packages/
 git rm -r scripts/
 git mv vendor upstream
 git commit -m "chore: wipe skeleton, prepare for redesign"
 ```
-Giữ: `docs/`, `CLAUDE.md`, `dependencies.yaml` (review nội dung sau), `upstream/` (đã
-rename), `.gitmodules` (cập nhật path). Phase 1 bắt đầu build mới.
+Keep: `docs/`, `CLAUDE.md`, `dependencies.yaml` (review content after), `upstream/` (renamed), `.gitmodules` (update paths). Phase 1 starts fresh build.
 
 ---
 
 ## Decisions log
 
-> Khi 1 CQ answered, append summary vào đây để có view nhanh.
+> When a CQ is answered, append a summary here for a quick overview.
 
-- **CQ-1a (2026-05-07)** — Top-level core: `claudekit/`. Layout flat: `claudekit/ +
-  presets/ + plugins/ + scripts/`.
-- **CQ-1b (2026-05-07)** — Internal layout: Type-first (ECC style). Naming prefix
-  (`web-`, `python-`, ...) cho component domain-specific; cross-stack giữ tên gốc.
-- **CQ-1c (2026-05-07)** — Import mode: Copy thuần. claudekit/ là source of truth.
-  Cần script sync-from-upstream để diff/merge khi upstream cập nhật.
-- **CQ-1d (2026-05-07)** — Modify tracking: Edit thẳng + sidecar `modified` flag +
-  `modifications` text. Sync dùng `git diff source_commit..upstream`, không snapshot
-  riêng, không patch file.
-- **CQ-2 (2026-05-07)** — Sidecar YAML. File-component: `<name>.source.yaml` cạnh file.
-  Folder-component (skill): `SOURCE.yaml` bên trong folder, installer exclude khi copy.
-  Cần parser YAML (yq hoặc Node/Python).
-- **CQ-3a (2026-05-07)** — Preset schema phase 1: name, kind, description, version,
-  extends, components{agents,skills,commands,hooks,rules}, settings_patch, tags.
-  KHÔNG có target_levels. Defer mcp_servers Phase 2.
-- **CQ-3b (2026-05-07)** — extends CÓ ngay phase 1. Edge cases (multi/diamond/circular/
-  conflict) phải handle trong installer. Phase 1 KHÔNG có override/exclude — chỉ append.
-- **CQ-3c (2026-05-07)** — Preset layout: folder theo kind (`presets/{core,framework,
-  purpose}/<name>.json`). Kind field giữ redundant trong JSON cho schema validation.
-- **CQ-3d (2026-05-07)** — JSON + MD per preset, cùng tên khác đuôi. Installer đọc
-  JSON, MD chỉ human docs. Lint verify 1-1.
-- **CQ-4a (2026-05-07)** — private/ ở mỗi top package (claudekit/private/, presets/
-  private/). Mirror cấu trúc public. Mỗi package gitignore rule riêng.
-- **CQ-4b (2026-05-07)** — Cấu trúc trong private/ mirror public. Installer search
-  public trước, fallback private khi resolve component ID.
-- **CQ-4c (2026-05-07)** — Có private.example/ + scripts/init-private.sh. Skeleton tối
-  thiểu (.gitkeep + README) cho máy mới.
-- **CQ-4d (2026-05-07)** — Bootstrap private: manual / cloud sync. Repo dotclaude
-  không quản lý distribution. docs/PRIVATE.md hướng dẫn.
-- **CQ-5a (2026-05-07)** — Phase 1 install levels: User + Project. Plugin/MCP defer.
-- **CQ-5b (2026-05-07)** — Hybrid mode: user=symlink default, project=copy default.
-  Flags --copy/--symlink override.
-- **CQ-5c (2026-05-07)** — Conflict policy: backup-then-overwrite default
-  (.bak.<timestamp>). Flags --force, --skip-existing, --prompt.
-- **CQ-5d (2026-05-07)** — Idempotent re-run MUST. Uninstall defer Phase 2.
-- **CQ-5e (2026-05-07)** — Manifest tracking có ngay Phase 1.
-  ~/.claude/.dotclaude-manifest.json + <repo>/.claude/.dotclaude-manifest.json.
-- **CQ-6a (2026-05-07)** — Marketplace: self-hosted repo
-  phantien133/claudekit-marketplace.
-- **CQ-6b (2026-05-07)** — Preset ↔ plugin: 1-1, mỗi plugin self-contained.
-- **CQ-6c (2026-05-07)** — Marketplace + plugin packaging: phase cuối, sau khi core +
-  presets + install ổn.
-- **CQ-7 (2026-05-07)** — Vendor strategy: rename `vendor/` → `upstream/`, giữ 4
-  submodule cùng folder. ECC role: source để sync (không phải runtime).
-- **CQ-8 (2026-05-07)** — Phase ordering: 5 phase (0 cleanup, 1 core foundation, 2
-  install pipeline, 3 lifecycle, 4 marketplace).
-- **CQ-9 (2026-05-07)** — Migration: wipe & rewrite. `git rm packages/ scripts/`,
-  `git mv vendor upstream`, commit, build mới Phase 1.
-- **CQ-10 (2026-05-07, revised 2026-05-08)** — Scripts language: 100% TypeScript + pnpm
-  + tsx (revised từ Bun do toolchain absent tại Phase 0.5; node 23.7 + pnpm 10.28 đã
-  có sẵn). Zod cho schema, Vitest cho test. Repo cần `package.json` + `tsconfig.json`.
-  Giải quyết R2 (parser fragile).
-- **CQ-11 (2026-05-07)** — Format chuẩn: prefer **YAML** cho mọi file do owner control
-  (preset → `.yaml`, manifest → `.yaml`). JSON giữ cho convention bên ngoài
-  (settings.json, .mcp.json, package.json, tsconfig.json, JSON Schema, plugin manifest).
-  Settings_patch trong preset là YAML object, serialize JSON khi apply vào target.
-  Revisits: CQ-3a, CQ-3d, CQ-5e.
-- **CQ-12 (2026-05-07)** — Inter-component dependencies trong sidecar:
-  - 12a: schema full (required/optional/external) ngay Phase 1.
-  - 12b: auto-include verbose. Required auto-add, optional skip default (flag
-    --include-optional), external warn-only (no auto-install). Recursive resolution +
-    circular detect + dedupe. Manifest đánh dấu `auto_included` cho component kéo qua
-    dep.
+- **CQ-1a (2026-05-07)** — Top-level core: `claudekit/`. Flat layout: `claudekit/ + presets/ + plugins/ + scripts/`.
+- **CQ-1b (2026-05-07)** — Internal layout: Type-first (ECC style). Naming prefix (`web-`, `python-`, ...) for domain-specific components; cross-stack keeps original name.
+- **CQ-1c (2026-05-07)** — Import mode: Pure copy. `claudekit/` is the source of truth. A sync-from-upstream script is needed to diff/merge when upstream updates.
+- **CQ-1d (2026-05-07)** — Modify tracking: Edit directly + sidecar `modified` flag + `modifications` text. Sync uses `git diff source_commit..upstream`, no separate snapshot, no patch files.
+- **CQ-2 (2026-05-07)** — Sidecar YAML. File-component: `<name>.source.yaml` alongside the file. Folder-component (skill): `SOURCE.yaml` inside the folder, installer excludes it when copying. Requires a YAML parser (yq or Node/Python).
+- **CQ-3a (2026-05-07)** — Preset schema Phase 1: name, kind, description, version, extends, components{agents,skills,commands,hooks,rules}, settings_patch, tags. No `target_levels`. Defer mcp_servers to Phase 2.
+- **CQ-3b (2026-05-07)** — `extends` included from Phase 1. Edge cases (multiple/diamond/circular/conflict) must be handled in installer. Phase 1 has NO override/exclude — append only.
+- **CQ-3c (2026-05-07)** — Preset layout: folder by kind (`presets/{core,framework,purpose}/<name>.json`). Kind field kept redundant in JSON for schema validation.
+- **CQ-3d (2026-05-07)** — JSON + MD per preset, same name different extension. Installer reads JSON, MD is human docs only. Lint verifies 1-1.
+- **CQ-4a (2026-05-07)** — `private/` under each top-level package (`claudekit/private/`, `presets/private/`). Mirrors public structure. Each package has its own gitignore rule.
+- **CQ-4b (2026-05-07)** — Structure inside `private/` mirrors public. Installer searches public first, falls back to private when resolving component IDs.
+- **CQ-4c (2026-05-07)** — Include `private.example/` + `scripts/init-private.sh`. Minimal skeleton (.gitkeep + README) for new machines.
+- **CQ-4d (2026-05-07)** — Private bootstrap: manual / cloud sync. The dotclaude repo does not manage distribution. `docs/PRIVATE.md` documents the convention.
+- **CQ-5a (2026-05-07)** — Phase 1 install levels: User + Project. Plugin/MCP deferred.
+- **CQ-5b (2026-05-07)** — Hybrid mode: user=symlink default, project=copy default. Flags `--copy`/`--symlink` override.
+- **CQ-5c (2026-05-07)** — Conflict policy: backup-then-overwrite default (`.bak.<timestamp>`). Flags `--force`, `--skip-existing`, `--prompt`.
+- **CQ-5d (2026-05-07)** — Idempotent re-run is a MUST. Uninstall deferred to Phase 2.
+- **CQ-5e (2026-05-07)** — Manifest tracking included from Phase 1. `~/.claude/.dotclaude-manifest.json` + `<repo>/.claude/.dotclaude-manifest.json`.
+- **CQ-6a (2026-05-07)** — Marketplace: self-hosted repo `phantien133/claudekit-marketplace`.
+- **CQ-6b (2026-05-07)** — Preset ↔ plugin: 1-1, each plugin self-contained.
+- **CQ-6c (2026-05-07)** — Marketplace + plugin packaging: last phase, after core + presets + install are stable.
+- **CQ-7 (2026-05-07)** — Vendor strategy: rename `vendor/` → `upstream/`, keep all 4 submodules in the same folder. ECC role: source for syncing (not a runtime dependency).
+- **CQ-8 (2026-05-07)** — Phase ordering: 5 phases (0 cleanup, 1 core foundation, 2 install pipeline, 3 lifecycle, 4 marketplace).
+- **CQ-9 (2026-05-07)** — Migration: wipe & rewrite. `git rm packages/ scripts/`, `git mv vendor upstream`, commit, fresh build in Phase 1.
+- **CQ-10 (2026-05-07, revised 2026-05-08)** — Scripts language: 100% TypeScript + pnpm + tsx (revised from Bun due to toolchain absence at Phase 0.5; node 23.7 + pnpm 10.28 available). Zod for schema, Vitest for tests. Repo needs `package.json` + `tsconfig.json`. Resolves R2 (fragile parser).
+- **CQ-11 (2026-05-07)** — Standard format: prefer **YAML** for all owner-controlled files (preset → `.yaml`, manifest → `.yaml`). Keep JSON for external conventions (settings.json, .mcp.json, package.json, tsconfig.json, JSON Schema, plugin manifest). `settings_patch` in preset YAML is a YAML object, serialized to JSON when applied to the target. Revisits: CQ-3a, CQ-3d, CQ-5e.
+- **CQ-12 (2026-05-07)** — Inter-component dependencies in sidecar:
+  - 12a: full schema (required/optional/external) from Phase 1.
+  - 12b: auto-include verbose. Required auto-added, optional skipped by default (`--include-optional` flag), external warn-only (no auto-install). Recursive resolution + circular detection + dedupe. Manifest marks `auto_included` for components pulled in via dependency.

@@ -1,7 +1,7 @@
 # presets/private/ — Private presets
 
-`presets/private/` mirror cấu trúc public của `presets/`. Folder này là
-**gitignored** ở repo root (`.gitignore` rule `/presets/private/`).
+`presets/private/` mirrors the public structure of `presets/`. This folder is
+**gitignored** at the repo root (`.gitignore` rule `/presets/private/`).
 
 ```
 presets/private/
@@ -13,37 +13,36 @@ presets/private/
 └── purpose/
 ```
 
-## Khi nào tạo private preset?
+## When to create a private preset?
 
-- **Internal stack**: project nội bộ với tooling specific (vd Next.js + 1
-  internal logging lib + auth dashboard riêng).
-- **Per-project**: 1 project có config rất riêng, muốn 1 preset dùng cho mỗi
-  project đó (ví dụ `presets/private/purpose/projectA-onboarding.yaml`).
-- **Sensitive**: preset chứa references đến private component, internal MCP
-  servers, internal markdown notes.
+- **Internal stack**: an internal project with specific tooling (e.g. Next.js + an
+  internal logging lib + a private auth dashboard).
+- **Per-project**: a project with very specific config that warrants a dedicated preset
+  (e.g. `presets/private/purpose/projectA-onboarding.yaml`).
+- **Sensitive**: a preset referencing private components, internal MCP servers, or
+  internal markdown notes.
 
 ## Schema
 
-Cùng schema như public preset (`presets/schema/preset.schema.json`). Header
-YAML:
+Same schema as public presets (`presets/schema/preset.schema.json`). YAML header:
 
 ```yaml
 # yaml-language-server: $schema=../../schema/preset.schema.json
 ```
 
-Note path `../../schema/...` nếu private nằm sâu hơn 1 cấp.
+Note the path `../../schema/...` if the private preset is nested one level deeper.
 
 ## Resolver behavior
 
-Cũng mirror logic component:
+Mirrors the component lookup logic:
 
-- `pnpm install:user my-private-baseline --kind core` → installer search
-  `presets/core/my-private-baseline.yaml` (public) trước, fallback
+- `pnpm install:user my-private-baseline --kind core` → installer searches
+  `presets/core/my-private-baseline.yaml` (public) first, falls back to
   `presets/private/core/my-private-baseline.yaml`.
-- Tên preset phải unique (kind + name) — public hay private đều cùng namespace
-  cho `extends:`.
+- Preset names must be unique by (kind + name) — public and private share the same
+  namespace for `extends:`.
 
-## Bootstrap máy mới
+## Bootstrap on a new machine
 
-Same as `claudekit/private/`: copy nội dung từ nguồn riêng. Xem
+Same as `claudekit/private/`: copy content from your personal source. See
 `docs/PRIVATE.md`.

@@ -1,166 +1,163 @@
 # Redesign Plan — dotclaude
 
-> Bắt đầu: 2026-05-07
+> Started: 2026-05-07
 >
-> Bối cảnh: skeleton hiện tại (`packages/`, `scripts/`) là do Claude session trước
-> setup nhanh để có structure, **chưa được verify**. Session này sẽ redesign lại
-> repo structure + installer dựa trên yêu cầu mới của owner. Skeleton hiện tại
-> được giữ nguyên cho đến khi có plan rõ ràng.
+> Context: the existing skeleton (`packages/`, `scripts/`) was quickly scaffolded by a
+> prior Claude session to establish structure, **without verification**. This session
+> redesigns the repo structure and installer from scratch based on the owner's new
+> requirements. The existing skeleton is preserved until a clear plan is in place.
 >
-> Quy trình:
-> 1. Thu thập yêu cầu/ý tưởng từ owner (mục [Requirements](#requirements)).
-> 2. Đặt câu hỏi làm rõ trước khi generate plan thật.
-> 3. Generate redesign plan (mục [Plan](#plan)) sau khi requirements đủ rõ.
-> 4. Giải quyết các risks + open questions tồn đọng dưới đây trong quá trình redesign.
+> Process:
+> 1. Collect requirements/ideas from the owner (see [Requirements](#requirements)).
+> 2. Ask clarifying questions before generating the real plan.
+> 3. Generate the redesign plan (see [Plan](#plan)) once requirements are clear enough.
+> 4. Resolve the risks and open questions below during the redesign.
 
 ---
 
-## 1. Risks tồn đọng từ skeleton hiện tại
+## 1. Risks from the existing skeleton
 
-Cần xử lý hoặc cố ý chấp nhận khi redesign:
+These must be addressed or deliberately accepted during the redesign:
 
-### R1 — Destructive `rm -rf` trong installer
+### R1 — Destructive `rm -rf` in the installer
 - **File**: `scripts/install-preset.sh` (~line 100, 105)
-- **Hành vi**: `rm -rf '$dst'` chạy trước mỗi symlink/copy ECC skill
-- **Tình huống xấu**: nếu awk parser resolve sai `$dst` → `$dst` rỗng/sai → có thể xóa nhầm thư mục ngoài ý muốn. Hiện được bảo vệ một phần bởi `set -euo pipefail`.
-- **Tình huống xấu 2**: symlink target mặc định là `$(pwd)/.claude` → user **bắt buộc** phải `cd` vào project repo trước khi chạy. Quên thì symlink trỏ sai.
-- **Cần khi redesign**: defensive guards (verify `$dst` non-empty + nằm trong target dir trước khi xóa); explicit `--target` thay vì rely vào CWD.
+- **Behavior**: `rm -rf '$dst'` runs before each symlink/copy of an ECC skill
+- **Failure scenario**: if the awk parser resolves `$dst` incorrectly → `$dst` empty or wrong → may unintentionally delete directories outside the intended target. Partially guarded by `set -euo pipefail`.
+- **Failure scenario 2**: the symlink target defaults to `$(pwd)/.claude` → the user **must** `cd` into the project repo before running. Forgetting causes symlinks to point to the wrong location.
+- **Redesign requirement**: defensive guards (verify `$dst` is non-empty and within the target dir before deleting); explicit `--target` instead of relying on CWD.
 
-### R2 — Awk parser fragile
-- **File**: cả `install-user.sh` và `install-preset.sh`
-- **Hành vi**: parse YAML bằng awk với indentation cứng (2-space section, 4-space key)
-- **Tình huống xấu**: ai chỉnh tay YAML sai indent → parser trả về chuỗi rỗng → script exit "ECC local_path not configured", hoặc tệ hơn là trả sai value mà script vẫn chạy.
-- **Tiềm ẩn**: hàm `run()` dùng `eval "$@"` — shell injection nếu path chứa ký tự đặc biệt. Hiện safe vì path hardcode trong YAML.
-- **Cần khi redesign**: quyết định chiến lược parser — giữ awk (self-contained), hay accept thêm dependency (`yq`, Python, Node) để có schema validation.
+### R2 — Fragile awk parser
+- **File**: both `install-user.sh` and `install-preset.sh`
+- **Behavior**: parses YAML with awk using hard-coded indentation (2-space section, 4-space key)
+- **Failure scenario**: manually editing YAML with wrong indentation → parser returns empty string → script exits with "ECC local_path not configured", or worse, returns an incorrect value while the script continues running.
+- **Latent risk**: the `run()` function uses `eval "$@"` — shell injection if path contains special characters. Currently safe because paths are hard-coded in YAML.
+- **Redesign requirement**: decide on a parser strategy — keep awk (self-contained), or accept adding a dependency (`yq`, Python, Node) for schema validation.
 
-### R3 — `rsync -a` không xoá file cũ
-- **File**: `install-user.sh` (overlay personal files vào `~/.claude/`)
-- **Hành vi**: `rsync -a` chỉ thêm/update, không có `--delete`
-- **Tình huống xấu**: rename/xóa file trong `packages/user/agents/` → file cũ vẫn tồn tại ở `~/.claude/agents/`, gây drift lâu dần.
-- **Cần khi redesign**: chiến lược cleanup — `--delete` (nguy hiểm với mixed content), hay manifest-based tracking, hay symlink toàn bộ user layer thay vì rsync.
+### R3 — `rsync -a` does not delete stale files
+- **File**: `install-user.sh` (overlays personal files into `~/.claude/`)
+- **Behavior**: `rsync -a` only adds/updates, no `--delete`
+- **Failure scenario**: renaming or deleting a file in `packages/user/agents/` → the old file remains at `~/.claude/agents/`, causing gradual drift.
+- **Redesign requirement**: a cleanup strategy — `--delete` (risky with mixed content), manifest-based tracking, or symlinking the entire user layer instead of rsync.
 
-### R4 — ECC installer là black box, không có version pinning thực sự
+### R4 — ECC installer is a black box with no real version pinning
 - **File**: `dependencies.yaml`
-- **Hành vi**: trường `pinned_commit` cho cả 4 source vẫn là `null`. Script đọc `local_path` để gọi `$ECC_DIR/install.sh --target claude --modules <ids>` nhưng không verify commit ECC đang ở đúng version mong đợi.
-- **Tình huống xấu**: ECC upstream thay đổi flag installer → dotclaude scripts break im lặng. Hoặc submodule bị bump không ý thức được.
-- **Cần khi redesign**: cơ chế pin (lockfile hoặc enforce check submodule SHA) + cách update/refresh.
+- **Behavior**: the `pinned_commit` field for all 4 sources is still `null`. The script reads `local_path` to call `$ECC_DIR/install.sh --target claude --modules <ids>` but does not verify the ECC checkout matches the expected version.
+- **Failure scenario**: ECC upstream changes installer flags → dotclaude scripts break silently. Or the submodule gets bumped unintentionally.
+- **Redesign requirement**: a pinning mechanism (lockfile or enforced submodule SHA check) and an update/refresh workflow.
 
-### R5 — Preset CLAUDE.md template chỉ copy nếu chưa tồn tại
+### R5 — Preset CLAUDE.md template only copies if not already present
 - **File**: `install-preset.sh`
-- **Hành vi**: skip `CLAUDE.md` nếu project đã có
-- **Tình huống xấu**: project đã có CLAUDE.md sơ sài → user không biết template ECC có gì hay → phải merge thủ công, dễ bỏ sót.
-- **Cần khi redesign**: chiến lược template — copy as `.example`, hoặc merge sections, hoặc warn explicit.
+- **Behavior**: skips `CLAUDE.md` if the project already has one
+- **Failure scenario**: project has a minimal CLAUDE.md → user doesn't know what the ECC template adds → must merge manually, easy to miss things.
+- **Redesign requirement**: a template strategy — copy as `.example`, merge sections, or explicit warning.
 
-### R6 — Symlink mặc định nhưng vendor/ECC ở local path
-- Symlink trỏ vào `vendor/everything-claude-code/skills/<id>/` của repo dotclaude. Nếu user clone dotclaude ở máy khác có path khác, hoặc move repo, symlink bị broken.
-- **Cần khi redesign**: tài liệu rõ symlink là absolute path đến repo dotclaude; rerun installer khi move repo.
+### R6 — Default symlink depends on local path of `vendor/ECC`
+- Symlinks point to `vendor/everything-claude-code/skills/<id>/` inside the dotclaude repo. If the user clones dotclaude to a different path on another machine, or moves the repo, symlinks break.
+- **Redesign requirement**: clearly document that symlinks use absolute paths tied to the dotclaude repo location; re-run installer when moving the repo.
 
 ---
 
-## 2. Open questions tồn đọng
+## 2. Open questions
 
-Câu hỏi chưa có lời đáp trong skeleton/docs hiện tại:
+Questions without answers in the existing skeleton/docs:
 
-### Q1 — ECC installer API thực sự là gì?
-Script gọi `./install.sh --target claude --modules <ids>` nhưng dotclaude không có docs về flag này. Cần verify với `vendor/everything-claude-code/install.sh` (đọc trực tiếp source) trước khi tin tưởng.
+### Q1 — What is the actual ECC installer API?
+The script calls `./install.sh --target claude --modules <ids>` but dotclaude has no docs on those flags. Need to verify against `vendor/everything-claude-code/install.sh` (read the source directly) before trusting it.
 
-### Q2 — Personal overlays sẽ chứa gì?
-`packages/user/{rules,agents,commands,hooks,skills}/` đang rỗng. Convention cá nhân của owner chưa được viết ra — đây là phần "tại sao có repo này" mà skeleton chưa trả lời.
+### Q2 — What will the personal overlays contain?
+`packages/user/{rules,agents,commands,hooks,skills}/` is empty. The owner's personal conventions haven't been written down — this is the "why does this repo exist" question that the skeleton hasn't answered.
 
 ### Q3 — Settings.json strategy
-ECC modules có thể ship `settings.json` snippet. User-level `~/.claude/settings.json` đã có (xem owner setup hiện tại). Chưa quyết định: overlay (overwrite), merge JSON, hay tách `settings.local.json`?
+ECC modules may ship `settings.json` snippets. A user-level `~/.claude/settings.json` already exists (see current owner setup). Not yet decided: overlay (overwrite), merge JSON, or split into `settings.local.json`?
 
 ### Q4 — Preset inheritance (`extends:`)
-`docs/architecture.md` ghi nhận tương lai: ví dụ `nestjs-prisma extends typescript-fullstack`. Chưa có schema, chưa implement.
+`docs/architecture.md` notes a future pattern: e.g. `nestjs-prisma extends typescript-fullstack`. No schema or implementation yet.
 
-### Q5 — Lockfile cho reproducible install
-`dependencies.lock.yaml` được nhắc trong CLAUDE.md TODO nhưng chưa thiết kế. Format gì? Ai generate? CI verify?
+### Q5 — Lockfile for reproducible installs
+`dependencies.lock.yaml` is mentioned in the CLAUDE.md TODO but not designed yet. What format? Who generates it? Does CI verify it?
 
 ### Q6 — CI / validation
-- Validate `deps.yaml` references có thực sự tồn tại trong ECC manifest?
-- Lint markdown frontmatter của agent/skill?
-- Test installer trong sandbox?
+- Validate that `deps.yaml` references actually exist in the ECC manifest?
+- Lint agent/skill markdown frontmatter?
+- Test the installer in a sandbox?
 
 ### Q7 — Distribution / multi-machine
-- Owner dùng repo này trên nhiều máy → cách bootstrap nhanh trên máy mới?
-- Có cần `bootstrap.sh` không (clone + submodule init + install user)?
+- The owner uses this repo on multiple machines → how to bootstrap quickly on a new machine?
+- Is a `bootstrap.sh` needed (clone + submodule init + install user)?
 
 ### Q8 — Update workflow
-- `scripts/update.sh` chưa có. Update nghĩa là gì: `git submodule update --remote` rồi reinstall? Có cần diff trước khi apply?
+- `scripts/update.sh` does not exist yet. What does "update" mean: `git submodule update --remote` followed by reinstall? Is a diff needed before applying?
 
 ---
 
 ## 3. Requirements
 
-> Sẽ fill dần khi owner đưa yêu cầu/ý tưởng. Mỗi requirement nên ghi: **what**, **why**, **constraint** (nếu có).
+> Filled in progressively as the owner provides requirements/ideas. Each requirement notes: **what**, **why**, **constraint** (if any).
 
-### REQ-1 — Bộ "claudekit" core đầy đủ
-- **What**: một bộ kit đầy đủ gồm `agents/`, `skills/`, `rules/`, `commands/`, `hooks/`, ... — đóng vai trò core của repo (tương đương ECC nhưng do owner kiểm soát).
-- **Source**: tổng hợp từ nhiều nguồn upstream (ECC, `anthropics/skills`, anthropic-cookbook, ...) — có thể là clone nguyên hoặc clone + chỉnh sửa theo mong muốn cá nhân.
-- **Provenance**: mỗi component có file ghi chú nguồn riêng (upstream URL, commit, đã modify hay chưa, ...).
-- **Khác biệt với skeleton hiện tại**: skeleton hiện chỉ wrap ECC qua submodule + installer. Yêu cầu mới là **tự mình sở hữu** bộ kit, không phụ thuộc runtime vào ECC.
+### REQ-1 — A complete "claudekit" core
+- **What**: a complete kit comprising `agents/`, `skills/`, `rules/`, `commands/`, `hooks/`, etc. — serving as the core of the repo (equivalent to ECC but owner-controlled).
+- **Source**: aggregated from multiple upstream sources (ECC, `anthropics/skills`, anthropic-cookbook, ...) — either cloned as-is or cloned and modified to personal preference.
+- **Provenance**: each component has its own metadata file (upstream URL, commit, whether it has been modified, etc.).
+- **Difference from existing skeleton**: the skeleton only wraps ECC via submodule + installer. The new requirement is for the owner to **actually own** the kit, with no runtime dependency on ECC.
 
-### REQ-2 — Presets là pure manifest (md/json, prefer json)
-- **What**: presets KHÔNG chứa code component, chỉ là file mô tả "preset X dùng các component nào trong core".
-- **Trục phân loại**: theo framework (vd Next.js, Django), theo core baseline (cross-stack), theo mục đích cụ thể của từng loại project.
-- **Format**: prefer JSON cho machine-readability của installer; markdown có thể song song cho human docs.
-- **Khác biệt với skeleton hiện tại**: skeleton hiện preset có `skills/` directory riêng (dù đang rỗng). Yêu cầu mới là **preset chỉ trỏ vào core**, không tự chứa.
+### REQ-2 — Presets are pure manifests (md/json, prefer json)
+- **What**: presets do NOT contain component code — they are files that describe "preset X uses these components from the core".
+- **Classification axes**: by framework (e.g. Next.js, Django), by core baseline (cross-stack), by specific purpose for each project type.
+- **Format**: prefer JSON for machine-readability by the installer; Markdown may coexist for human docs.
+- **Difference from existing skeleton**: the current skeleton has a `skills/` directory per preset (though it's empty). The new requirement is that **presets only point to the core**, they don't contain code themselves.
 
-### REQ-3 — `private/` folder ở mỗi phần (gitignored)
-- **What**: tại mỗi cấp phù hợp (core/, presets/, có thể cả từng loại component), có folder `private/` chứa thứ riêng tư của owner — project-specific, company-specific, secrets, internal conventions.
-- **Constraint**: `private/` ignore khỏi git để dùng local mà không leak khi push public.
-- **Mục tiêu**: dùng được local đầy đủ tính năng + an toàn khi repo public hoặc share.
+### REQ-3 — `private/` folder at each level (gitignored)
+- **What**: at each appropriate level (core/, presets/, possibly each component type), a `private/` folder holds the owner's private content — project-specific, company-specific, secrets, internal conventions.
+- **Constraint**: `private/` is gitignored so it can be used locally without leaking when the repo is pushed publicly.
+- **Goal**: fully usable locally with all features + safe when the repo is public or shared.
 
-### REQ-4 — Install script chạy theo preset, multi-level
-- **What**: scripts đọc preset (md/json, prefer json) và install các component tương ứng vào target phù hợp.
-- **Levels**: user-level (`~/.claude/`), repo-level (`<project>/.claude/`), và có thể các level khác theo Claude convention.
-- **Constraint**: tuân theo Claude Code conventions chính thức (đường dẫn `~/.claude/agents/*.md`, `~/.claude/skills/<name>/SKILL.md`, `~/.claude/commands/*.md`, format frontmatter, hook config trong `settings.json`...).
+### REQ-4 — Install script driven by presets, multi-level
+- **What**: scripts read a preset (md/json, prefer json) and install the corresponding components to the appropriate target.
+- **Levels**: user-level (`~/.claude/`), repo-level (`<project>/.claude/`), and possibly other levels per Claude conventions.
+- **Constraint**: must follow official Claude Code conventions (paths `~/.claude/agents/*.md`, `~/.claude/skills/<name>/SKILL.md`, `~/.claude/commands/*.md`, frontmatter format, hook config in `settings.json`, etc.).
 
-### REQ-5 — Marketplace + plugin theo preset
-- **What**: hỗ trợ Claude Code marketplace + plugin model — đóng gói preset thành plugin để cài qua marketplace, không chỉ qua script local.
-- **Goal**: 1 preset có thể publish thành 1 plugin package, người khác (hoặc owner ở máy khác) cài qua `/plugin install ...` theo flow chính thức của Claude Code.
+### REQ-5 — Marketplace + plugin per preset
+- **What**: support Claude Code marketplace + plugin model — package presets as plugins to install via the marketplace, not just via a local script.
+- **Goal**: one preset can be published as one plugin package, so others (or the owner on a new machine) can install it via `/plugin install ...` using the official Claude Code flow.
 
 ---
 
-## 4. Clarifying questions cho owner
+## 4. Clarifying questions for the owner
 
-> Đã tách sang [clarifying-questions.md](./clarifying-questions.md) để dễ track trạng
-> thái từng CQ (`pending`/`asking`/`answered`). File đó là source-of-truth, file này
-> chỉ giữ pointer.
+> Moved to [clarifying-questions.md](./clarifying-questions.md) for easier per-CQ status tracking (`pending`/`asking`/`answered`). That file is the source of truth; this file only holds a pointer.
 >
-> Tóm tắt: 9 nhóm CQ-1 → CQ-9. Khi 1 CQ answered, decision được sync ngược về đây
-> (mục 5 — Plan) khi generate plan.
+> Summary: 9 CQ groups, CQ-1 → CQ-9. When a CQ is answered, the decision is synced back here (Section 5 — Plan) when the plan is generated.
 
 <details>
-<summary>Snapshot 9 CQ groups (chi tiết xem file riêng)</summary>
+<summary>Snapshot of 9 CQ groups (see separate file for details)</summary>
 
-### CQ-1 — Layout của core (REQ-1)
+### CQ-1 — Core layout (REQ-1)
 
-**a)** Tên + vị trí của core ở root: `core/`, `kit/`, `claudekit/`, hay `packages/core/`?
+**a)** Name and location of the core at root: `core/`, `kit/`, `claudekit/`, or `packages/core/`?
 
-**b)** Cấu trúc bên trong core — chọn 1 trong các kiểu:
-  - **Type-first** (ECC style): `core/agents/`, `core/skills/`, `core/commands/`, `core/hooks/`, `core/rules/` — phẳng theo loại component.
-  - **Domain-first**: `core/web/{agents,skills}/`, `core/python/{agents,skills}/` — group theo domain trước, loại sau.
-  - **Hybrid**: top-level type, sub-folder domain bên trong (vd `core/skills/web/`, `core/skills/python/`).
+**b)** Internal structure of the core — choose one:
+  - **Type-first** (ECC style): `core/agents/`, `core/skills/`, `core/commands/`, `core/hooks/`, `core/rules/` — flat by component type.
+  - **Domain-first**: `core/web/{agents,skills}/`, `core/python/{agents,skills}/` — grouped by domain first, then type.
+  - **Hybrid**: top-level type, sub-folder domain inside (e.g. `core/skills/web/`, `core/skills/python/`).
 
-**c)** Khi vendor 1 component từ ECC: copy file vào `core/` rồi gắn metadata, hay giữ submodule và symlink? Owner muốn **tự sở hữu nội dung** → khả năng cao là copy vào, đúng không?
+**c)** When vendoring a component from ECC: copy the file into `core/` and attach metadata, or keep the submodule and symlink? The owner wants to **own the content** → likely copy-in, correct?
 
-**d)** Khi modify một component clone từ upstream: dùng patch file riêng + apply mỗi lần update, hay edit thẳng file rồi lưu diff trong metadata?
+**d)** When modifying a component cloned from upstream: use a separate patch file applied on each update, or edit the file directly and store a diff in the metadata?
 
 ### CQ-2 — Provenance metadata format (REQ-1)
 
-Chọn 1 trong:
-- **Per-file frontmatter**: thêm field `source:` vào YAML frontmatter có sẵn của agent/skill/command. Ưu: cùng file. Nhược: chỉ work cho file md có frontmatter.
-- **Sidecar file**: mỗi component có file `<name>.source.json` (hoặc `.source.md`) cạnh nó. Ưu: format thống nhất, cover cả file không có frontmatter (hooks, json). Nhược: thêm file.
-- **Manifest tập trung**: 1 file `core/PROVENANCE.json` (hoặc `.yaml`) liệt kê toàn bộ. Ưu: 1 chỗ scan. Nhược: dễ drift khi sửa file mà quên update manifest.
+Choose one:
+- **Per-file frontmatter**: add a `source:` field to the existing YAML frontmatter of the agent/skill/command. Pro: same file. Con: only works for markdown files with frontmatter.
+- **Sidecar file**: each component has a `<name>.source.json` (or `.source.md`) alongside it. Pro: uniform format, covers files without frontmatter (hooks, json). Con: extra file.
+- **Centralized manifest**: one `core/PROVENANCE.json` (or `.yaml`) listing everything. Pro: single place to scan. Con: prone to drift if a file is modified without updating the manifest.
 
-Owner ghi "**file ghi chú nguồn riêng biệt cho từng phần**" → nghiêng về sidecar hoặc per-file frontmatter. Xác nhận?
+The owner wrote "**a separate metadata file per component**" → leaning toward sidecar or per-file frontmatter. Confirm?
 
-Cần fields gì? Đề xuất tối thiểu: `source_repo`, `source_commit`, `source_path`, `imported_at`, `modified` (bool), `modifications` (mô tả ngắn nếu modified).
+Required fields? Minimum proposal: `source_repo`, `source_commit`, `source_path`, `imported_at`, `modified` (bool), `modifications` (short description if modified).
 
 ### CQ-3 — Preset format (REQ-2)
 
-**a)** Schema JSON đề xuất:
+**a)** Proposed JSON schema:
 ```json
 {
   "name": "typescript-fullstack",
@@ -174,93 +171,93 @@ Cần fields gì? Đề xuất tối thiểu: `source_repo`, `source_commit`, `s
     "hooks": [...],
     "rules": [...]
   },
-  "settings": { "snippet trộn vào settings.json": "..." }
+  "settings": { "snippet to merge into settings.json": "..." }
 }
 ```
-OK? Cần thêm/bớt field gì?
+OK? Any fields to add or remove?
 
-**b)** Có muốn implement `extends:` ngay đợt redesign này không, hay để Phase 2?
+**b)** Should `extends:` be implemented in this redesign, or deferred to Phase 2?
 
-**c)** Trục `framework | core | purpose` đặt ở đâu: thư mục riêng (`presets/framework/`, `presets/core/`, `presets/purpose/`), hay flat + dựa vào field `kind`?
+**c)** Where does the `framework | core | purpose` axis live: separate directories (`presets/framework/`, `presets/core/`, `presets/purpose/`), or flat with a `kind` field?
 
-**d)** Markdown song song với JSON để làm gì — chỉ docs (README per preset), hay cũng readable bởi installer?
+**d)** What is the Markdown companion for — docs only (README per preset), or also readable by the installer?
 
 ### CQ-4 — `private/` placement (REQ-3)
 
-**a)** "Mỗi phần" có nghĩa là:
-  - Option A: chỉ ở root level → `private/`.
-  - Option B: ở mỗi top-level package → `core/private/`, `presets/private/`.
-  - Option C: ở mỗi loại component → `core/agents/private/`, `core/skills/private/`, `presets/private/`. Mirror sâu nhất.
+**a)** "Each level" means:
+  - Option A: only at root level → `private/`.
+  - Option B: at each top-level package → `core/private/`, `presets/private/`.
+  - Option C: at each component type → `core/agents/private/`, `core/skills/private/`, `presets/private/`. Deepest mirroring.
 
-  Owner nghiêng về cái nào?
+  Which does the owner prefer?
 
-**b)** Cấu trúc trong `private/` mirror cấu trúc public (vd `private/agents/foo.md`), hay tự do?
+**b)** Does the structure inside `private/` mirror the public structure (e.g. `private/agents/foo.md`), or is it free-form?
 
-**c)** Có cần `private.example/` (template gitignored thực, có example commit để hướng dẫn) không?
+**c)** Is a `private.example/` needed (a tracked template with example commits as guidance)?
 
-**d)** Multi-machine: `private/` không track git → bootstrap máy mới thì dùng cách gì (dotfiles repo riêng, 1Password, manual copy)? Có cần repo riêng `dotclaude-private` (private repo) không?
+**d)** Multi-machine: `private/` is not tracked by git → what's the bootstrapping strategy for a new machine (separate dotfiles repo, 1Password, manual copy)? Is a separate `dotclaude-private` (private repo) needed?
 
 ### CQ-5 — Install levels & semantics (REQ-4)
 
-**a)** Levels chính thức theo Claude Code conventions cần support:
+**a)** Official Claude Code levels to support:
   - User: `~/.claude/` (agents, skills, commands, hooks via settings.json)
   - Project: `<repo>/.claude/`
-  - Plugin: `~/.claude/plugins/<name>/` (theo plugin model)
-  - MCP servers: config trong `~/.claude.json` hoặc `<repo>/.mcp.json`
+  - Plugin: `~/.claude/plugins/<name>/` (per plugin model)
+  - MCP servers: config in `~/.claude.json` or `<repo>/.mcp.json`
   
-  Tất cả đều support, hay scope hẹp hơn ở phase đầu?
+  Support all levels, or narrow the scope for the first phase?
 
 **b)** Install action — pick semantics:
-  - **Copy**: an toàn, không phụ thuộc repo dotclaude sau khi cài. Update phải re-run.
-  - **Symlink**: live link đến `core/`, edit core → áp dụng ngay. Phụ thuộc absolute path.
-  - **Hybrid**: symlink mặc định, `--copy` flag khi muốn standalone.
+  - **Copy**: safe, no dependency on the dotclaude repo after install. Updates require re-running.
+  - **Symlink**: live link to `core/`, edits to core take effect immediately. Depends on absolute path.
+  - **Hybrid**: symlink by default, `--copy` flag for standalone.
 
-  Owner muốn cái nào là default?
+  Which should be the default?
 
-**c)** Conflict policy khi file đã tồn tại ở target: skip, overwrite, backup-then-overwrite, prompt?
+**c)** Conflict policy when a file already exists at the target: skip, overwrite, backup-then-overwrite, or prompt?
 
-**d)** Idempotent re-run + uninstall: cần ngay phase đầu không?
+**d)** Idempotent re-run + uninstall: needed in the first phase?
 
-**e)** Manifest tracking: ghi lại "đã install những gì" ở target (vd `~/.claude/.dotclaude-manifest.json`) để uninstall/update biết phải xóa gì?
+**e)** Manifest tracking: record "what was installed" at the target (e.g. `~/.claude/.dotclaude-manifest.json`) so uninstall/update knows what to remove?
 
 ### CQ-6 — Marketplace & plugin (REQ-5)
 
-**a)** Marketplace target: official Claude Code plugin marketplace (theo format Anthropic định nghĩa), hay self-hosted marketplace của owner (vd 1 GitHub repo `phantien133/claudekit-marketplace` chứa plugin manifest)?
+**a)** Marketplace target: official Claude Code plugin marketplace (in the format Anthropic defines), or the owner's self-hosted marketplace (e.g. a GitHub repo `phantien133/claudekit-marketplace` containing plugin manifests)?
 
-**b)** Quan hệ preset ↔ plugin:
-  - 1-1: mỗi preset = 1 plugin package độc lập?
-  - N-1: nhiều preset gộp thành 1 mega plugin?
-  - Hai cấp: core plugin + preset plugin extends?
+**b)** Preset ↔ plugin relationship:
+  - 1-1: each preset = one independent plugin package?
+  - N-1: multiple presets bundled into one mega plugin?
+  - Two-tier: core plugin + preset plugin that extends it?
 
-**c)** Plugin packaging: phase này chỉ cần preset → plugin bundle script (`scripts/build-plugin.sh`), hay cần CI/CD publish luôn?
+**c)** Plugin packaging: does this phase only need a preset → plugin bundle script (`scripts/build-plugin.sh`), or does it need a CI/CD publish pipeline too?
 
-**d)** Phase: marketplace ở phase nào? Owner muốn redesign repo trước rồi mới làm marketplace, hay marketplace là yêu cầu phải support ngay ở thiết kế?
+**d)** Phase: when does the marketplace come in? Does the owner want to redesign the repo first and then build the marketplace, or must the design support the marketplace from the start?
 
-### CQ-7 — Vendor strategy (cross-cutting với REQ-1)
+### CQ-7 — Vendor strategy (cross-cutting with REQ-1)
 
-**a)** Sau redesign, có còn giữ `vendor/` submodules không?
-  - Giữ ECC submodule như **source để sync**, core là copy có modification → cần workflow merge update từ ECC vào core.
-  - Bỏ hoàn toàn submodule, chỉ ghi `source_commit` trong metadata, update là thao tác thủ công 1 lần.
+**a)** After the redesign, should `vendor/` submodules be kept?
+  - Keep the ECC submodule as a **sync source**, with the core being a copy-with-modifications → need a workflow to merge upstream ECC updates into the core.
+  - Drop submodules entirely, only record `source_commit` in metadata, updates are one-time manual operations.
 
-**b)** Nếu giữ submodule cho purpose docs (anthropic-cookbook, anthropic-skills, mcp-servers), có cần move khỏi `vendor/` không (vì không còn là "vendored runtime")?
+**b)** If keeping submodules for doc purposes (anthropic-cookbook, anthropic-skills, mcp-servers), should they be moved out of `vendor/` (since they are no longer "vendored runtime")?
 
 ### CQ-8 — Phase ordering
 
-Owner muốn order nào:
-  1. Core layout + provenance trước → presets manifest → install script → marketplace?
-  2. Hay scope nhỏ MVP: chỉ core + 1 preset + install user-level, rồi mở rộng?
-  3. Hay làm song song?
+Which order does the owner prefer:
+  1. Core layout + provenance first → preset manifest → install script → marketplace?
+  2. Small MVP scope: only core + 1 preset + user-level install, then expand?
+  3. Work in parallel?
 
-Cần biết để chia plan thành phases rõ.
+Needed to divide the plan into clear phases.
 
-### CQ-9 — Migration từ skeleton hiện tại
+### CQ-9 — Migration from existing skeleton
 
-Skeleton hiện tại (`packages/`, `scripts/`, `vendor/`) sẽ:
-  - **Wipe & rewrite**: xóa hết, làm lại từ đầu theo design mới.
-  - **Migrate**: giữ những gì còn dùng được, refactor dần.
-  - **Branch song song**: skeleton ở `main` cũ, redesign ở branch mới, merge khi ổn.
+The existing skeleton (`packages/`, `scripts/`, `vendor/`) will be:
+  - **Wipe & rewrite**: delete everything, start over with the new design.
+  - **Migrate**: keep whatever is still usable, refactor incrementally.
+  - **Parallel branch**: skeleton stays on `main`, redesign on a new branch, merge when stable.
 
-Owner chọn cách nào?
+Which does the owner choose?
 
 </details>
 
@@ -268,29 +265,28 @@ Owner chọn cách nào?
 
 ## 5. Plan
 
-> Generated 2026-05-07 sau khi 9 CQ trong [clarifying-questions.md](./clarifying-questions.md)
-> đã chốt. Mỗi quyết định được ghi rõ ở "Decisions log" trong file đó.
+> Generated 2026-05-07 after all 9 CQ groups in [clarifying-questions.md](./clarifying-questions.md) were resolved. Each decision is recorded in the "Decisions log" in that file.
 
-### 5.1. Layout đích (sau Phase 1)
+### 5.1. Target layout (after Phase 1)
 
 ```
 dotclaude/
-├── CLAUDE.md                    # update reflect design mới
-├── README.md                    # update
-├── dependencies.yaml            # rewrite — list upstream sources + commit pin
+├── CLAUDE.md                    # updated to reflect new design
+├── README.md                    # updated
+├── dependencies.yaml            # rewritten — lists upstream sources + commit pins
 ├── .gitignore                   # /claudekit/private/, /presets/private/, ...
-├── .gitmodules                  # paths cập nhật theo upstream/
+├── .gitmodules                  # paths updated to upstream/
 │
 ├── claudekit/                   # core kit, type-first
 │   ├── agents/
 │   │   ├── code-reviewer.md
 │   │   ├── code-reviewer.source.yaml      # provenance sidecar
-│   │   ├── web-frontend-reviewer.md       # naming prefix domain
+│   │   ├── web-frontend-reviewer.md       # domain-prefixed naming
 │   │   └── web-frontend-reviewer.source.yaml
 │   ├── skills/
 │   │   ├── coding-standards/
 │   │   │   ├── SKILL.md
-│   │   │   └── SOURCE.yaml                # sidecar bên trong, installer EXCLUDE
+│   │   │   └── SOURCE.yaml                # sidecar inside folder, installer EXCLUDES
 │   │   └── web-frontend-patterns/
 │   │       ├── SKILL.md
 │   │       └── SOURCE.yaml
@@ -298,24 +294,24 @@ dotclaude/
 │   │   ├── <name>.md
 │   │   └── <name>.source.yaml
 │   ├── hooks/
-│   │   ├── <name>.sh                      # script thật
+│   │   ├── <name>.sh                      # actual script
 │   │   └── <name>.source.yaml
 │   ├── rules/
 │   │   ├── <name>.md
 │   │   └── <name>.source.yaml
-│   ├── private/                           # GITIGNORED, mirror trên
+│   ├── private/                           # GITIGNORED, mirrors above
 │   │   ├── agents/
 │   │   ├── skills/
 │   │   ├── commands/
 │   │   ├── hooks/
 │   │   └── rules/
-│   └── private.example/                   # TRACKED, skeleton hướng dẫn
+│   └── private.example/                   # TRACKED, guidance skeleton
 │       ├── README.md
 │       ├── agents/.gitkeep
 │       ├── skills/.gitkeep
 │       └── ...
 │
-├── presets/                     # pure manifest, YAML + MD per preset
+├── presets/                     # pure manifests, YAML + MD per preset
 │   ├── core/
 │   │   ├── personal-baseline.yaml
 │   │   └── personal-baseline.md
@@ -331,14 +327,14 @@ dotclaude/
 │   ├── private.example/                   # TRACKED
 │   │   ├── README.md
 │   │   └── framework/.gitkeep
-│   ├── README.md                          # giải thích preset chung
+│   ├── README.md                          # explains presets in general
 │   └── schema/
-│       └── preset.schema.json             # JSON Schema (cross-IDE chuẩn) để validate preset YAML qua header
+│       └── preset.schema.json             # JSON Schema (cross-IDE standard) for validating preset YAML via header comment
 │
-├── plugins/                     # PHASE 4 — build artifacts cho marketplace
-│   └── (rỗng cho đến Phase 4)
+├── plugins/                     # PHASE 4 — build artifacts for marketplace
+│   └── (empty until Phase 4)
 │
-├── upstream/                    # rename từ vendor/ — source để sync + reference
+├── upstream/                    # renamed from vendor/ — sync source + reference
 │   ├── everything-claude-code/  (submodule, role: sync source)
 │   ├── anthropic-cookbook/      (submodule, role: docs)
 │   ├── anthropic-skills/        (submodule, role: docs)
@@ -349,76 +345,70 @@ dotclaude/
 ├── vitest.config.ts
 ├── pnpm-lock.yaml               # pnpm lockfile
 │
-├── scripts/                     # 100% TypeScript, chạy qua tsx (pnpm exec)
+├── scripts/                     # 100% TypeScript, run via tsx (pnpm exec)
 │   ├── install.ts               # entry dispatcher: user|project|list|validate
 │   ├── install-user.ts          # default symlink
 │   ├── install-project.ts       # default copy
-│   ├── init-private.ts          # copy private.example → private cho máy mới
+│   ├── init-private.ts          # copy private.example → private for new machine
 │   ├── sync-from-upstream.ts    # diff upstream component
-│   ├── clean-backups.ts         # xoá .bak.* cũ
+│   ├── clean-backups.ts         # remove old .bak.* files
 │   ├── lib/
 │   │   ├── types.ts             # TypeScript types (Preset, Sidecar, Manifest)
 │   │   ├── schema.ts            # zod schemas (runtime validation + types)
 │   │   ├── sidecar.ts           # read/write SOURCE.yaml + <name>.source.yaml
 │   │   ├── manifest.ts          # read/write .dotclaude-manifest.yaml
 │   │   ├── resolver.ts          # extends tree, component lookup public+private
-│   │   ├── settings-merge.ts    # deep-merge JSON cho settings_patch
+│   │   ├── settings-merge.ts    # deep-merge JSON for settings_patch
 │   │   ├── fs-ops.ts            # symlink/copy/backup helpers
 │   │   └── logger.ts            # uniform output (info/warn/error)
 │   └── tests/
 │       ├── resolver.test.ts
 │       ├── settings-merge.test.ts
 │       ├── manifest.test.ts
-│       └── fixtures/            # preset samples cho test
+│       └── fixtures/            # preset samples for tests
 │
 └── docs/
-    ├── architecture.md          # update reflect design mới
-    ├── redesign-plan.md         # file này
-    ├── clarifying-questions.md  # tất cả CQ đã chốt
-    ├── PRIVATE.md               # convention private + bootstrap manual
-    ├── PROVENANCE.md            # cách dùng sidecar source.yaml
-    ├── PRESETS.md               # schema + cách viết preset
-    └── INSTALL.md               # cách dùng install scripts
+    ├── architecture.md          # updated to reflect new design
+    ├── redesign-plan.md         # this file
+    ├── clarifying-questions.md  # all resolved CQs
+    ├── PRIVATE.md               # private/ convention + manual bootstrap
+    ├── PROVENANCE.md            # how to use sidecar source.yaml
+    ├── PRESETS.md               # schema + how to write a preset
+    └── INSTALL.md               # how to use install scripts
 ```
 
-### 5.2. Phase 0 — Cleanup skeleton
+### 5.2. Phase 0 — Clean up skeleton
 
-**Goal**: dọn skeleton chưa verify, chuẩn bị nền cho redesign.
+**Goal**: remove the unverified skeleton, prepare the foundation for the redesign.
 
 **Steps**:
-1. Verify branch sạch, không có thay đổi pending: `git status`.
-2. Read kỹ `dependencies.yaml` hiện tại để biết nội dung gì giữ được — chỉ giữ block
-   `sources` của ECC + 3 docs, bỏ phần `pinned_commit: null` và schema cũ nếu không
-   khớp design mới.
+1. Verify branch is clean, no pending changes: `git status`.
+2. Read `dependencies.yaml` carefully to identify what to keep — only the `sources` block for ECC + 3 docs sources; drop `pinned_commit: null` and old schema that doesn't match the new design.
 3. `git rm -r packages/`
 4. `git rm -r scripts/`
-5. `git mv vendor upstream` — git tự update `.gitmodules` nội dung path; verify lại
-   `.gitmodules` đường dẫn `path = upstream/...`.
-6. Update `.gitignore` thêm:
+5. `git mv vendor upstream` — git automatically updates `.gitmodules` path entries; verify `.gitmodules` uses `path = upstream/...`.
+6. Update `.gitignore` to add:
    ```gitignore
    /claudekit/private/
    /presets/private/
    /plugins/private/
    *.bak.*
-   .dotclaude-manifest.yaml    # nếu accidentally commit
+   .dotclaude-manifest.yaml    # in case of accidental commit
    ```
-7. Commit `chore: wipe skeleton, prepare redesign` với HEREDOC body giải thích.
+7. Commit `chore: wipe skeleton, prepare redesign` with HEREDOC body explaining the change.
 
-**Risks giải quyết**: R1, R2, R3 (xoá installer cũ với `rm -rf` + awk parser).
+**Risks resolved**: R1, R2, R3 (old installer with `rm -rf` + awk parser removed).
 
-**Done when**: `tree -L 2` chỉ thấy `upstream/`, `docs/`, `CLAUDE.md`, `dependencies.yaml`.
+**Done when**: `tree -L 2` shows only `upstream/`, `docs/`, `CLAUDE.md`, `dependencies.yaml`.
 
 ### 5.2.1. Phase 0.5 — TypeScript toolchain bootstrap
 
-**Goal**: setup pnpm + TS + tsx (CQ-10 revised 2026-05-08) để Phase 1 có nền tảng dùng
-ngay.
+**Goal**: set up pnpm + TS + tsx (CQ-10 revised 2026-05-08) so Phase 1 has a ready foundation.
 
 **Steps**:
-1. Verify toolchain: `node --version` (≥20), `pnpm --version` (≥9). Nếu thiếu pnpm:
-   `corepack enable` hoặc `brew install pnpm`.
-2. Tạo tay `package.json`, `tsconfig.json`, `vitest.config.ts` (không dùng
-   `pnpm init` để tránh template thừa).
-3. Install deps:
+1. Verify toolchain: `node --version` (≥20), `pnpm --version` (≥9). If pnpm is missing: `corepack enable` or `brew install pnpm`.
+2. Manually create `package.json`, `tsconfig.json`, `vitest.config.ts` (avoid `pnpm init` to prevent template bloat).
+3. Install dependencies:
    ```bash
    pnpm add zod zod-to-json-schema js-yaml commander deepmerge
    pnpm add -D tsx typescript vitest @types/js-yaml @types/node
@@ -426,7 +416,7 @@ ngay.
 4. `tsconfig.json`: `"strict": true`, `"target": "ES2022"`, `"module": "ESNext"`,
    `"moduleResolution": "Bundler"`, `"allowImportingTsExtensions": true`,
    `"noEmit": true`.
-5. `vitest.config.ts` setup test root `scripts/tests/`.
+5. `vitest.config.ts` sets the test root to `scripts/tests/`.
 6. Add `package.json` scripts:
    ```json
    {
@@ -446,38 +436,33 @@ ngay.
    ```
 7. Commit `chore: init TypeScript + pnpm toolchain`.
 
-**Done when**: `pnpm typecheck` xanh, `pnpm test` chạy (0 test cũng OK).
+**Done when**: `pnpm typecheck` passes, `pnpm test` runs (zero tests is fine).
 
 ### 5.3. Phase 1 — Core foundation
 
-**Goal**: skeleton mới có cấu trúc + 1 component + 1 preset thật để verify flow
-provenance + reference.
+**Goal**: new skeleton with structure + 1 real component + 1 real preset to verify the provenance + reference flow end-to-end.
 
 **Steps**:
 
-1. **Tạo cấu trúc thư mục rỗng** (`.gitkeep` để track):
+1. **Create empty directory structure** (`.gitkeep` to track):
    - `claudekit/{agents,skills,commands,hooks,rules}/`
    - `claudekit/private.example/{agents,skills,commands,hooks,rules}/.gitkeep`
    - `presets/{core,framework,purpose}/`
    - `presets/private.example/{core,framework,purpose}/.gitkeep`
    - `presets/schema/`
-   - `plugins/` (rỗng, .gitkeep)
+   - `plugins/` (empty, .gitkeep)
    - `scripts/lib/`
-   - Update `.gitignore` đầy đủ private rules.
+   - Update `.gitignore` with full private rules.
 
-2. **Định nghĩa schema (TypeScript-first)**:
-   - `scripts/lib/schema.ts` — zod schemas cho `Preset`, `Sidecar`, `Manifest`. Types
-     được suy ra từ zod (`z.infer<typeof PresetSchema>`).
-   - Generate JSON Schema cho preset từ zod (qua `zod-to-json-schema`) → ghi ra
-     `presets/schema/preset.schema.json` để VS Code YAML extension validate preset
-     YAML qua comment header `# yaml-language-server: $schema=...`.
-   - Document format sidecar trong `docs/PROVENANCE.md`.
+2. **Define schema (TypeScript-first)**:
+   - `scripts/lib/schema.ts` — zod schemas for `Preset`, `Sidecar`, `Manifest`. Types inferred from zod (`z.infer<typeof PresetSchema>`).
+   - Generate JSON Schema for preset from zod (via `zod-to-json-schema`) → write to `presets/schema/preset.schema.json` so VS Code YAML extension validates preset YAML via the comment header `# yaml-language-server: $schema=...`.
+   - Document the sidecar format in `docs/PROVENANCE.md`.
 
-3. **Vendor 1 component thật từ ECC** (verify provenance + dependencies flow end-to-end):
-   - Chọn 1 agent đơn giản từ `upstream/everything-claude-code/agents/` (vd
-     `code-reviewer.md`).
+3. **Vendor 1 real component from ECC** (verify provenance + dependencies flow end-to-end):
+   - Pick a simple agent from `upstream/everything-claude-code/agents/` (e.g. `code-reviewer.md`).
    - Copy → `claudekit/agents/code-reviewer.md`.
-   - Tạo `claudekit/agents/code-reviewer.source.yaml`:
+   - Create `claudekit/agents/code-reviewer.source.yaml`:
      ```yaml
      source:
        repo: https://github.com/affaan-m/everything-claude-code
@@ -494,7 +479,7 @@ provenance + reference.
        required:
          agents: []
          skills:
-           - coding-standards   # agent này cần skill rules để hoạt động đúng
+           - coding-standards   # this agent requires the skill rules to function correctly
          commands: []
          hooks: []
          rules: []
@@ -506,22 +491,18 @@ provenance + reference.
          rules: []
        external: []
      ```
-   - Tương tự vendor 1 skill (folder) để verify SOURCE.yaml flow:
-     - Copy `upstream/.../skills/coding-standards/` → `claudekit/skills/coding-standards/`
-       (toàn folder).
-     - Tạo `claudekit/skills/coding-standards/SOURCE.yaml` (cùng schema, deps có thể
-       trống cho skill foundation).
-   - **Test deps resolution end-to-end**: preset chỉ list `agents: [code-reviewer]` →
-     resolver tự kéo skill `coding-standards` qua sidecar deps → verify install plan
-     đúng.
+   - Similarly, vendor 1 skill (folder) to verify the SOURCE.yaml flow:
+     - Copy `upstream/.../skills/coding-standards/` → `claudekit/skills/coding-standards/` (entire folder).
+     - Create `claudekit/skills/coding-standards/SOURCE.yaml` (same schema, deps can be empty for a foundation skill).
+   - **Test dependency resolution end-to-end**: preset only lists `agents: [code-reviewer]` → resolver automatically pulls skill `coding-standards` via sidecar deps → verify install plan is correct.
 
-4. **Tạo 1 preset thật**:
+4. **Create 1 real preset**:
    - `presets/core/personal-baseline.yaml`:
      ```yaml
      # yaml-language-server: $schema=../schema/preset.schema.json
      name: personal-baseline
      kind: core
-     description: Cross-stack baseline cho mọi project.
+     description: Cross-stack baseline for all projects.
      version: 0.1.0
      extends: []
      components:
@@ -539,98 +520,95 @@ provenance + reference.
    - `presets/core/personal-baseline.md` — human docs (when to use, rationale).
 
 5. **Script `scripts/sync-from-upstream.ts` (skeleton)**:
-   - Invocation qua `pnpm sync <component>` (script trong package.json wrap `tsx`).
-   - Input: component path (vd `agents/code-reviewer`).
-   - Đọc sidecar `.source.yaml` qua `scripts/lib/sidecar.ts` → `source_commit`.
-   - Spawn `git -C upstream/<repo> fetch && git diff <source_commit>..HEAD -- <source_path>`
-     → print diff cho owner.
-   - Owner copy/merge thủ công (Phase 1 chưa auto-apply).
+   - Invoked via `pnpm sync <component>` (package.json script wraps `tsx`).
+   - Input: component path (e.g. `agents/code-reviewer`).
+   - Reads sidecar `.source.yaml` via `scripts/lib/sidecar.ts` → `source_commit`.
+   - Spawns `git -C upstream/<repo> fetch && git diff <source_commit>..HEAD -- <source_path>`
+     → prints the diff for the owner.
+   - Owner manually copies/merges (Phase 1 does not auto-apply).
 
 6. **Docs**:
-   - `docs/PRIVATE.md` — convention, gitignore rule, bootstrap manual cho máy mới.
-   - `docs/PROVENANCE.md` — schema sidecar + workflow sync.
-   - `docs/PRESETS.md` — preset schema + cách viết.
-   - Update `docs/architecture.md` — thay nội dung skeleton bằng design mới.
-   - Update root `CLAUDE.md` — reflect 5 phase + decisions chính.
+   - `docs/PRIVATE.md` — convention, gitignore rules, manual bootstrap for a new machine.
+   - `docs/PROVENANCE.md` — sidecar schema + sync workflow.
+   - `docs/PRESETS.md` — preset schema + how to write a preset.
+   - Update `docs/architecture.md` — replace skeleton content with new design.
+   - Update root `CLAUDE.md` — reflect the 5 phases + key decisions.
 
 7. **Validate** — `scripts/install.ts validate <preset>`:
-   - Đọc preset JSON, parse qua zod schema → throw nếu sai.
-   - Đọc mọi component IDs trong preset, kiểm tra path tồn tại trong
-     `claudekit/<type>/<id>` hoặc `claudekit/private/<type>/<id>`.
-   - Đọc mọi sidecar (`.source.yaml` và `SOURCE.yaml` cho skill folder), parse zod →
-     valid.
-   - Vitest test cho schema validation.
+   - Read preset JSON, parse via zod schema → throw on failure.
+   - For every component ID in the preset, check the path exists in `claudekit/<type>/<id>` or `claudekit/private/<type>/<id>`.
+   - Read every sidecar (`.source.yaml` and `SOURCE.yaml` for skill folders), parse via zod → valid.
+   - Vitest tests for schema validation.
 
-**Risks giải quyết**: R4 (provenance + commit pin trong sidecar thay null).
+**Risks resolved**: R4 (provenance + commit pin in sidecar instead of null).
 
-**Done when**: chạy script validate xanh, có thể `cat` được provenance của 1 component
-+ `cat` được preset chốt.
+**Done when**: validate script passes, can `cat` the provenance of 1 component and `cat` the finalized preset.
 
 ### 5.4. Phase 2 — Install pipeline
 
-> Xem chi tiết: [`docs/planning/phase-2-install-pipeline.md`](planning/phase-2-install-pipeline.md)
+> See details: [`docs/planning/phase-2-install-pipeline.md`](planning/phase-2-install-pipeline.md)
 
-**Goal**: cài 1 preset vào target user/project được, idempotent, có manifest.
+**Goal**: install 1 preset into a user/project target, idempotent, with manifest tracking.
 
-**Milestones** (xem file planning để track từng step):
+**Milestones** (see planning file to track each step):
 - M1: Resolver (extends tree + deps recursive, pure/no-fs)
 - M2: FS ops + manifest atomic read/write
 - M3: `install:user` command end-to-end
 - M4: `install:project` command
 - M5: `init-private` + `clean-backups` utilities
 
-**Risks giải quyết**: R1, R2, R3, R5.
+**Risks resolved**: R1, R2, R3, R5.
 
-**Done when**: cài + re-cài + dry-run + 1 preset extends 1 preset khác đều chạy đúng.
+**Done when**: install + reinstall + dry-run + 1 preset extending another all run correctly.
 
 ### 5.5. Phase 3 — Lifecycle
 
-> Xem chi tiết: [`docs/planning/phase-3-lifecycle.md`](planning/phase-3-lifecycle.md)
+> See details: [`docs/planning/phase-3-lifecycle.md`](planning/phase-3-lifecycle.md)
 
-**Goal**: lifecycle đầy đủ — uninstall, upgrade, audit.
+**Goal**: full lifecycle — uninstall, upgrade, audit.
 
-**Done when**: install → modify → uninstall round-trip clean (target không leftover).
+**Done when**: install → modify → uninstall round-trip is clean (no leftover at target).
 
 ### 5.6. Phase 4 — Marketplace + plugin
 
-> Xem chi tiết: [`docs/planning/phase-4-marketplace.md`](planning/phase-4-marketplace.md)
+> See details: [`docs/planning/phase-4-marketplace.md`](planning/phase-4-marketplace.md)
 
-**Goal**: 1-2 preset đầu publish được lên marketplace tự host.
+**Goal**: publish 1-2 presets to a self-hosted marketplace.
 
-**Done when**: round-trip publish + install qua marketplace thành công ít nhất 1 preset.
+**Done when**: publish + install round-trip via marketplace succeeds for at least 1 preset.
 
-### 5.7. Phase 5+ — Defer
+### 5.7. Phase 5+ — Deferred
 
-Khi nào cần thì thêm vào schema + installer:
-- `mcp_servers` field trong preset.
-- `target_levels` field (nếu thấy gõ nhầm level nhiều lần).
-- preset extends `override` / `exclude` khi pattern repeat xuất hiện.
+Add to schema + installer when needed:
+- `mcp_servers` field in preset.
+- `target_levels` field (if level mismatches become frequent).
+- Preset extends `override` / `exclude` when the pattern repeats.
 - `tags` filter command (`claudekit list --tag <tag>`).
-- Plugin level install (`~/.claude/plugins/<name>/`).
-- CI: validate schema + reference + lint sidecar.
+- Plugin-level install (`~/.claude/plugins/<name>/`).
+- CI: validate schema + references + lint sidecar.
 
-### 5.8. Risks tracking
+### 5.8. Risk tracking
 
-Ánh xạ risks Section 1 → phase giải quyết:
+Mapping risks from Section 1 → resolving phase:
 
-| Risk | Phase | Cách giải quyết |
+| Risk | Phase | Resolution |
 |---|---|---|
-| R1 — `rm -rf` destructive | 0 (xoá installer cũ), 2 (defensive guard mới) | Verify `$dst` non-empty + nằm trong target dir trước khi xoá; explicit `--target` thay CWD-dependent. |
-| R2 — Awk parser fragile | 2 | TypeScript + zod schema. `js-yaml` cho YAML, `JSON.parse` builtin. Compile-time types + runtime validation. Awk bị xoá hoàn toàn. |
-| R3 — `rsync -a` không cleanup | 2 | Manifest tracking thay rsync mù. Phase 3 uninstall đọc manifest, không guess. |
-| R4 — `pinned_commit: null` | 1 | Sidecar có `source_commit` chính xác. Update `dependencies.yaml` với pin thật. |
-| R5 — CLAUDE.md skip nếu tồn | 2 | Settings_patch + manifest tracking thay template skip-if-exists. CLAUDE.md template còn đó nhưng không phải cơ chế chính. |
-| R6 — Symlink absolute path | 2 (user level vẫn symlink, document rõ) | Doc `INSTALL.md` ghi rõ symlink phụ thuộc dotclaude path. Migration script khi move repo. Project level copy (CQ-5b) → đa số use case không bị. |
+| R1 — `rm -rf` destructive | 0 (remove old installer), 2 (new defensive guards) | Verify `$dst` is non-empty and within target dir before deleting; explicit `--target` instead of CWD-dependent. |
+| R2 — Fragile awk parser | 2 | TypeScript + zod schema. `js-yaml` for YAML, built-in `JSON.parse`. Compile-time types + runtime validation. awk removed entirely. |
+| R3 — `rsync -a` no cleanup | 2 | Manifest tracking instead of blind rsync. Phase 3 uninstall reads the manifest, no guessing. |
+| R4 — `pinned_commit: null` | 1 | Sidecar has accurate `source_commit`. `dependencies.yaml` updated with real pin. |
+| R5 — CLAUDE.md skip if present | 2 | Settings_patch + manifest tracking replaces skip-if-exists template approach. CLAUDE.md template still exists but is no longer the primary mechanism. |
+| R6 — Symlink absolute path | 2 (user level still symlinks, clearly documented) | `INSTALL.md` explicitly states symlinks depend on the dotclaude path. Migration script when moving the repo. Project level uses copy (CQ-5b) → most use cases unaffected. |
 
-### 5.9. Open questions giải quyết
+### 5.9. Open questions resolution
 
 | Q | Phase | Note |
 |---|---|---|
-| Q1 — ECC installer API | KHÔNG còn dùng | Phase 0 wipe → không gọi ECC installer nữa. |
-| Q2 — Personal overlays nội dung | 1 + ongoing | Phase 1 tạo 1 overlay mẫu. Owner thêm dần. |
+| Q1 — ECC installer API | No longer used | Phase 0 wipe → ECC installer is no longer called. |
+| Q2 — Personal overlay content | 1 + ongoing | Phase 1 creates 1 sample overlay. Owner adds more incrementally. |
 | Q3 — Settings.json strategy | 2 | settings_patch + deep-merge + manifest. |
-| Q4 — Preset extends | 1 (schema), 2 (resolver) | Đã chốt CÓ ngay phase 1, schema sẵn. |
-| Q5 — Lockfile reproducible | 5+ | Manifest đã 1 phần. Lockfile riêng nếu cần Phase 5+. |
-| Q6 — CI validation | 5+ | Defer. |
-| Q7 — Multi-machine bootstrap | 1 (private), N/A | Manual per CQ-4d. Repo dotclaude clone đủ cho public. |
-| Q8 — Update workflow | 1 (sync-from-upstream), 3 (upgrade) | Tách 2 layer: upstream sync (refresh source) vs install upgrade (refresh target). |
+| Q4 — Preset extends | 1 (schema), 2 (resolver) | Confirmed to be supported from Phase 1, schema ready. |
+| Q5 — Reproducible lockfile | 5+ | Manifest covers part of this. Separate lockfile if needed in Phase 5+. |
+| Q6 — CI validation | 5+ | Deferred. |
+| Q7 — Multi-machine bootstrap | 1 (private), N/A | Manual per CQ-4d. Cloning dotclaude is sufficient for public content. |
+| Q8 — Update workflow | 1 (sync-from-upstream), 3 (upgrade) | Split into two layers: upstream sync (refresh source) vs install upgrade (refresh target). |

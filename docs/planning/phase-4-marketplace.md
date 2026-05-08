@@ -1,13 +1,13 @@
 # Phase 4 — Marketplace + Plugin
 
-> **Status**: PENDING (sau Phase 3)
+> **Status**: PENDING (after Phase 3)
 >
 > **Prereq**: Phase 3 lifecycle stable + Claude Code plugin API docs verified.
 
 ## Goal
 
-1-2 preset đầu publish được lên marketplace tự-host. User khác (hoặc owner ở máy mới) cài
-qua plugin install flow chính thức của Claude Code.
+Publish 1–2 initial presets to a self-hosted marketplace. Other users (or the owner on a
+new machine) can install them via the official Claude Code plugin install flow.
 
 ## Scope
 
@@ -15,62 +15,62 @@ qua plugin install flow chính thức của Claude Code.
 |---|---|
 | Plugin build script | `scripts/build-plugin.ts` |
 | Plugin manifest format | `plugins/<preset>/plugin.json` |
-| Self-hosted marketplace repo | `phantien133/claudekit-marketplace` (repo riêng) |
-| Publish workflow | Build → push artifact sang marketplace repo |
+| Self-hosted marketplace repo | `phantien133/claudekit-marketplace` (separate repo) |
+| Publish workflow | Build → push artifact to marketplace repo |
 
-## Steps (draft — sẽ refine trước Phase 4)
+## Steps (draft — to be refined before Phase 4)
 
-### S1 — Verify Claude plugin model
+### S1 — Verify the Claude plugin model
 
-Đọc docs Anthropic mới nhất về:
+Read the latest Anthropic docs on:
 - Plugin manifest format (`plugin.json` fields, version, entry points).
-- Marketplace index format (single `marketplace.json` hay folder per plugin?).
+- Marketplace index format (single `marketplace.json` or one folder per plugin?).
 - Install flow: `/plugin marketplace add <url>` → `/plugin install <name>`.
 
 Source: `upstream/anthropic-cookbook` + Claude Code official docs.
 
-**Block**: nếu plugin API chưa public/stable → điều chỉnh scope Phase 4.
+**Blocker**: if the plugin API is not yet public/stable → narrow Phase 4 scope.
 
 ### S2 — `scripts/build-plugin.ts`
 
 - Input: preset name.
-- Resolver chạy giống install (kéo extends, deps, tất cả components).
+- Resolver runs the same way as install (pulls extends, deps, all components).
 - Output: `plugins/<preset>/`
-  - `plugin.json` — auto-generate từ preset metadata (name, version, description, tags,
+  - `plugin.json` — auto-generated from preset metadata (name, version, description, tags,
     component list).
-  - Components đóng gói bên trong (không symlink — plugin phải self-contained).
-  - Exclude `SOURCE.yaml` khỏi bundle.
+  - Components bundled inside (no symlinks — plugin must be self-contained).
+  - `SOURCE.yaml` excluded from the bundle.
 
 ### S3 — Marketplace repo
 
-- Tạo repo `phantien133/claudekit-marketplace` (public).
+- Create repo `phantien133/claudekit-marketplace` (public).
 - Layout:
   ```
-  marketplace.json         # index: list tất cả plugins + version + url
+  marketplace.json         # index: list of all plugins + version + url
   plugins/
     personal-baseline/
       plugin.json
       agents/...
       skills/...
   ```
-- Workflow: `pnpm run publish <preset>` → build + copy sang marketplace repo + commit +
+- Workflow: `pnpm run publish <preset>` → build + copy to marketplace repo + commit +
   push.
 
 ### S4 — Test round-trip
 
-Từ máy khác (hoặc fresh profile):
+From another machine (or fresh profile):
 ```bash
-# Giả sử Claude Code hỗ trợ:
+# Assuming Claude Code supports:
 /plugin marketplace add https://github.com/phantien133/claudekit-marketplace
 /plugin install personal-baseline
 ```
-Verify file có ở `~/.claude/` đúng.
+Verify files are present at `~/.claude/`.
 
 ## Open questions Phase 4
 
-- **Plugin format thực tế**: Anthropic có public spec chưa? Nếu chưa → scope Phase 4 thu
-  hẹp thành "build bundle zip + manual install" thay vì marketplace.
-- **Versioning**: khi preset update (bump version), marketplace update thế nào? CI auto-push
-  hay manual?
-- **License**: component từ ECC có MIT → bundle được. Nhưng cần ghi license info trong
-  plugin.json.
+- **Actual plugin format**: has Anthropic published a spec? If not → narrow Phase 4 scope
+  to "build a bundle zip + manual install" instead of a marketplace.
+- **Versioning**: when a preset is updated (version bump), how does the marketplace update?
+  CI auto-push or manual?
+- **License**: components from ECC are MIT → can be bundled. But license info needs to be
+  recorded in `plugin.json`.

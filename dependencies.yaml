@@ -1,14 +1,14 @@
 # dependencies.yaml — Upstream sources for dotclaude
 #
-# After CQ-1c/CQ-7 redesign: claudekit/ là source of truth (copy thuần với
-# provenance trong sidecar). upstream/ chỉ đóng vai trò "source để diff/sync"
-# cho scripts/sync-from-upstream.ts — KHÔNG còn là runtime.
+# After CQ-1c/CQ-7 redesign: claudekit/ is the source of truth (plain copy with
+# provenance tracked in sidecars). upstream/ serves only as a "source for diff/sync"
+# via scripts/sync-from-upstream.ts — it is NO LONGER a runtime dependency.
 #
 # Refresh workflow:
 #   1. git submodule update --remote upstream/<name>
-#   2. git -C upstream/<name> rev-parse HEAD  → cập nhật pinned_commit dưới đây
-#   3. bun scripts/sync-from-upstream.ts <component>  (per component diff)
-#   4. Owner merge thủ công, update sidecar source.commit nếu adopt commit mới
+#   2. git -C upstream/<name> rev-parse HEAD  → update pinned_commit below
+#   3. pnpm sync <component>  (per-component diff)
+#   4. Owner merges manually, updates sidecar source.commit if adopting the new commit
 #   5. Commit dependencies.yaml + .gitmodules + sidecar updates
 
 version: 2

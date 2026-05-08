@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../schema/preset.schema.json
 name: personal-baseline
 kind: core
-description: Cross-stack baseline cho mọi project — code review + coding standards.
+description: Cross-stack baseline for any project — code review + coding standards.
 version: 0.1.0
 extends: []
 components:

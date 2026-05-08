@@ -2,37 +2,40 @@
 
 > Kind: `core` · Version: `0.1.0` · Tags: `baseline`, `cross-stack`
 
-Cross-stack baseline preset áp dụng cho mọi project. Đây là preset đầu tiên owner cài
-khi setup máy mới hoặc khởi tạo `~/.claude/` lần đầu.
+Cross-stack baseline preset applicable to any project. This is the first preset the
+owner installs when setting up a new machine or initialising `~/.claude/` for the first
+time.
 
-## Khi nào dùng
+## When to use
 
-- Setup user-level baseline trên máy mới: `pnpm install:user personal-baseline`.
-- Kết hợp với 1 framework preset khác (vd `nextjs-app`) khi vào project: framework
-  preset thường `extends: [personal-baseline]` để khỏi liệt kê lại baseline.
+- Set up a user-level baseline on a new machine: `pnpm install:user personal-baseline`.
+- Combine with a framework preset (e.g. `nextjs-app`) when entering a project: framework
+  presets typically `extends: [personal-baseline]` so the baseline components don't need
+  to be listed again.
 
 ## Components installed
 
-Trực tiếp qua `components`:
+Directly via `components`:
 
-- `agents/code-reviewer` — agent review code chuyên sâu (CRITICAL/HIGH/MEDIUM/LOW
+- `agents/code-reviewer` — in-depth code review agent (CRITICAL/HIGH/MEDIUM/LOW
   taxonomy, confidence-based filtering).
 
-Auto-included qua dependency resolver (đọc từ
+Auto-included via the dependency resolver (read from
 `claudekit/agents/code-reviewer.source.yaml`):
 
-- `skills/coding-standards` — required dep của `code-reviewer`. Skill cung cấp
-  baseline conventions (naming, immutability, code-quality review).
+- `skills/coding-standards` — required dependency of `code-reviewer`. Provides baseline
+  conventions (naming, immutability, code-quality review).
 
 ## Why these two?
 
-`code-reviewer` cần một bộ rule baseline để compare khi review — `coding-standards`
-là skill rỗng-context-friendly, vào kit user-level đầu tiên là ngon nhất.
+`code-reviewer` needs a baseline rule set to compare against during reviews —
+`coding-standards` is a context-efficient skill that belongs in the user-level kit from
+day one.
 
 ## Notes
 
-- Khi 1 framework preset (vd Next.js) thêm component khác đè lên: deps resolver dedupe
-  theo `<type>:<id>` → không install 2 lần.
-- Nếu owner muốn loại `coding-standards` ra (ưu tiên skill khác), tạm thời chưa có
-  cơ chế `exclude` trong preset extends (CQ-3b Phase 1 chỉ append). Workaround: viết
-  preset baseline thay thế, không extends preset này.
+- When a framework preset (e.g. Next.js) adds overlapping components, the dependency
+  resolver deduplicates by `<type>:<id>` — no component is installed twice.
+- If you want to exclude `coding-standards` (preferring a different skill), there is
+  currently no `exclude` mechanism in preset extends (CQ-3b, Phase 1 appends only).
+  Workaround: write a replacement baseline preset that does not extend this one.
