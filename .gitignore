@@ -10,15 +10,19 @@ Thumbs.db
 # Upstream submodule node_modules (in case ECC pulls deps locally)
 upstream/everything-claude-code/node_modules/
 
-# Private overlays (per CQ-4a — gitignored, mỗi top package có private/ riêng)
+# Private overlays (per CQ-4a — gitignored, each top package has its own private/)
 /claudekit/private/
 /presets/private/
 /plugins/private/
 
-# Backup files từ installer (CQ-5c — backup-then-overwrite default)
+# Plugin build artifacts — committed selectively when publishing to marketplace repo
+# Uncomment to gitignore all built plugin bundles:
+# /plugins/*/
+
+# Backup files from installer (CQ-5c — backup-then-overwrite default)
 *.bak.*
 
-# Manifest installer (CQ-5e — track per-target, không commit chung repo)
+# Manifest installer (CQ-5e — track per-target, not committed to the repo)
 .dotclaude-manifest.yaml
 
 # TypeScript / Bun

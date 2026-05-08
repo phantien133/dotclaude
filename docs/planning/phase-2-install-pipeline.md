@@ -1,6 +1,6 @@
 # Phase 2 — Install Pipeline
 
-> **Status**: PLANNING — needs co-planning with owner before implementation.
+> **Status**: COMPLETE — implemented 2026-05-08.
 >
 > **Prereq**: Phase 1 complete (commit `bf32a83`). Schema, sidecar, preset, validate,
 > list, and sync all green. 15 tests pass.

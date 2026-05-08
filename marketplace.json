@@ -1,0 +1,34 @@
+{
+  "name": "claudekit-marketplace",
+  "owner": {
+    "name": "phantien133",
+    "email": "tienpq@hilab.asia"
+  },
+  "metadata": {
+    "description": "Personal Claude Code plugin marketplace for claudekit presets."
+  },
+  "plugins": [
+    {
+      "name": "personal-baseline",
+      "source": "./plugins/personal-baseline/",
+      "description": "Cross-stack baseline for any project — code review + coding standards.",
+      "version": "0.1.0",
+      "author": {
+        "name": "phantien133",
+        "email": "tienpq@hilab.asia"
+      },
+      "license": "MIT",
+      "keywords": [
+        "baseline",
+        "cross-stack"
+      ],
+      "category": "workflow",
+      "tags": [
+        "baseline",
+        "cross-stack"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/claudekit-marketplace"
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 # Phase 3 — Lifecycle
 
-> **Status**: PENDING (after Phase 2)
+> **Status**: COMPLETE (2026-05-08)
 >
-> **Prereq**: Phase 2 install pipeline complete + manifest tracking stable.
+> **Prereq**: Phase 2 install pipeline complete + manifest tracking stable. ✓
 
 ## Goal
 

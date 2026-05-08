@@ -11,15 +11,15 @@ installer). When opening Claude Code in this folder, the information below is th
 
 ## Current Status (2026-05-08)
 
-Phase 0, 0.5, 1 complete. Phase 2 not yet started.
+All phases complete.
 
 ```
 ✓ Phase 0   — Wipe skeleton (packages/ + scripts/ bash, vendor/ → upstream/)
 ✓ Phase 0.5 — pnpm + TypeScript + tsx + zod + vitest bootstrap
 ✓ Phase 1   — claudekit/ + presets/ + 1 component vendored + validate/list/sync commands
-☐ Phase 2   — Install pipeline (user symlink, project copy, manifest, deps resolver)
-☐ Phase 3   — Lifecycle (uninstall, upgrade, audit)
-☐ Phase 4   — Marketplace + plugin packaging (self-hosted)
+✓ Phase 2   — Install pipeline (user symlink, project copy, manifest, deps resolver)
+✓ Phase 3   — Lifecycle (uninstall, upgrade, audit)
+✓ Phase 4   — Marketplace + plugin packaging (self-hosted)
 ```
 
 See `docs/redesign-plan.md` Section 5 for per-phase details.
@@ -132,6 +132,22 @@ pnpm schema:generate   # idempotent, commit result to git
 
 After editing `scripts/lib/schema.ts`, run this to keep JSON Schema in sync.
 
+### Build and publish a plugin
+
+```bash
+# Build a self-contained plugin bundle for one preset
+pnpm build-plugin personal-baseline --clean
+
+# Build + update marketplace.json (local index)
+pnpm publish-plugin personal-baseline --clean
+
+# Then copy plugins/<name>/ to phantien133/claudekit-marketplace repo and push
+```
+
+Plugin output: `plugins/<preset-name>/` with `.claude-plugin/plugin.json` + component files.
+No sidecar files (*.source.yaml / SOURCE.yaml) are included in the bundle.
+`agents` and `hooks` are auto-discovered by Claude Code — never declared in plugin.json.
+
 ## Code Editing Principles
 
 1. **Schema-first**: changing data shape → edit zod schema first, regen JSON Schema,
@@ -187,13 +203,11 @@ test/CI):
 
 ## Open Questions / TODO
 
-- [ ] Phase 2 — Install pipeline (next).
-- [ ] Phase 3 — Lifecycle (uninstall, upgrade, audit).
-- [ ] Phase 4 — Marketplace + plugin packaging.
+- [ ] Create `phantien133/claudekit-marketplace` GitHub repo and push first plugin bundle.
 - [ ] Lockfile strategy details (manifest already partially handles this).
 - [ ] CI: pnpm typecheck + test + schema regen drift check.
 - [ ] Settings.json deep-merge with array policy (replace vs concat per field).
-- [ ] Set up remote GitHub (private/public) + push after Phase 2.
+- [ ] Set up remote GitHub (private/public) + push.
 
 ## Session Lineage
 
