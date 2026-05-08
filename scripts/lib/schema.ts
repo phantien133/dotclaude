@@ -78,6 +78,8 @@ export const SidecarSchema = z
       optional: { agents: [], skills: [], commands: [], hooks: [], rules: [] },
       external: [],
     }),
+    tags: z.array(z.string().min(1)).default([]),
+    categories: z.record(z.string().min(1), z.array(z.string().min(1))).default({}),
   })
   .strict();
 export type Sidecar = z.infer<typeof SidecarSchema>;

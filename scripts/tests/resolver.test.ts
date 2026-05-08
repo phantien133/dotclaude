@@ -55,6 +55,8 @@ function makeSidecar(opts: { required?: Partial<Sidecar['dependencies']['require
       optional: { ...empty },
       external: [],
     },
+    tags: [],
+    categories: {},
   };
 }
 

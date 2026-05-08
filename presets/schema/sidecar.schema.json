@@ -204,6 +204,28 @@
         },
         "external": []
       }
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "default": []
+    },
+    "categories": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "propertyNames": {
+        "minLength": 1
+      },
+      "default": {}
     }
   },
   "required": [

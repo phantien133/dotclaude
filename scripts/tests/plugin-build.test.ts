@@ -43,6 +43,8 @@ function makeSidecar(): Sidecar {
       optional: { agents: [], skills: [], commands: [], hooks: [], rules: [] },
       external: [],
     },
+    tags: [],
+    categories: {},
   };
 }
 

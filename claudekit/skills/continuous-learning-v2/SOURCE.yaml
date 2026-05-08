@@ -33,3 +33,15 @@ dependencies:
     - name: python3
       type: system_binary
       reason: "observe.sh and scripts/instinct-cli.py require Python 3"
+tags:
+  - learning
+  - hooks
+  - instinct
+  - observation
+categories:
+  purpose:
+    - learning
+    - automation
+  mechanism:
+    - hooks
+    - background-agent

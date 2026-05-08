@@ -24,3 +24,11 @@ dependencies:
     hooks: []
     rules: []
   external: []
+tags:
+  - code-review
+  - quality
+categories:
+  purpose:
+    - review
+  stack:
+    - cross-stack
