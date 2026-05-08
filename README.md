@@ -5,17 +5,32 @@ preset manifests (`presets/`), TypeScript installer, and plugin packaging.
 
 > Owner: phantien133 (phanqtien@gmail.com).
 
-## Objectives
+## Motivation
 
-- **`claudekit/`** — complete core kit (agents, skills, commands, hooks, rules) owned
-  by the owner. Vendored from upstream (ECC, anthropic-skills, ...) with per-component
-  provenance via sidecar YAML.
-- **`presets/`** — pure manifest YAML pointing to component IDs in claudekit/. Contains
-  no component code.
-- **`upstream/`** — git submodules (ECC + 3 docs sources) serving as sync source +
-  reference. Not a runtime dependency.
-- **`scripts/`** — TypeScript installer (run via `tsx`) that reads a preset → installs
-  into user/project target, with lifecycle and plugin packaging.
+Managing Claude Code tools and plugins for daily work is harder than it looks: too many
+options, no clear way to pick what's right for a specific project, and no way to evaluate
+whether a plugin is actually helping or just adding noise.
+
+This repo solves that problem — personal, curated, measurable:
+
+- **Right-sized**: pick only what's needed per project, nothing more
+- **Traceable**: every vendored component has a sidecar YAML recording its origin, license,
+  and modifications
+- **Evaluable**: skills are benchmarked with and without — so quality is measurable, not
+  assumed
+
+## Roadmap
+
+**P1 — Bootstrap** *(done)*: vibe-code the skeleton (installer, preset schema, sidecar
+format), vendor the plugins already in active use, get to a working daily-driver state fast.
+
+**P2 — Helpers** *(done)*: complete the tooling so updates, preset authoring, and building
+personal plugins are fast and simple — the `dotclaude-component-picker` skill, eval loop,
+sync workflow, and plugin packaging.
+
+**P3 — Operate & refine** *(ongoing)*: fix bugs that surface during real use, self-improve
+tools after using them, track upstream open-source changes. License compliance becomes a
+first-class concern at this phase.
 
 ## Quickstart
 
@@ -73,7 +88,7 @@ dotclaude/
 ├── marketplace.json               # Local marketplace index
 ├── upstream/<repo>/               # Submodules (sync source + docs)
 ├── scripts/                       # TS installer + lifecycle + plugin packaging
-└── docs/                          # Architecture, CQ decisions, guides
+└── docs/                          # Architecture + guides
 ```
 
 See `docs/architecture.md` for design decisions and full layout.
