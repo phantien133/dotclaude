@@ -39,6 +39,9 @@ dist/
 __pycache__/
 *.pyc
 
+# skill-creator eval workspaces (local iteration artifacts)
+claudekit/skills/skill-creator/*-workspace/
+
 # Planning documents (local only — not tracked in git)
 docs/plan/
 
