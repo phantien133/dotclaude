@@ -24,7 +24,7 @@ This repo solves that problem — personal, curated, measurable:
 **P1 — Bootstrap** *(done)*: vibe-code the skeleton (installer, preset schema, sidecar
 format), vendor the plugins already in active use, get to a working daily-driver state fast.
 
-**P2 — Helpers** *(done)*: complete the tooling so updates, preset authoring, and building
+**P2 — Helpers** *(in progress)*: complete the tooling so updates, preset authoring, and building
 personal plugins are fast and simple — the `dotclaude-component-picker` skill, eval loop,
 sync workflow, and plugin packaging.
 
