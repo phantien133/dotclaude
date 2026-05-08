@@ -3,8 +3,6 @@
 Personal Claude Code configuration kit — owner-controlled core (`claudekit/`),
 preset manifests (`presets/`), TypeScript installer, and plugin packaging.
 
-> Owner: phantien133 (phanqtien@gmail.com).
-
 ## Motivation
 
 Managing Claude Code tools and plugins for daily work is harder than it looks: too many
@@ -32,14 +30,24 @@ sync workflow, and plugin packaging.
 tools after using them, track upstream open-source changes. License compliance becomes a
 first-class concern at this phase.
 
-## Quickstart
+## Getting Started
 
-### Prerequisites
+There are two ways to use dotclaude. **Option A is recommended** — it gives you the full
+toolchain, preset authoring, and the ability to customize everything. Option B is a lighter
+path for quick onboarding without a local clone.
+
+---
+
+### Option A — Clone & use locally *(recommended)*
+
+Full control: all scripts, skills, and preset authoring tools available inside Claude Code.
+
+#### Prerequisites
 
 - Node ≥ 20
 - pnpm ≥ 9 (`corepack enable` or `brew install pnpm`)
 
-### Setup
+#### Setup
 
 ```bash
 git clone --recursive git@github.com:phantien133/dotclaude.git
@@ -50,7 +58,19 @@ pnpm test
 # pnpm init-private   # then restore private content from cloud sync
 ```
 
-### Subcommands
+Open the cloned folder in Claude Code. The `dotclaude-self` preset (installed at project
+level) activates the full working environment: `/preset-wizard`, `/dotclaude-setup`,
+`dotclaude-component-picker`, `skill-creator`, and the self-learning hooks.
+
+```bash
+# Install a preset to your global Claude config
+pnpm install:user personal-baseline
+
+# Or to the current project
+pnpm install:project personal-baseline
+```
+
+#### Subcommands
 
 ```bash
 pnpm run list                                  # List presets (public + private)
@@ -71,6 +91,27 @@ pnpm publish-plugin <preset>                   # Build + update marketplace.json
 > `pnpm list` (without `run`) calls the pnpm built-in → use `pnpm run list` for preset listing.
 
 See `docs/INSTALL.md` for detailed usage.
+
+---
+
+### Option B — Install `dotclaude-bootstrap` plugin *(not recommended)*
+
+No clone needed. Installs the bootstrap wizard and preset-creation tools at user level via
+the [claudekit-marketplace](https://github.com/phantien133/claudekit-marketplace) plugin.
+
+> **Limitations**: no local scripts, no preset authoring, no sync workflow, no private
+> overlays. Use this only for a quick taste or when you can't clone the repo.
+
+```bash
+# Add the marketplace to your Claude Code user settings, then install the plugin:
+# Settings → Marketplace → claudekit-marketplace → dotclaude-bootstrap → Install (user level)
+```
+
+Once installed, run `/dotclaude-setup` inside Claude Code — the setup wizard will guide you
+through finding and installing a preset that fits your workflow.
+
+> `dotclaude-bootstrap` is published to the marketplace at
+> [phantien133/claudekit-marketplace](https://github.com/phantien133/claudekit-marketplace).
 
 ## Structure
 
