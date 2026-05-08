@@ -568,163 +568,34 @@ provenance + reference.
 
 ### 5.4. Phase 2 — Install pipeline
 
+> Xem chi tiết: [`docs/planning/phase-2-install-pipeline.md`](planning/phase-2-install-pipeline.md)
+
 **Goal**: cài 1 preset vào target user/project được, idempotent, có manifest.
 
-**Steps**:
+**Milestones** (xem file planning để track từng step):
+- M1: Resolver (extends tree + deps recursive, pure/no-fs)
+- M2: FS ops + manifest atomic read/write
+- M3: `install:user` command end-to-end
+- M4: `install:project` command
+- M5: `init-private` + `clean-backups` utilities
 
-1. **`scripts/lib/types.ts` + `schema.ts`** — TypeScript types + zod schema cho:
-   - `Preset` (CQ-3a fields).
-   - `Sidecar` (file-component) + `SkillSidecar` (folder-component, cùng schema).
-   - `Manifest` (CQ-5e schema).
-   - Helper types: `ComponentRef`, `InstallPlan`, `Operation`.
-
-2. **`scripts/lib/sidecar.ts`** — read/write `<name>.source.yaml` + `SOURCE.yaml`.
-   Parse qua `js-yaml` → validate qua zod → return typed object.
-
-3. **`scripts/lib/resolver.ts`** — pure functions, 3 phase:
-
-   **Phase 1: Preset resolution**:
-   - `loadPreset(name, kind?): Preset` — đọc YAML qua js-yaml, validate qua zod.
-   - `resolveExtends(preset): Preset` — đệ quy, detect circular (Set visited),
-     diamond dedupe.
-
-   **Phase 2: Component lookup**:
-   - `resolveComponents(preset): ComponentRef[]` — với mỗi ID trong preset.components,
-     lookup `claudekit/<type>/<id>` trước, fallback `claudekit/private/<type>/<id>`.
-     Throw nếu không tìm thấy.
-
-   **Phase 3: Dependency resolution (CQ-12)**:
-   - `resolveDependencies(components, opts: { includeOptional: bool }): { components: ComponentRef[], external: ExternalDep[], log: string[] }`:
-     - Với mỗi component, đọc sidecar (`<name>.source.yaml` hoặc folder/`SOURCE.yaml`).
-     - Cho `dependencies.required.<type>: [...]`: auto-add vào component list +
-       `auto_included: true` flag. Recursive resolve (deps of deps).
-     - Cho `dependencies.optional.<type>: [...]`: skip default, log warn. Add nếu
-       `--include-optional`.
-     - Cho `dependencies.external[]`: check qua `which <name>` cho `system_binary`,
-       `pnpm ls --depth=0` cho `npm`, etc. Log FOUND/NOT FOUND. Không auto-install.
-     - Detect circular: A→B→A → throw error rõ.
-     - Dedupe: Set theo `<type>:<id>`.
-     - Output log array có thể print verbose ở dry-run.
-
-   **Final composition**:
-   - `mergeSettingsPatch(patches: object[]): object` — left-fold deep-merge.
-   - `buildInstallPlan(preset, opts): InstallPlan` — gộp toàn bộ:
-     `{ ops: Operation[], settingsPatch, externalDeps: ExternalDep[], depLog: string[] }`.
-
-4. **`scripts/lib/fs-ops.ts`** — helpers:
-   - `backup(path)`: tạo `<path>.bak.<timestamp>` nếu file tồn tại.
-   - `applyOp(op, mode)`: symlink hoặc copy theo mode.
-   - `copyFolder(src, dst, exclude=['SOURCE.yaml'])` cho skill.
-   - Tất cả async fs API (`node:fs/promises`).
-
-5. **`scripts/lib/manifest.ts`** — read/write manifest atomic:
-   - `loadManifest(path): Manifest | null`.
-   - `writeManifest(path, manifest)`: write tmp → rename atomic.
-   - `mergeManifest(old, plan)`: cập nhật manifest sau install (multi-preset chồng).
-
-6. **`scripts/install-user.ts`**:
-   - Invocation qua `pnpm install:user <preset>` (package.json wrap `tsx`).
-   - Default mode: symlink (CQ-5b).
-   - Sử dụng resolver → InstallPlan.
-   - Apply plan qua `fs-ops` (backup → symlink/copy).
-   - Apply `settings_patch` qua `settings-merge.ts`: deep-merge YAML object (từ preset)
-     → object → `JSON.stringify` → ghi vào `~/.claude/settings.json`. Backup
-     `settings.json` trước.
-   - Cập nhật `~/.claude/.dotclaude-manifest.yaml` qua `manifest.ts` (đọc/ghi YAML).
-   - Flags qua `commander`: `--copy`, `--symlink`, `--force`, `--skip-existing`,
-     `--prompt`, `--dry-run`.
-
-7. **`scripts/install-project.ts`**:
-   - Default mode: copy.
-   - Target: `<cwd>/.claude/`.
-   - Tương tự install-user.ts nhưng default mode khác.
-   - Warn nếu `<cwd>` không có `.git/`.
-
-8. **`scripts/install.ts`** — entry dispatcher dùng `commander`:
-   - `install user <preset> [flags]` → install-user.ts logic.
-   - `install project <preset> [flags]` → install-project.ts logic.
-   - `install list [--kind <k>]` → list presets.
-   - `install validate <preset>` → schema + reference check.
-   - Có thể chia subcommand qua các file riêng và import.
-
-9. **`scripts/init-private.ts`**: copy `*/private.example/` → `*/private/` skeleton.
-   Idempotent (không đè nếu private đã có nội dung).
-
-10. **`scripts/clean-backups.ts`**: scan `*.bak.YYYYMMDD-*` cũ hơn N ngày (default 30)
-    trong `~/.claude/` + project `.claude/`. Flag `--days <n>` + `--dry-run`.
-
-11. **Vitest tests**:
-    - `resolver.test.ts`:
-      - Preset extends: linear, diamond, circular detect, multi-parent.
-      - Component lookup: public hit, private fallback, missing → error.
-      - **Dependency resolution (CQ-12)**:
-        - Required dep auto-include + recursive (A→B→C all included).
-        - Optional dep skip default, included with `--include-optional`.
-        - External dep: mock `which` calls, FOUND/NOT FOUND log.
-        - Circular dep detect: A→B→A throw.
-        - Dedupe: same dep from 2 sources → install once, manifest tracks both
-          requesters.
-    - `settings-merge.test.ts`: deep-merge object, array policies, conflict warn.
-    - `manifest.test.ts`: read/write atomic YAML, merge multi-preset, `auto_included`
-      flag preserved.
-    - `sidecar.test.ts`: parse valid + invalid YAML, deps schema variants.
-    - Fixtures trong `scripts/tests/fixtures/`.
-
-12. **Test với preset thật** (`personal-baseline`):
-    - `./scripts/install.ts user personal-baseline --dry-run` → plan đúng + section
-      `[deps]` hiển thị components auto-included từ sidecar dependencies.
-    - **Test deps resolution**: tạo preset minimal `agents: [code-reviewer]` (không
-      list skill) → dry-run phải show `+ skill: coding-standards (auto-included from
-      code-reviewer)` → final plan có cả 2.
-    - Run thật → manifest tạo, file ở target đúng chỗ, manifest có `auto_included: true`
-      cho `coding-standards`.
-    - Re-run → idempotent (chỉ cập nhật manifest timestamp).
-
-**Risks giải quyết**: R1 (defensive guard cho `rm -rf`), R2 (yq/jq thay awk),
-R3 (manifest tracking thay rsync mù), R5 (settings_patch + manifest trace lifecycle
-template).
+**Risks giải quyết**: R1, R2, R3, R5.
 
 **Done when**: cài + re-cài + dry-run + 1 preset extends 1 preset khác đều chạy đúng.
 
 ### 5.5. Phase 3 — Lifecycle
 
+> Xem chi tiết: [`docs/planning/phase-3-lifecycle.md`](planning/phase-3-lifecycle.md)
+
 **Goal**: lifecycle đầy đủ — uninstall, upgrade, audit.
-
-**Steps**:
-
-1. **`uninstall.sh`**: đọc manifest → revert components (xoá file + restore .bak nếu
-   có) + revert settings_patch → cập nhật manifest.
-
-2. **`upgrade.sh`**: re-resolve preset, diff với manifest cũ → smart upgrade (xoá
-   component không còn trong preset, add component mới, update component đã đổi).
-
-3. **`audit.sh`**: list file ở target không thuộc manifest → owner quyết.
 
 **Done when**: install → modify → uninstall round-trip clean (target không leftover).
 
 ### 5.6. Phase 4 — Marketplace + plugin
 
+> Xem chi tiết: [`docs/planning/phase-4-marketplace.md`](planning/phase-4-marketplace.md)
+
 **Goal**: 1-2 preset đầu publish được lên marketplace tự host.
-
-**Steps**:
-
-1. **Verify Claude plugin model**: đọc docs Anthropic mới nhất + `upstream/everything
-   -claude-code` + `upstream/anthropic-cookbook` để biết format `manifest.json`,
-   marketplace index format hiện hành.
-
-2. **`scripts/build-plugin.sh`**:
-   - Input: preset name.
-   - Resolver chạy giống install (kéo cả extends).
-   - Output: `plugins/<preset>/.claude-plugin/plugin.json` + components đóng gói.
-   - Tự generate plugin.json từ preset metadata (name, version, description, tags).
-
-3. **Repo `phantien133/claudekit-marketplace`** (tạo riêng):
-   - Layout: `marketplace.json` index + `plugins/<name>/`.
-   - Workflow publish: build trong dotclaude → push artifact sang marketplace repo.
-
-4. **Test**: 1 user khác (hoặc máy 2 của owner) chạy
-   `/plugin marketplace add phantien133/claudekit-marketplace` →
-   `/plugin install personal-baseline`.
 
 **Done when**: round-trip publish + install qua marketplace thành công ít nhất 1 preset.
 

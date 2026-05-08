@@ -84,7 +84,8 @@ implementation plan.
 | Doc | Nội dung |
 |---|---|
 | `docs/architecture.md` | Design decisions sau redesign |
-| `docs/redesign-plan.md` | 5-phase plan (in progress) |
+| `docs/redesign-plan.md` | 5-phase plan overview (in progress) |
+| `docs/planning/` | Per-phase planning files (Phase 2–4) |
 | `docs/clarifying-questions.md` | 12 CQ với decisions log |
 | `docs/PROVENANCE.md` | Sidecar schema + sync workflow |
 | `docs/PRESETS.md` | Preset schema + authoring guide |
