@@ -149,6 +149,14 @@ Plugin output: `plugins/<preset-name>/` with `.claude-plugin/plugin.json` + comp
 No sidecar files (*.source.yaml / SOURCE.yaml) are included in the bundle.
 `agents` and `hooks` are auto-discovered by Claude Code — never declared in plugin.json.
 
+## Planning
+
+- Planning documents (session plans, architecture explorations, step-by-step execution notes)
+  go in `docs/plan/<name>.md`.
+- `docs/plan/` is gitignored — plans are local-only, never committed to the repo.
+- When starting a multi-step task, create a plan file in `docs/plan/` and keep it updated
+  as steps complete.
+
 ## Code Editing Principles
 
 1. **Schema-first**: changing data shape → edit zod schema first, regen JSON Schema,
