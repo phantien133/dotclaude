@@ -1,0 +1,24 @@
+{
+  "name": "dotclaude-bootstrap",
+  "version": "0.1.0",
+  "description": "Bootstrap preset for new dotclaude users — includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
+  "author": {
+    "name": "phantien133",
+    "email": "tienpq@hilab.asia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "dotclaude",
+    "bootstrap",
+    "setup",
+    "wizard"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ]
+}

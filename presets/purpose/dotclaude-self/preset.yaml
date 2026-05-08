@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: dotclaude-self
+kind: purpose
+description: Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.
+version: 0.2.0
+extends: []
+components:
+  agents: []
+  skills:
+    - continuous-learning-v2
+    - dotclaude-component-picker
+    - skill-creator
+    - preset-debugger
+    - plugin-discovery
+  commands:
+    - preset-wizard
+    - dotclaude-setup
+  hooks: []
+  rules: []
+settings_patch:
+  hooks:
+    PreToolUse:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: ".claude/skills/continuous-learning-v2/hooks/observe.sh pre"
+    PostToolUse:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: ".claude/skills/continuous-learning-v2/hooks/observe.sh"
+external_setup: []
+use_case_tags:
+  roles:
+    - developer
+  project_types:
+    - tooling
+  stacks:
+    - claude-code
+  use_cases:
+    - preset-authoring
+    - setup
+    - onboarding
+    - component-management
+    - self-learning
+tags:
+  - self
+  - learning
+  - dotclaude
+  - wizard
+  - preset-authoring

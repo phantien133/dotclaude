@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+#
+# Project-native skill (not vendored from upstream). repo/commit point to
+# dotclaude itself at the commit when this skill was first created.
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 3d4d7a43eaad7b2b0fc9eaf31d98e8f8d0b50e04
+  path: claudekit/skills/plugin-discovery
+  ref: main
+imported_at: "2026-05-08"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Project-native skill created as part of the wizard-features plan (2026-05-08).
+  Searches GitHub (auto) and optionally npm (user opt-in) for external Claude Code
+  components to vendor into claudekit/. Quality filter: ≥50 stars minimum, active
+  within 12 months, MIT/Apache-2.0 license, recognisable component structure.
+  Warns clearly when no qualifying candidates are found. Vendor path: git submodule
+  into upstream/<alias> + dependencies.yaml update + delegates to
+  dotclaude-component-picker for the actual pick/sidecar/install pipeline.
+  Scope strictly limited to dotclaude vendoring — not for general search tasks.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills:
+      - dotclaude-component-picker
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - search
+  - vendoring
+  - component-management
+  - dotclaude
+categories:
+  purpose:
+    - preset-authoring
+    - discovery
+  mechanism:
+    - guided-steps
+    - interactive

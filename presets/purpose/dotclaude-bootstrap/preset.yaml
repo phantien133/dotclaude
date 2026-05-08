@@ -1,0 +1,34 @@
+# yaml-language-server: $schema=../../presets/schema/preset.schema.json
+name: dotclaude-bootstrap
+kind: purpose
+description: Bootstrap preset for new dotclaude users — includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.
+version: 0.1.0
+extends: []
+components:
+  agents: []
+  skills:
+    - preset-debugger
+    - plugin-discovery
+  commands:
+    - dotclaude-setup
+    - preset-wizard
+  hooks: []
+  rules: []
+settings_patch: {}
+external_setup: []
+use_case_tags:
+  roles:
+    - developer
+  project_types:
+    - tooling
+  stacks:
+    - claude-code
+  use_cases:
+    - preset-authoring
+    - setup
+    - onboarding
+tags:
+  - dotclaude
+  - bootstrap
+  - setup
+  - wizard

@@ -1,0 +1,25 @@
+{
+  "name": "dotclaude-self",
+  "version": "0.2.0",
+  "description": "Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
+  "author": {
+    "name": "phantien133",
+    "email": "tienpq@hilab.asia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "self",
+    "learning",
+    "dotclaude",
+    "wizard",
+    "preset-authoring"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ]
+}

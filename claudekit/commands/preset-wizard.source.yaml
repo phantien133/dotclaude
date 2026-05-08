@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=../../presets/schema/sidecar.schema.json
+#
+# Project-native command (not vendored from upstream).
+# repo/commit point to dotclaude itself at the commit when this command was created.
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 3d4d7a43eaad7b2b0fc9eaf31d98e8f8d0b50e04
+  path: claudekit/commands/preset-wizard.md
+  ref: main
+imported_at: "2026-05-08"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Project-native command created as part of the wizard-features plan (2026-05-08).
+  Implements a 4-phase interactive wizard: elicitation → planning → confirmation → execution.
+  Calls plugin-discovery skill when claudekit lacks coverage for stated requirements.
+  On build/test failure, hands off to preset-debugger skill rather than fixing inline.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills:
+      - plugin-discovery
+      - preset-debugger
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - wizard
+  - preset
+  - workflow
+  - dotclaude
+categories:
+  purpose:
+    - preset-authoring
+    - setup
+  mechanism:
+    - guided-steps
+    - interactive

@@ -1,0 +1,31 @@
+{
+  "eval_id": "eval-5-mcp-builder-deps",
+  "configuration": "old_skill",
+  "expectations": [
+    {
+      "text": "Greps mcp-builder/ for skill/agent references and reports findings",
+      "passed": false,
+      "evidence": "Step 2 says 'Internal dependencies: The skill mentions no other claudekit skills explicitly.' No grep command shown. Finding came from reading SKILL.md rather than a systematic scan. Response notes this as a gap: 'No systematic grep scan — dependency detection was ad-hoc.'"
+    },
+    {
+      "text": "Checks scripts/ for Python imports to identify external package dependencies",
+      "passed": false,
+      "evidence": "Step 2 reads `scripts/requirements.txt` to find mcp and anthropic packages, but does not show a grep of Python import statements. Import-level scan was not performed. Response notes: 'Didn't grep imports explicitly — relied on requirements.txt.'"
+    },
+    {
+      "text": "Correctly identifies fastmcp/mcp as external Python packages (not claudekit skills)",
+      "passed": true,
+      "evidence": "Step 2: 'FastMCP is a Python package, not a claudekit component.' and 'External dependencies: mcp>=1.1.0, anthropic>=0.39.0'. Correct classification reached via reading docs."
+    },
+    {
+      "text": "Correctly concludes no inter-skill dependencies on existing claudekit skills",
+      "passed": true,
+      "evidence": "Response states: 'mcp-builder does not depend on any other claudekit skills.' Correct conclusion."
+    },
+    {
+      "text": "Produces a dependencies section for SOURCE.yaml with correct external entry",
+      "passed": true,
+      "evidence": "SOURCE.yaml shown with external entries for mcp and anthropic (python_pkg). Correct output, though the response also notes: 'dependencies.external was left empty in the actual SOURCE.yaml that was created — old skill didn't prompt for it explicitly enough.'"
+    }
+  ]
+}
