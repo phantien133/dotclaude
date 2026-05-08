@@ -125,7 +125,7 @@ program
   .option('--kind <kind>', `Disambiguate preset kind (${PRESET_KINDS.join(' | ')})`)
   .option('--copy', 'Copy files instead of symlinking')
   .option('--symlink', 'Symlink files instead of copying')
-  .option('--force', 'Backup-overwrite conflicts without prompting')
+  .option('--force', 'Overwrite conflicts in-place (no backup)')
   .option('--skip-existing', 'Skip files that already exist at target')
   .option('--include-optional', 'Also install optional component deps')
   .option('--dry-run', 'Print what would be installed without making changes')
@@ -144,7 +144,7 @@ program
   .option('--kind <kind>', `Disambiguate preset kind (${PRESET_KINDS.join(' | ')})`)
   .option('--symlink', 'Symlink files instead of copying')
   .option('--copy', 'Copy files instead of symlinking')
-  .option('--force', 'Backup-overwrite conflicts without prompting')
+  .option('--force', 'Overwrite conflicts in-place (no backup)')
   .option('--skip-existing', 'Skip files that already exist at target')
   .option('--include-optional', 'Also install optional component deps')
   .option('--dry-run', 'Print what would be installed without making changes')
@@ -198,9 +198,11 @@ async function runInstall(
       ? 'symlink'
       : await promptInstallMode();
 
-  const conflictPolicy: ConflictPolicy = opts.skipExisting === true
-    ? 'skip'
-    : 'backup-overwrite';
+  const conflictPolicy: ConflictPolicy = opts.force === true
+    ? 'overwrite'
+    : opts.skipExisting === true
+      ? 'skip'
+      : 'backup-overwrite';
 
   const kind = opts.kind ? validateKind(opts.kind) : undefined;
 
