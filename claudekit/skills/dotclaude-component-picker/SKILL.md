@@ -1,11 +1,17 @@
 ---
 name: dotclaude-component-picker
-description: Use when picking, vendoring, porting, or syncing agents, skills, commands, hooks, or rules from any upstream source (ECC = everything-claude-code, anthropic-skills, mcp-servers, wshobson/agents, or other external repos) into this dotclaude project's claudekit/ directory. Trigger on phrases like "pick X from ECC", "vendor this skill", "add agent from upstream", "port this component", "sync component from source", "import this hook", "bring in this rule from ECC", or any time the user references an upstream component to add to claudekit/. This skill covers the full 7-step pipeline: browse → evaluate → vendor → sidecar → preset → install → verify.
+description: Use when picking, vendoring, porting, or syncing agents, skills, commands, hooks, or rules from any upstream source (ECC = everything-claude-code, anthropic-skills, mcp-servers, wshobson/agents, or other external repos) into this dotclaude project's claudekit/ directory. Trigger on phrases like "pick X from ECC", "vendor this skill", "add agent from upstream", "port this component", "sync component from source", "import this hook", "bring in this rule from ECC", or any time the user references an upstream component to add to claudekit/. This skill covers the full 7-step pipeline: browse → evaluate → vendor → sidecar → preset → install → verify. Also trigger for upgrade or sync tasks ("check if X has updates", "sync X from upstream").
 ---
 
 # dotclaude-component-picker
 
 Full pipeline for picking a component from any upstream source and integrating it into `dotclaude`. Follow all 7 steps — each step's output feeds the next.
+
+**Bundled references** (read when you need the full schema or deeper context):
+- `references/sidecar.md` — sidecar schema, layout rules, dependency resolution, modify/upgrade workflows
+- `references/presets.md` — preset schema, extends: semantics, settings_patch, install flags
+
+---
 
 ## Upstream Sources
 
@@ -16,17 +22,17 @@ Full pipeline for picking a component from any upstream source and integrating i
 | mcp-servers | `upstream/mcp-servers/` | reference only |
 | anthropic-cookbook | `upstream/anthropic-cookbook/` | reference only |
 
-Before starting, ensure the target submodule is up-to-date:
+---
+
+## Step 1 — Browse
+
+First, bring the submodule to the latest remote state:
 
 ```bash
 git submodule update --remote upstream/<alias>
 ```
 
----
-
-## Step 1 — Browse
-
-Survey what's available and what's already vendored:
+Then survey what's available and what's already vendored:
 
 ```bash
 # Available in upstream
@@ -42,7 +48,7 @@ ls claudekit/commands/
 ls claudekit/hooks/
 ```
 
-Note: component name, whether it's a **folder** or **file** component, and whether it already exists in `claudekit/`.
+Note: component name, whether it's a **folder** or **file** component, and whether it already exists in `claudekit/`. If it already exists, compare commits and decide whether to upgrade (see Upgrade workflow in `references/sidecar.md`).
 
 ---
 
@@ -54,22 +60,22 @@ Read the component's primary documentation:
 - **Hook**: read the script header / inline comments
 
 Confirm before vendoring:
-1. License is compatible (look for `LICENSE.txt` in the component folder or the upstream root)
-2. Not already vendored — if it is, compare commits and decide whether to upgrade
-3. External dependencies (python3, npm packages, binaries) — note them for the sidecar
-4. Internal dependencies (other skills, hooks, agents) — note for the sidecar
+1. License is compatible — look for `LICENSE.txt` in the component folder or the upstream root
+2. Not already vendored — if it is, compare commits (`pnpm sync <type>/<name>`) and decide whether to upgrade
+3. External dependencies (python3, npm packages, binaries) — note them; they go in `dependencies.external`
+4. Internal dependencies (other skills, hooks, agents this component requires) — note them; they go in `dependencies.required` or `dependencies.optional`
 
 ---
 
 ## Step 3 — Vendor
 
-Get the upstream commit hash first (needed for the sidecar):
+Get the upstream commit hash first — you need it for the sidecar:
 
 ```bash
 git -C upstream/<alias> rev-parse HEAD
 ```
 
-**Folder component** (skill with multiple files, multi-file agent):
+**Folder component** (skill with SKILL.md + assets, multi-file agent):
 ```bash
 cp -r upstream/<alias>/<type>/<name>/ claudekit/<type>/<name>/
 ```
@@ -85,31 +91,27 @@ cp upstream/<alias>/<type>/<name>.sh claudekit/<type>/<name>.sh
 
 ## Step 4 — Sidecar
 
-Sidecar location depends on component type:
+The sidecar records provenance and drives dependency resolution at install time. Read `references/sidecar.md` for the full schema — here's the quick version.
+
+**Sidecar location:**
 - **Folder component** → `SOURCE.yaml` **inside** the folder: `claudekit/<type>/<name>/SOURCE.yaml`
 - **File component** → `<name>.source.yaml` **next to** the file: `claudekit/<type>/<name>.source.yaml`
 
-Always add the schema comment at the top so IDEs validate it.
-
-### Template
+**Minimal template** (see `references/sidecar.md` for all fields including tags/categories):
 
 ```yaml
 # yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
-#
-# SOURCE.yaml is INSIDE the skill folder.
-# Installer MUST exclude this file when copying the skill folder to a target.
 source:
-  repo: https://github.com/<org>/<repo>         # exact HTTPS URL (no trailing .git)
-  commit: <40-char-hex>                          # from `git -C upstream/<alias> rev-parse HEAD`
-  path: <type>/<name>                            # path within the upstream repo
+  repo: https://github.com/<org>/<repo>   # no trailing .git
+  commit: <40-char-hex>                   # from `git -C upstream/<alias> rev-parse HEAD`
+  path: <type>/<name>                     # path within upstream repo
   ref: main
-imported_at: "<YYYY-MM-DD>"                      # today's date
-license: MIT                                     # actual license of the component
+imported_at: "<YYYY-MM-DD>"              # quoted — bare dates get parsed as Date objects
+license: MIT
 modified: false
 modifications: null
 notes: >-
-  <One paragraph: what the component does, key files, any quirks worth knowing
-  for future sync or upgrade decisions.>
+  What the component does, key files, any quirks for future sync decisions.
 dependencies:
   required:
     agents: []
@@ -123,36 +125,36 @@ dependencies:
     commands: []
     hooks: []
     rules: []
-  external: []                                   # fill in if there are system deps
+  external: []
 tags: []
 categories: {}
 ```
 
-Fill `dependencies.external` for non-standard system dependencies:
-
+**External dependency format:**
 ```yaml
 external:
   - name: python3
-    type: system_binary       # or: npm, python_pkg
-    reason: "why it's needed"
+    type: system_binary       # npm | system_binary | python_pkg
+    reason: "scripts/*.py require Python 3.9+"
   - name: claude
     type: system_binary
     reason: "calls claude -p via subprocess"
 ```
 
-After writing the sidecar, verify the schema:
-
+**After creating the sidecar**, verify it parses correctly:
 ```bash
 pnpm typecheck
 ```
+
+**If you later edit the vendored component**, set `modified: true` and add a `modifications:` description — this is how the sync tool knows the local copy diverges from upstream.
 
 ---
 
 ## Step 5 — Preset
 
-Add the component reference to an existing preset, or create a new one.
+Add the component to an existing preset or create a new one. Read `references/presets.md` for the full schema.
 
-**Add to existing preset** — edit the relevant `.yaml` in `presets/`:
+**Add to an existing preset** — edit the `.yaml` in `presets/`:
 ```yaml
 components:
   skills:
@@ -165,10 +167,10 @@ KIND=core   # or: framework, purpose
 NAME=<preset-name>
 cp presets/core/personal-baseline.yaml presets/$KIND/$NAME.yaml
 cp presets/core/personal-baseline.md   presets/$KIND/$NAME.md
-$EDITOR presets/$KIND/$NAME.yaml
+$EDITOR presets/$KIND/$NAME.yaml       # update name/kind/description/components/tags
 ```
 
-Validate the preset parses correctly:
+Validate the preset:
 ```bash
 pnpm validate <preset-name> --kind <core|framework|purpose>
 ```
@@ -178,16 +180,21 @@ pnpm validate <preset-name> --kind <core|framework|purpose>
 ## Step 6 — Install
 
 ```bash
-# Into this project (.claude/ in the dotclaude repo)
-pnpm install:project <preset-name>
+# Into this project (.claude/ at repo root)
+pnpm install:project <preset-name> --symlink --force
 
-# Into user-level Claude config (~/.claude/)
-pnpm install:user <preset-name>
+# Into user-level (~/.claude/)
+pnpm install:user <preset-name> --symlink --force
 ```
 
-> **Pitfall**: never `pnpm install <preset>` — pnpm intercepts this as an npm install. Always use `pnpm install:project` or `pnpm install:user`.
+`--force` overwrites in-place without creating `.bak` backups. `--symlink` keeps the installed component as a pointer back to `claudekit/` (edits to the source are immediately live).
 
-If the preset patches `settings.json` hooks, the installer merges them automatically. Check `.claude/settings.json` after install to confirm the hooks landed correctly.
+> **Pitfall**: `pnpm install <preset>` is intercepted by pnpm as an npm install. Always use `pnpm install:project` or `pnpm install:user`.
+
+If the preset has a `settings_patch` (e.g., hooks), the installer merges it into `.claude/settings.json` automatically. Check the result:
+```bash
+cat .claude/settings.json
+```
 
 ---
 
@@ -206,7 +213,7 @@ Confirm the component exists at its expected target location:
 
 ## Commit
 
-One commit per vendor operation (keep them small and easy to revert):
+One commit per vendor operation — keep them small and easy to revert:
 
 ```bash
 git add claudekit/<type>/<name>/ presets/<kind>/<preset>.yaml presets/<kind>/<preset>.md
@@ -214,3 +221,16 @@ git commit -m "feat(<type>): vendor <name> from <upstream-alias>"
 ```
 
 Conventional commits, English headers. Do not bundle multiple unrelated vendors in one commit.
+
+---
+
+## Upgrade an existing component
+
+If a component is already in `claudekit/` and you want to pull upstream changes:
+
+```bash
+pnpm sync <type>/<name>          # shows diff between sidecar.commit and upstream HEAD
+# Review diff, manually merge desired changes into claudekit/<type>/<name>/
+# Then update sidecar: bump source.commit, set modified: true if diverged
+pnpm typecheck && pnpm test
+```

@@ -12,18 +12,21 @@ source:
   ref: main
 imported_at: "2026-05-08"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: |
+  - Added references/ directory: sidecar.md (full schema, layout rules, dep resolution,
+    modify/upgrade workflows) and presets.md (preset schema, extends, settings_patch,
+    install flags).
+  - SKILL.md v2: added bundled reference pointers, tags/categories in sidecar template,
+    modify-after-import workflow, pnpm sync upgrade path, --force --symlink install flags,
+    "Upgrade an existing component" section, richer Step 2 (eval) and Step 6 (install).
 notes: >-
-  Project-native skill created during step 5 of the continuous-learning-v2 plan
-  (session 2026-05-08). Built by following the skill-creator workflow. Encodes
-  the full dotclaude component pick/vendor/install pipeline: (1) browse upstream
-  submodules, (2) evaluate license + deps, (3) cp -r or cp vendor, (4) write
-  SOURCE.yaml sidecar (folder → inside, file → sibling), (5) add to preset +
-  pnpm validate, (6) pnpm install:project|user (never pnpm install), (7)
-  pnpm typecheck && pnpm test. Key pitfall: pnpm install intercepts `pnpm
-  install <preset>` as npm install — always use pnpm install:project or
-  install:user. No external deps: pure markdown SKILL.md, no scripts.
+  Project-native skill created in step 5 of the continuous-learning-v2 plan
+  (session 2026-05-08), improved via skill-creator in the same session.
+  Encodes the full dotclaude component pick/vendor/install pipeline with
+  bundled references for sidecar and preset schemas. Key pitfall: pnpm
+  install intercepts `pnpm install <preset>` as npm install — always use
+  pnpm install:project or install:user with --symlink --force.
 dependencies:
   required:
     agents: []
