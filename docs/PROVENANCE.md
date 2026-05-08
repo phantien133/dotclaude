@@ -12,6 +12,7 @@ A sidecar:
 - Stores provenance (repo + commit + path + license).
 - Stores the `modified` flag + diff summary when the owner edits a component.
 - Stores inter-component dependencies (CQ-12) → the resolver auto-includes them on install.
+- Stores `tags` + `categories` (CQ-13) → flat and grouped labels for future wizard/search tooling.
 
 Schema is TS-first via `zod` (see `scripts/lib/schema.ts → SidecarSchema`). JSON Schema
 is generated at `presets/schema/sidecar.schema.json` for IDE validation.
@@ -72,7 +73,33 @@ dependencies:
       type: npm                              # npm | system_binary | python_pkg
       version: ">=3.0"
       reason: "Hook format-on-save uses prettier"
+tags:                                        # flat labels for search/filter (CQ-13)
+  - code-review
+  - quality
+categories:                                  # grouped by dimension (CQ-13)
+  purpose:
+    - review
+  stack:
+    - cross-stack
 ```
+
+### `tags` vs `categories`
+
+| Field | Type | Use case |
+|---|---|---|
+| `tags` | `string[]` | Flat labels — quick filter, full-text search, preset wizard tag cloud |
+| `categories` | `Record<string, string[]>` | Grouped by dimension — structured browse, faceted search |
+
+**Suggested category dimensions:**
+
+| Dimension | Example values |
+|---|---|
+| `purpose` | `review`, `learning`, `automation`, `setup`, `ops`, `guidance` |
+| `stack` | `cross-stack`, `typescript`, `python`, `go`, `react`, `django` |
+| `mechanism` | `hooks`, `background-agent`, `cli`, `mcp` |
+| `phase` | `setup`, `development`, `ci`, `deployment` |
+
+Both fields default to empty — not required when first vendoring. Fill in when the component will be referenced by a wizard or search tool.
 
 ## Workflow: vendor a new component
 
@@ -153,6 +180,7 @@ Edge cases:
 
 - `claudekit/agents/code-reviewer.source.yaml` — first vendored agent (Phase 1).
 - `claudekit/skills/coding-standards/SOURCE.yaml` — first vendored skill (Phase 1).
+- `claudekit/skills/continuous-learning-v2/SOURCE.yaml` — folder-component sidecar with external dep + tags/categories example.
 - `scripts/lib/schema.ts → SidecarSchema` — runtime + compile-time validation.
 - `scripts/lib/sidecar.ts` — locate + load helpers.
 - `scripts/sync-from-upstream.ts` — diff helper.

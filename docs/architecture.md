@@ -102,13 +102,14 @@ dotclaude/
 | CQ-2 | Sidecar YAML — file-component `<name>.source.yaml`, folder-component `SOURCE.yaml` (excluded on install) | docs/PROVENANCE.md |
 | CQ-3a/b/c/d | Preset: YAML + companion MD, schema validation via `# yaml-language-server: $schema=...` header, folder per kind, `extends:` supported | docs/PRESETS.md |
 | CQ-4a/b/c/d | `private/` per top package, mirrors public, `private.example/` skeleton tracked, manual cloud-sync bootstrap | docs/PRIVATE.md |
-| CQ-5a/b/c/d/e | User+Project install; user=symlink default, project=copy default; backup-then-overwrite; idempotent; manifest YAML tracking | docs/INSTALL.md |
+| CQ-5a/b/c/d/e | User+Project install; neither scope has a hardcoded default mode — installer always prompts `symlink/copy` when no flag is passed. Pass `--symlink` or `--copy` to skip prompt. Folder components respect the chosen mode (copy uses `copyFolderExcluding`, excludes `SOURCE.yaml`). Backup-then-overwrite; idempotent; manifest YAML tracking | docs/INSTALL.md |
 | CQ-6 | Self-hosted marketplace (`phantien133/claudekit-marketplace`), 1-1 preset↔plugin | |
 | CQ-7 | `vendor/` → `upstream/`, ECC role: sync_source | |
 | CQ-9 | Migration: wipe & rewrite | |
 | CQ-10 | 100% TS + pnpm + tsx | |
 | CQ-11 | YAML for owner-controlled files; JSON for external conventions (settings.json, package.json, JSON Schema, plugin manifest) | |
 | CQ-12 | Sidecar has `dependencies.required/optional/external`; resolver auto-includes required, skips optional by default, warn-only for external | docs/PROVENANCE.md |
+| CQ-13 | Sidecar has `tags: string[]` (flat labels) + `categories: Record<string, string[]>` (grouped by dimension: purpose, stack, mechanism, phase…). Both default to empty and are optional at vendor time. Intended for future preset wizard / search tooling | docs/PROVENANCE.md |
 
 ## Resolver flow
 
