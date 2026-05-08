@@ -1,51 +1,55 @@
-# dependencies.yaml — Nguồn external cho mọi package
+# dependencies.yaml — Upstream sources for dotclaude
 #
-# Mỗi entry trong `sources:` khai báo một plugin/repo external.
-# Các package (packages/user, packages/presets/*) chỉ tham chiếu source ID,
-# không hardcode URL/path lặp lại.
+# After CQ-1c/CQ-7 redesign: claudekit/ là source of truth (copy thuần với
+# provenance trong sidecar). upstream/ chỉ đóng vai trò "source để diff/sync"
+# cho scripts/sync-from-upstream.ts — KHÔNG còn là runtime.
 #
-# Update workflow:
-#   1. Cập nhật submodule:  git submodule update --remote vendor/<name>
-#   2. Refresh `pinned_commit`:  git -C vendor/<name> rev-parse HEAD
-#   3. Commit dependencies.yaml + .gitmodules
+# Refresh workflow:
+#   1. git submodule update --remote upstream/<name>
+#   2. git -C upstream/<name> rev-parse HEAD  → cập nhật pinned_commit dưới đây
+#   3. bun scripts/sync-from-upstream.ts <component>  (per component diff)
+#   4. Owner merge thủ công, update sidecar source.commit nếu adopt commit mới
+#   5. Commit dependencies.yaml + .gitmodules + sidecar updates
 
-version: 1
+version: 2
 
 sources:
-  # ECC — dependency runtime (installer dùng)
   ecc:
     name: everything-claude-code
     description: Battle-tested agents/skills/hooks/commands collection
     repo: https://github.com/affaan-m/everything-claude-code
-    local_path: vendor/everything-claude-code
-    pinned_commit: null      # TODO: git -C vendor/everything-claude-code rev-parse HEAD
+    local_path: upstream/everything-claude-code
+    pinned_commit: 841beea45cb25ba51f29fa45b7e272938d19b80a
     ref: main
-    role: runtime            # installer resolve modules từ repo này
+    role: sync_source
+    license: MIT
 
-  # Docs-only sources — tham khảo khi build agents/skills/MCP, không phải runtime
   anthropic_cookbook:
     name: anthropic-cookbook
     description: Official Anthropic API + Claude Code recipe collection
     repo: https://github.com/anthropics/anthropic-cookbook
-    local_path: vendor/anthropic-cookbook
-    pinned_commit: null
+    local_path: upstream/anthropic-cookbook
+    pinned_commit: 93a262f1e00a9d48f58b4c6fe49241b612156452
     ref: main
     role: docs
+    license: MIT
 
   anthropic_skills:
     name: anthropic-skills
     description: Official Anthropic skills collection (skill format reference)
     repo: https://github.com/anthropics/skills
-    local_path: vendor/anthropic-skills
-    pinned_commit: null
+    local_path: upstream/anthropic-skills
+    pinned_commit: d211d437443a7b2496a3dad9575e7dddd724c585
     ref: main
     role: docs
+    license: MIT
 
   mcp_servers:
     name: mcp-servers
     description: Official Model Context Protocol server implementations
     repo: https://github.com/modelcontextprotocol/servers
-    local_path: vendor/mcp-servers
-    pinned_commit: null
+    local_path: upstream/mcp-servers
+    pinned_commit: 4503e2d12b799448cd05f789dd40f9643a8d1a6c
     ref: main
     role: docs
+    license: MIT

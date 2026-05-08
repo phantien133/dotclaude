@@ -7,12 +7,26 @@ Thumbs.db
 .idea/
 *.swp
 
-# Vendored ECC (when added as submodule, .gitmodules tracks it; this just ignores stray clones)
-vendor/everything-claude-code/node_modules/
+# Upstream submodule node_modules (in case ECC pulls deps locally)
+upstream/everything-claude-code/node_modules/
 
-# Local lockfile (tùy chọn — uncomment nếu không muốn commit)
-# dependencies.lock.yaml
+# Private overlays (per CQ-4a — gitignored, mỗi top package có private/ riêng)
+/claudekit/private/
+/presets/private/
+/plugins/private/
+
+# Backup files từ installer (CQ-5c — backup-then-overwrite default)
+*.bak.*
+
+# Manifest installer (CQ-5e — track per-target, không commit chung repo)
+.dotclaude-manifest.yaml
+
+# TypeScript / Bun
+node_modules/
+dist/
+*.tsbuildinfo
 
 # Test scratch
 .tmp/
 .cache/
+coverage/

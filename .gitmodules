@@ -1,12 +1,12 @@
-[submodule "vendor/everything-claude-code"]
-	path = vendor/everything-claude-code
+[submodule "upstream/everything-claude-code"]
+	path = upstream/everything-claude-code
 	url = https://github.com/affaan-m/everything-claude-code.git
-[submodule "vendor/anthropic-cookbook"]
-	path = vendor/anthropic-cookbook
+[submodule "upstream/anthropic-cookbook"]
+	path = upstream/anthropic-cookbook
 	url = https://github.com/anthropics/anthropic-cookbook.git
-[submodule "vendor/anthropic-skills"]
-	path = vendor/anthropic-skills
+[submodule "upstream/anthropic-skills"]
+	path = upstream/anthropic-skills
 	url = https://github.com/anthropics/skills.git
-[submodule "vendor/mcp-servers"]
-	path = vendor/mcp-servers
+[submodule "upstream/mcp-servers"]
+	path = upstream/mcp-servers
 	url = https://github.com/modelcontextprotocol/servers.git
