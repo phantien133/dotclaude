@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+#
+# This is a project-native skill (not vendored from upstream). The repo/commit
+# below point to dotclaude itself at the commit when the skill was first created.
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 4b6cdef1a8daa7411670036a2ff4596060c03a0f
+  path: claudekit/skills/dotclaude-component-picker
+  ref: main
+imported_at: "2026-05-08"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Project-native skill created during step 5 of the continuous-learning-v2 plan
+  (session 2026-05-08). Built by following the skill-creator workflow. Encodes
+  the full dotclaude component pick/vendor/install pipeline: (1) browse upstream
+  submodules, (2) evaluate license + deps, (3) cp -r or cp vendor, (4) write
+  SOURCE.yaml sidecar (folder → inside, file → sibling), (5) add to preset +
+  pnpm validate, (6) pnpm install:project|user (never pnpm install), (7)
+  pnpm typecheck && pnpm test. Key pitfall: pnpm install intercepts `pnpm
+  install <preset>` as npm install — always use pnpm install:project or
+  install:user. No external deps: pure markdown SKILL.md, no scripts.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - workflow
+  - vendoring
+  - component-management
+  - dotclaude
+categories:
+  purpose:
+    - workflow
+    - installation
+  mechanism:
+    - guided-steps

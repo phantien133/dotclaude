@@ -1,0 +1,64 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+source:
+  repo: https://github.com/anthropics/skills.git
+  commit: d211d437443a7b2496a3dad9575e7dddd724c585
+  path: skills/skill-creator
+  ref: main
+imported_at: "2026-05-08"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Anthropic's official skill-creator skill. Provides an interactive eval-loop
+  workflow for creating, testing, benchmarking, and description-optimizing new
+  skills. Includes: Python scripts (stdlib only, no pip deps) — run_eval.py
+  (trigger accuracy testing via `claude -p` subprocess), run_loop.py (full
+  optimize loop: eval + improve up to 5 iterations, 60/40 train/test split),
+  improve_description.py (Claude-powered description improvement),
+  aggregate_benchmark.py (multi-run stats: pass_rate/time/tokens ± stddev),
+  generate_report.py (HTML benchmark report), package_skill.py (.skill zip
+  bundler), quick_validate.py (SKILL.md syntax check).  Sub-agents in agents/:
+  grader.md (assertion evaluation), comparator.md (blind A/B), analyzer.md
+  (benchmark patterns + post-hoc analysis). Viewer in eval-viewer/:
+  generate_review.py serves a self-contained HTTP server for qualitative review;
+  supports --static for headless environments. assets/eval_review.html is the
+  trigger-eval HTML editor template. All scripts must be run as a Python module
+  from the skill-creator directory (python -m scripts.<name>).
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: python3
+      type: system_binary
+      reason: "All scripts/*.py and eval-viewer/generate_review.py require Python 3.9+"
+    - name: claude
+      type: system_binary
+      reason: "run_eval.py and improve_description.py call `claude -p` via subprocess for trigger accuracy testing and description improvement; uses session auth (no ANTHROPIC_API_KEY needed)"
+tags:
+  - skill-creation
+  - eval
+  - benchmark
+  - description-optimization
+  - subagents
+categories:
+  purpose:
+    - creation
+    - evaluation
+    - optimization
+  mechanism:
+    - eval-loop
+    - background-agent
+    - subprocess-claude
