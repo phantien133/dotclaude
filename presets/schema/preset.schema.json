@@ -83,6 +83,56 @@
       "additionalProperties": {},
       "default": {}
     },
+    "external_setup": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "mcp_server",
+              "npm_global",
+              "system_binary",
+              "pip_package"
+            ]
+          },
+          "standalone": {
+            "type": "boolean",
+            "default": true
+          },
+          "install_hint": {
+            "type": "string"
+          },
+          "complexity": {
+            "type": "string",
+            "enum": [
+              "simple",
+              "moderate",
+              "complex"
+            ],
+            "default": "simple"
+          },
+          "docs_url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "kind"
+        ],
+        "additionalProperties": false
+      },
+      "default": []
+    },
     "tags": {
       "type": "array",
       "items": {
@@ -90,6 +140,50 @@
         "minLength": 1
       },
       "default": []
+    },
+    "use_case_tags": {
+      "type": "object",
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        },
+        "project_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        },
+        "stacks": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        },
+        "use_cases": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "default": []
+        }
+      },
+      "additionalProperties": false,
+      "default": {
+        "roles": [],
+        "project_types": [],
+        "stacks": [],
+        "use_cases": []
+      }
     }
   },
   "required": [

@@ -10,17 +10,31 @@ import {
 } from './schema.ts';
 import { PRESETS_DIR, PRESETS_PRIVATE_DIR } from './paths.ts';
 
+// Each preset lives in its own folder: presets/<kind>/<name>/
+//   preset.yaml  — machine-readable manifest (schema-validated)
+//   README.md    — human docs (optional)
+//   scripts/     — optional helper scripts
+//   hooks/       — optional hook configs
 export interface PresetLocation {
   preset: Preset;
   scope: 'public' | 'private';
-  yamlPath: string;
-  mdPath: string | null;
+  presetDir: string;   // path to the preset folder
+  yamlPath: string;    // <presetDir>/preset.yaml
+  mdPath: string | null; // <presetDir>/README.md, or null if absent
 }
 
 async function pathExists(path: string): Promise<boolean> {
   try {
     await stat(path);
     return true;
+  } catch {
+    return false;
+  }
+}
+
+async function isDirectory(path: string): Promise<boolean> {
+  try {
+    return (await stat(path)).isDirectory();
   } catch {
     return false;
   }
@@ -36,7 +50,10 @@ export async function locatePreset(
   for (const scope of ['public', 'private'] as const) {
     const base = scope === 'public' ? PRESETS_DIR : PRESETS_PRIVATE_DIR;
     for (const kind of kindsToScan) {
-      const yamlPath = join(base, kind, `${name}.yaml`);
+      const presetDir = join(base, kind, name);
+      if (!(await isDirectory(presetDir))) continue;
+
+      const yamlPath = join(presetDir, 'preset.yaml');
       if (!(await pathExists(yamlPath))) continue;
 
       let preset: Preset;
@@ -49,20 +66,20 @@ export async function locatePreset(
 
       if (preset.name !== name) {
         errors.push(
-          `${yamlPath}: preset.name "${preset.name}" does not match filename "${name}"`,
+          `${yamlPath}: preset.name "${preset.name}" does not match folder name "${name}"`,
         );
         continue;
       }
       if (preset.kind !== kind) {
         errors.push(
-          `${yamlPath}: preset.kind "${preset.kind}" does not match folder "${kind}"`,
+          `${yamlPath}: preset.kind "${preset.kind}" does not match parent folder "${kind}"`,
         );
         continue;
       }
 
-      const mdPath = join(base, kind, `${name}.md`);
+      const mdPath = join(presetDir, 'README.md');
       const mdExists = await pathExists(mdPath);
-      return { preset, scope, yamlPath, mdPath: mdExists ? mdPath : null };
+      return { preset, scope, presetDir, yamlPath, mdPath: mdExists ? mdPath : null };
     }
   }
 
@@ -72,7 +89,7 @@ export async function locatePreset(
     );
   }
   throw new Error(
-    `Preset "${name}" not found in ${kindsToScan.map((k) => `presets/${k}/`).join(', ')} (public or private).`,
+    `Preset "${name}" not found in ${kindsToScan.map((k) => `presets/${k}/${name}/`).join(', ')} (public or private).`,
   );
 }
 
@@ -96,6 +113,7 @@ export interface PresetIndexEntry {
   name: string;
   kind: PresetKind;
   scope: 'public' | 'private';
+  presetDir: string;
   yamlPath: string;
   preset: Preset;
 }
@@ -111,22 +129,23 @@ export async function listAllPresets(
   for (const scope of scopes) {
     const base = scope === 'public' ? PRESETS_DIR : PRESETS_PRIVATE_DIR;
     for (const kind of kindsToScan) {
-      const dir = join(base, kind);
-      if (!(await pathExists(dir))) continue;
+      const kindDir = join(base, kind);
+      if (!(await pathExists(kindDir))) continue;
       let entries: string[];
       try {
-        entries = await readdir(dir);
+        entries = await readdir(kindDir);
       } catch {
         continue;
       }
-      for (const file of entries) {
-        if (!file.endsWith('.yaml')) continue;
-        const yamlPath = join(dir, file);
-        const name = file.replace(/\.yaml$/, '');
+      for (const entry of entries) {
+        const presetDir = join(kindDir, entry);
+        if (!(await isDirectory(presetDir))) continue; // skip .gitkeep and flat files
+        const yamlPath = join(presetDir, 'preset.yaml');
+        if (!(await pathExists(yamlPath))) continue;
         try {
           const preset = await loadPresetFile(yamlPath);
-          if (preset.name !== name || preset.kind !== kind) continue;
-          out.push({ name, kind, scope, yamlPath, preset });
+          if (preset.name !== entry || preset.kind !== kind) continue;
+          out.push({ name: entry, kind, scope, presetDir, yamlPath, preset });
         } catch {
           // skip malformed presets in list view
         }

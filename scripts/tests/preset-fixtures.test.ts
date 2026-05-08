@@ -7,9 +7,9 @@ import { PresetSchema, SidecarSchema } from '../lib/schema.ts';
 const REPO_ROOT = new URL('../..', import.meta.url).pathname;
 
 describe('shipped fixtures parse against schema', () => {
-  it('presets/core/personal-baseline.yaml is valid', async () => {
+  it('presets/core/personal-baseline/preset.yaml is valid', async () => {
     const raw = await readFile(
-      join(REPO_ROOT, 'presets/core/personal-baseline.yaml'),
+      join(REPO_ROOT, 'presets/core/personal-baseline/preset.yaml'),
       'utf8',
     );
     const data = loadYaml(raw);

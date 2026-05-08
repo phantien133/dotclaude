@@ -30,6 +30,8 @@ function makePreset(name: string, opts: {
       ...opts.components,
     },
     settings_patch: opts.settings_patch ?? {},
+    external_setup: [],
+    use_case_tags: { roles: [], project_types: [], stacks: [], use_cases: [] },
     tags: [],
   };
 }
@@ -69,7 +71,7 @@ function mockLocatePreset(map: Record<string, Preset>): void {
     async (name: string) => {
       const preset = map[name];
       if (!preset) throw new Error(`Preset "${name}" not found`);
-      return { preset, scope: 'public', yamlPath: `/fake/${name}.yaml`, mdPath: null };
+      return { preset, scope: 'public', presetDir: `/fake/${name}`, yamlPath: `/fake/${name}/preset.yaml`, mdPath: null };
     },
   );
 }

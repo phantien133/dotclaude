@@ -9,26 +9,30 @@
 
 ```
 presets/
-├── core/<name>.yaml + <name>.md       # cross-stack baseline
-├── framework/<name>.yaml + <name>.md  # framework-specific (Next.js, Django, ...)
-├── purpose/<name>.yaml + <name>.md    # task-specific (onboarding, hardening, ...)
+├── core/<name>/                       # cross-stack baseline
+│   ├── preset.yaml                    #   machine-readable manifest (schema-validated)
+│   ├── README.md                      #   human docs (when to use, rationale)
+│   ├── scripts/                       #   optional helper scripts
+│   └── hooks/                         #   optional hook configs
+├── framework/<name>/                  # framework-specific (Next.js, Django, ...)
+├── purpose/<name>/                    # task-specific (onboarding, hardening, ...)
 ├── private/                           # GITIGNORED — owner private (see PRIVATE.md)
 ├── private.example/                   # TRACKED skeleton
 └── schema/                            # Generated JSON Schema
 ```
 
-The canonical path for a preset is `presets/<kind>/<name>.yaml`. Each preset has two files:
+Each preset lives in its own folder. The manifest is always `preset.yaml` inside the
+folder — the folder name is the preset's canonical identifier.
 
-- `.yaml` — machine-readable, schema-validated.
-- `.md` — human docs (when to use, rationale, examples).
-
-Filenames MUST be kept in sync 1-to-1 (enforced by the validate command).
+- `preset.yaml` — machine-readable, schema-validated. `name` must match the folder name; `kind` must match the parent folder.
+- `README.md` — human docs. Optional but warned when missing.
+- `scripts/`, `hooks/`, etc. — co-located extras (scripts, hook configs, setup snippets). Never included in plugin output automatically; reference them explicitly.
 
 ## Schema (CQ-3a/b/d)
 
 ```yaml
-# yaml-language-server: $schema=../schema/preset.schema.json
-name: typescript-fullstack            # lowercase kebab-case, matches filename
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: typescript-fullstack            # lowercase kebab-case, matches folder name
 kind: framework                        # core | framework | purpose, matches folder
 description: ...                       # one line, shown in list output
 version: 0.1.0                         # SemVer X.Y.Z
@@ -46,7 +50,7 @@ tags: []                               # filterable via `pnpm run list --tag <t>
 ### Field details
 
 - **`name`**: lowercase kebab-case (`personal-baseline`, `nextjs-app`). Must match
-  the filename with `.yaml` stripped.
+  the folder name.
 - **`kind`**: `core | framework | purpose` — must match the folder.
   - `core`: cross-stack baseline.
   - `framework`: bound to a specific framework.
@@ -73,11 +77,12 @@ tags: []                               # filterable via `pnpm run list --tag <t>
 KIND=core
 NAME=my-baseline
 
-# 2. Copy template
-cp presets/core/personal-baseline.yaml presets/$KIND/$NAME.yaml
-cp presets/core/personal-baseline.md   presets/$KIND/$NAME.md
+# 2. Create folder and copy template
+mkdir -p presets/$KIND/$NAME
+cp presets/core/personal-baseline/preset.yaml presets/$KIND/$NAME/preset.yaml
+cp presets/core/personal-baseline/README.md   presets/$KIND/$NAME/README.md
 
-# 3. Edit YAML — update name/description/components/tags
+# 3. Edit — update name/description/components/tags
 
 # 4. Validate
 pnpm validate $NAME --kind $KIND
@@ -91,7 +96,7 @@ pnpm run list
 ## extends:
 
 ```yaml
-# presets/framework/nextjs-app.yaml
+# presets/framework/nextjs-app/preset.yaml
 name: nextjs-app
 kind: framework
 description: Next.js App Router preset (extends personal-baseline)

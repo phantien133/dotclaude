@@ -1,4 +1,4 @@
-# yaml-language-server: $schema=../schema/preset.schema.json
+# yaml-language-server: $schema=../../schema/preset.schema.json
 name: personal-baseline
 kind: core
 description: Cross-stack baseline for any project — code review + coding standards.

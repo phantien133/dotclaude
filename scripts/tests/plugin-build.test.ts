@@ -20,7 +20,9 @@ function makePreset(overrides: Partial<Preset> = {}): Preset {
     extends: [],
     components: { agents: ['code-reviewer'], skills: [], commands: [], hooks: [], rules: [] },
     settings_patch: {},
+    external_setup: [],
     tags: ['baseline'],
+    use_case_tags: { roles: [], project_types: [], stacks: [], use_cases: [] },
     ...overrides,
   };
 }

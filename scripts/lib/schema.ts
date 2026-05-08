@@ -11,6 +11,36 @@ export type PresetKind = z.infer<typeof PresetKindSchema>;
 export const EXTERNAL_DEP_TYPES = ['npm', 'system_binary', 'python_pkg'] as const;
 export const ExternalDepTypeSchema = z.enum(EXTERNAL_DEP_TYPES);
 
+export const EXTERNAL_SETUP_KINDS = ['mcp_server', 'npm_global', 'system_binary', 'pip_package'] as const;
+export const ExternalSetupKindSchema = z.enum(EXTERNAL_SETUP_KINDS);
+export type ExternalSetupKind = z.infer<typeof ExternalSetupKindSchema>;
+
+export const EXTERNAL_SETUP_COMPLEXITY = ['simple', 'moderate', 'complex'] as const;
+export const ExternalSetupComplexitySchema = z.enum(EXTERNAL_SETUP_COMPLEXITY);
+export type ExternalSetupComplexity = z.infer<typeof ExternalSetupComplexitySchema>;
+
+// Declares an external dependency that is not vendored into claudekit.
+// Config injection is done via settings_patch; this entry is for setup
+// instructions and complexity warnings shown at install time.
+export const ExternalSetupEntrySchema = z
+  .object({
+    name: z.string().min(1),
+    kind: ExternalSetupKindSchema,
+    // true = only needs settings_patch config (no install step); false = requires install_hint
+    standalone: z.boolean().default(true),
+    // Shell command or instruction for installing (required when standalone: false)
+    install_hint: z.string().optional(),
+    complexity: ExternalSetupComplexitySchema.default('simple'),
+    docs_url: z.string().url().optional(),
+    notes: z.string().optional(),
+  })
+  .strict()
+  .refine(
+    (v) => v.standalone || v.install_hint !== undefined,
+    { message: 'install_hint is required when standalone is false', path: ['install_hint'] },
+  );
+export type ExternalSetupEntry = z.infer<typeof ExternalSetupEntrySchema>;
+
 const ComponentRefListSchema = z
   .object({
     agents: z.array(z.string()).default([]),
@@ -104,7 +134,21 @@ export const PresetSchema = z
       rules: [],
     }),
     settings_patch: z.record(z.string(), z.unknown()).default({}),
+    // External tools/servers not vendored into claudekit. Config injection
+    // goes in settings_patch; these entries are for installer warnings + SETUP.md.
+    external_setup: z.array(ExternalSetupEntrySchema).default([]),
     tags: z.array(z.string().min(1)).default([]),
+    // Structured tags for catalog search in dotclaude-setup. Separate from
+    // free-form `tags` so catalog search can filter precisely by use-case dimensions.
+    use_case_tags: z
+      .object({
+        roles: z.array(z.string().min(1)).default([]),        // e.g. ["backend-dev", "data-scientist"]
+        project_types: z.array(z.string().min(1)).default([]), // e.g. ["web-api", "data-pipeline"]
+        stacks: z.array(z.string().min(1)).default([]),        // e.g. ["typescript", "nextjs", "python"]
+        use_cases: z.array(z.string().min(1)).default([]),     // e.g. ["code-review", "tdd", "refactoring"]
+      })
+      .strict()
+      .default({ roles: [], project_types: [], stacks: [], use_cases: [] }),
   })
   .strict();
 export type Preset = z.infer<typeof PresetSchema>;

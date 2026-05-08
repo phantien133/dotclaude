@@ -24,7 +24,7 @@ dotclaude/
 │   └── private.example/            # TRACKED skeleton
 │
 ├── presets/                        # Pure manifest
-│   ├── {core,framework,purpose}/<name>.yaml + .md
+│   ├── {core,framework,purpose}/<name>/preset.yaml + README.md [+ scripts/ hooks/]
 │   ├── private/ + private.example/
 │   └── schema/*.schema.json        # Generated from zod
 │
@@ -80,9 +80,10 @@ See `docs/PROVENANCE.md` for sidecar schema.
 
 ```bash
 KIND=core; NAME=my-baseline
-cp presets/core/personal-baseline.yaml presets/$KIND/$NAME.yaml
-cp presets/core/personal-baseline.md   presets/$KIND/$NAME.md
-$EDITOR presets/$KIND/$NAME.yaml
+mkdir -p presets/$KIND/$NAME
+cp presets/core/personal-baseline/preset.yaml presets/$KIND/$NAME/preset.yaml
+cp presets/core/personal-baseline/README.md   presets/$KIND/$NAME/README.md
+$EDITOR presets/$KIND/$NAME/preset.yaml
 pnpm validate $NAME --kind $KIND
 ```
 

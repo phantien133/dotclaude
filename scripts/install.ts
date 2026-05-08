@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { homedir } from 'node:os';
 import { createInterface } from 'node:readline/promises';
 import { Command } from 'commander';
-import { COMPONENT_TYPES, PRESET_KINDS, type ComponentType, type PresetKind } from './lib/schema.ts';
+import { COMPONENT_TYPES, PRESET_KINDS, type ComponentType, type PresetKind, type ExternalSetupEntry } from './lib/schema.ts';
 import { locateComponent, loadSidecar } from './lib/sidecar.ts';
 import { locatePreset, listAllPresets } from './lib/preset.ts';
 import { buildInstallPlan, type PlannedComponent } from './lib/resolver.ts';
@@ -53,9 +53,9 @@ program
 
     const located = await locatePreset(name, kind ? { kind } : {});
     log.info(`Preset: ${located.preset.name} (kind=${located.preset.kind}, scope=${located.scope})`);
-    log.info(`File:   ${located.yamlPath}`);
+    log.info(`Dir:    ${located.presetDir}`);
     if (!located.mdPath) {
-      log.warn(`Missing companion .md docs (expected ${located.preset.name}.md alongside YAML).`);
+      log.warn(`Missing README.md in ${located.presetDir}.`);
       exitCode = Math.max(exitCode, 1);
     }
 
@@ -277,6 +277,9 @@ async function runInstall(
     }
   }
 
+  // External setup instructions and complexity warnings.
+  printExternalSetup(plan.preset.external_setup);
+
   if (scope === 'project') {
     log.warn(`Consider adding to your project .gitignore:\n  .claude/.dotclaude-manifest.yaml`);
   }
@@ -285,6 +288,28 @@ async function runInstall(
     `Installed "${presetName}" → ${targetRoot}` +
     ` (${stats.installed} installed, ${stats.idempotent} already up-to-date, ${stats.skipped} skipped)`,
   );
+}
+
+function printExternalSetup(entries: ExternalSetupEntry[]): void {
+  if (entries.length === 0) return;
+  log.raw('');
+  log.raw('External setup required:');
+  for (const entry of entries) {
+    const prefix = entry.complexity === 'complex' ? '[COMPLEX] ' : '';
+    const hint = entry.install_hint !== undefined ? `  → ${entry.install_hint}` : '';
+    const docs = entry.docs_url !== undefined ? `  docs: ${entry.docs_url}` : '';
+    log.raw(`  ${prefix}${entry.name} [${entry.kind}]${hint}${docs}`);
+    if (entry.notes !== undefined) log.raw(`    note: ${entry.notes}`);
+    if (entry.complexity === 'complex') {
+      log.warn(
+        `  ⚠ ${entry.name} requires complex setup (env vars / custom install). ` +
+        `Verify docs before using this preset on another machine.`,
+      );
+    }
+    if (!entry.standalone && entry.install_hint === undefined) {
+      log.warn(`  ⚠ ${entry.name} is not standalone but has no install_hint — manual setup needed.`);
+    }
+  }
 }
 
 function printDryRun(

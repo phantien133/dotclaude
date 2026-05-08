@@ -3,7 +3,7 @@ import { extname, join } from 'node:path';
 import { buildInstallPlan, type PlannedComponent, type ResolveOptions } from './resolver.ts';
 import { PLUGINS_DIR } from './paths.ts';
 import { log } from './logger.ts';
-import type { Preset } from './schema.ts';
+import type { Preset, ExternalSetupEntry } from './schema.ts';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -25,6 +25,7 @@ export interface PluginManifest {
   mcpServers: Record<string, never>;
   skills?: string[];
   commands?: string[];
+  external_setup?: ExternalSetupEntry[];
 }
 
 export interface PluginBuildResult {
@@ -107,8 +108,58 @@ function buildManifest(
   if (opts.repository !== undefined) manifest.repository = opts.repository;
   if (hasSkills) manifest.skills = ['./skills/'];
   if (hasCommands) manifest.commands = ['./commands/'];
+  if (preset.external_setup.length > 0) manifest.external_setup = preset.external_setup;
 
   return manifest;
+}
+
+function buildSetupMd(preset: Preset): string | null {
+  const entries = preset.external_setup;
+  if (entries.length === 0) return null;
+
+  const lines: string[] = [
+    `# Setup — ${preset.name}`,
+    '',
+    'This preset requires external tools not bundled in the plugin.',
+    'Complete the steps below after installing the plugin.',
+    '',
+    '## External Dependencies',
+    '',
+  ];
+
+  for (const entry of entries) {
+    const complexityBadge = entry.complexity === 'complex'
+      ? ' ⚠ **[COMPLEX]**'
+      : entry.complexity === 'moderate' ? ' *(moderate setup)*' : '';
+
+    lines.push(`### ${entry.name} \`[${entry.kind}]\`${complexityBadge}`);
+    lines.push('');
+
+    if (entry.complexity === 'complex') {
+      lines.push(
+        '> **Warning:** This dependency requires complex setup (env vars, custom binaries, or',
+        '> multi-step installation). It may not be portable to other machines without manual work.',
+        '',
+      );
+    }
+
+    if (entry.standalone) {
+      lines.push('**Setup:** Configuration is injected automatically via `settings_patch`. No additional install needed.');
+    } else if (entry.install_hint !== undefined) {
+      lines.push(`**Install:**`);
+      lines.push('```sh');
+      lines.push(entry.install_hint);
+      lines.push('```');
+    } else {
+      lines.push('**Setup:** Manual installation required (no install command provided — see docs).');
+    }
+
+    if (entry.docs_url !== undefined) lines.push(`\n**Docs:** ${entry.docs_url}`);
+    if (entry.notes !== undefined) lines.push(`\n**Notes:** ${entry.notes}`);
+    lines.push('');
+  }
+
+  return lines.join('\n');
 }
 
 // ── Main export ───────────────────────────────────────────────────────────────
@@ -156,6 +207,12 @@ export async function buildPlugin(
     'utf8',
   );
   log.debug(`Wrote ${join(claudePluginDir, 'plugin.json')}`);
+
+  const setupMd = buildSetupMd(plan.preset);
+  if (setupMd !== null) {
+    await writeFile(join(pluginRoot, 'SETUP.md'), setupMd, 'utf8');
+    log.debug(`Wrote ${join(pluginRoot, 'SETUP.md')}`);
+  }
 
   return { outDir: pluginRoot, manifest, componentCount, skipped };
 }
