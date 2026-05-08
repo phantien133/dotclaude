@@ -9,6 +9,7 @@ components:
   skills:
     - continuous-learning-v2
     - dotclaude-component-picker
+    - skill-creator
   commands: []
   hooks: []
   rules: []
