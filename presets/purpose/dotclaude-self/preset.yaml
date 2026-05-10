@@ -3,32 +3,17 @@ name: dotclaude-self
 kind: purpose
 description: Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.
 version: 0.2.0
-extends: []
+extends:
+  - developer
 components:
-  agents: []
   skills:
-    - continuous-learning-v2
     - dotclaude-component-picker
-    - skill-creator
     - preset-debugger
     - plugin-discovery
   commands:
     - preset-wizard
     - dotclaude-setup
-  hooks: []
-  rules: []
-settings_patch:
-  hooks:
-    PreToolUse:
-      - matcher: "*"
-        hooks:
-          - type: command
-            command: ".claude/skills/continuous-learning-v2/hooks/observe.sh pre"
-    PostToolUse:
-      - matcher: "*"
-        hooks:
-          - type: command
-            command: ".claude/skills/continuous-learning-v2/hooks/observe.sh"
+settings_patch: {}
 external_setup: []
 use_case_tags:
   roles:
