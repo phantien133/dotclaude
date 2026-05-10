@@ -1,6 +1,59 @@
 {
   "hooks": {
-    "PreToolUse": [],
-    "PostToolUse": []
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/continuous-learning-v2/hooks/observe.sh pre"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.claude/hooks/pre-bash-commit-quality.js"
+          },
+          {
+            "type": "command",
+            "command": "node ~/.claude/hooks/block-no-verify.js"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/.claude/skills/continuous-learning-v2/hooks/observe.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ~/.claude/hooks/post-edit-typecheck.js"
+          }
+        ]
+      }
+    ]
+  },
+  "extraKnownMarketplaces": {
+    "Mixedbread-Grep": {
+      "source": {
+        "source": "github",
+        "repo": "mixedbread-ai/mgrep"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "mgrep@Mixedbread-Grep": true
   }
 }
