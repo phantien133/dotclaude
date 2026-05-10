@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: developer
+kind: core
+description: Extends ai-native with cross-stack developer tooling — GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.
+version: 0.1.0
+extends:
+  - ai-native
+components:
+  skills:
+    - tdd-workflow
+    - github-ops
+  commands:
+    - prp-plan
+    - feature-dev
+  agents:
+    - planner
+    - code-architect
+  hooks:
+    - post-edit-typecheck
+    - pre-bash-commit-quality
+    - block-no-verify
+settings_patch:
+  hooks:
+    PostToolUse:
+      - matcher: "Edit"
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/post-edit-typecheck.js"
+    PreToolUse:
+      - matcher: "Bash"
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/pre-bash-commit-quality.js"
+          - type: command
+            command: "node ~/.claude/hooks/block-no-verify.js"
+recommended_install_level: user
+tags:
+  - developer
+  - cross-stack
+  - quality
+use_case_tags:
+  roles:
+    - developer
+    - software-engineer
+  project_types:
+    - any
+  stacks: []
+  use_cases:
+    - code-review
+    - pr-workflow
+    - architecture
+    - feature-development

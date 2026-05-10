@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: core
+kind: core
+description: Universal baseline for any Claude Code user — context management, productivity, and semantic search.
+version: 0.1.0
+extends: []
+components:
+  skills:
+    - doc-coauthoring
+  hooks:
+    - suggest-compact
+    - pre-compact
+    - desktop-notify
+    - cost-tracker
+    - doc-file-warning
+settings_patch:
+  extraKnownMarketplaces:
+    Mixedbread-Grep:
+      source:
+        source: github
+        repo: mixedbread-ai/mgrep
+  enabledPlugins:
+    "mgrep@Mixedbread-Grep": true
+external_setup:
+  - name: mgrep
+    kind: claude_plugin
+    standalone: false
+    install_hint: "/plugins install mgrep@Mixedbread-Grep"
+    complexity: simple
+    docs_url: "https://github.com/mixedbread-ai/mgrep"
+    notes: "Semantic code search plugin. settings_patch registers the Mixedbread-Grep marketplace and auto-enables the plugin."
+recommended_install_level: user
+tags:
+  - core
+  - universal
+  - context-management
+  - productivity
+use_case_tags:
+  roles:
+    - any
+  project_types:
+    - any
+  stacks: []
+  use_cases:
+    - context-management
+    - documentation
+    - cost-tracking
+    - semantic-search

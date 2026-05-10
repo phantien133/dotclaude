@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: ai-native
+kind: core
+description: Extends core with AI self-learning and skill creation — for users who want Claude to improve with their personal workflow over time.
+version: 0.1.0
+extends:
+  - core
+components:
+  skills:
+    - continuous-learning-v2
+    - skill-creator
+    - ai-regression-testing
+settings_patch:
+  hooks:
+    PreToolUse:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: "~/.claude/skills/continuous-learning-v2/hooks/observe.sh pre"
+    PostToolUse:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: "~/.claude/skills/continuous-learning-v2/hooks/observe.sh"
+recommended_install_level: user
+tags:
+  - ai-native
+  - learning
+  - self-improving
+  - meta
+  - personal
+use_case_tags:
+  roles:
+    - any
+  project_types:
+    - any
+  stacks: []
+  use_cases:
+    - self-learning
+    - skill-creation
+    - ai-optimization
+    - personal-workflow
