@@ -98,7 +98,8 @@
               "mcp_server",
               "npm_global",
               "system_binary",
-              "pip_package"
+              "pip_package",
+              "claude_plugin"
             ]
           },
           "standalone": {
@@ -132,6 +133,13 @@
         "additionalProperties": false
       },
       "default": []
+    },
+    "recommended_install_level": {
+      "type": "string",
+      "enum": [
+        "user",
+        "project"
+      ]
     },
     "tags": {
       "type": "array",

@@ -50,7 +50,7 @@ export async function locateComponent(
     }
 
     const fileBase = join(base, ref.type, ref.id);
-    for (const ext of ['.md', '.json', '.sh', '.yaml', '.yml', '.ts']) {
+    for (const ext of ['.md', '.json', '.sh', '.yaml', '.yml', '.ts', '.js', '.py']) {
       const fileCandidate = `${fileBase}${ext}`;
       if (await pathExists(fileCandidate)) {
         const sidecarPath = `${fileCandidate.replace(/\.[^.]+$/, '')}.source.yaml`;

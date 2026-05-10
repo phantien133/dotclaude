@@ -11,7 +11,7 @@ export type PresetKind = z.infer<typeof PresetKindSchema>;
 export const EXTERNAL_DEP_TYPES = ['npm', 'system_binary', 'python_pkg'] as const;
 export const ExternalDepTypeSchema = z.enum(EXTERNAL_DEP_TYPES);
 
-export const EXTERNAL_SETUP_KINDS = ['mcp_server', 'npm_global', 'system_binary', 'pip_package'] as const;
+export const EXTERNAL_SETUP_KINDS = ['mcp_server', 'npm_global', 'system_binary', 'pip_package', 'claude_plugin'] as const;
 export const ExternalSetupKindSchema = z.enum(EXTERNAL_SETUP_KINDS);
 export type ExternalSetupKind = z.infer<typeof ExternalSetupKindSchema>;
 
@@ -137,6 +137,9 @@ export const PresetSchema = z
     // External tools/servers not vendored into claudekit. Config injection
     // goes in settings_patch; these entries are for installer warnings + SETUP.md.
     external_setup: z.array(ExternalSetupEntrySchema).default([]),
+    // Advisory recommendation for install level. Not enforced by the installer —
+    // user can always override. Omit when either level works equally well.
+    recommended_install_level: z.enum(['user', 'project']).optional(),
     tags: z.array(z.string().min(1)).default([]),
     // Structured tags for catalog search in dotclaude-setup. Separate from
     // free-form `tags` so catalog search can filter precisely by use-case dimensions.
