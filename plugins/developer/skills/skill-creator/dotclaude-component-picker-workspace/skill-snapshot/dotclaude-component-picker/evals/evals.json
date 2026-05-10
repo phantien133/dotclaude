@@ -1,0 +1,20 @@
+{
+  "skill_name": "dotclaude-component-picker",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "pick the code-reviewer agent from ECC and add it to the dotclaude-self preset",
+      "expected_output": "Runs all 7 steps: browse ECC agents/, evaluates code-reviewer.md, gets upstream commit, cp to claudekit/agents/, creates code-reviewer.source.yaml sidecar, adds to preset YAML, pnpm install:project, pnpm typecheck && pnpm test"
+    },
+    {
+      "id": 2,
+      "prompt": "vendor the claude-api skill from anthropic-skills into claudekit",
+      "expected_output": "Updates submodule, lists skills/, reads SKILL.md, notes external deps (python3, claude CLI), cp -r to claudekit/skills/claude-api/, creates SOURCE.yaml inside folder with correct commit hash and external deps, adds to a preset, validates"
+    },
+    {
+      "id": 3,
+      "prompt": "I want to port a hook from everything-claude-code — there's a pre-commit hook that formats TypeScript files automatically. How do I add it?",
+      "expected_output": "Identifies it as a file component (single .sh), runs browse step, copies to claudekit/hooks/, creates <name>.source.yaml as sibling file, adds hook to preset components.hooks[], installs and verifies"
+    }
+  ]
+}

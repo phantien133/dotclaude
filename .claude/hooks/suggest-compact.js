@@ -1,0 +1,1 @@
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/hooks/suggest-compact.js

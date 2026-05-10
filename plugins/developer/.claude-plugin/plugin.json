@@ -1,0 +1,25 @@
+{
+  "name": "developer",
+  "version": "0.1.0",
+  "description": "Extends ai-native with cross-stack developer tooling — security review, TDD, GitHub ops, quality gates, and architecture planning.",
+  "author": {
+    "name": "phantien133",
+    "email": "tienpq@hilab.asia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "developer",
+    "cross-stack",
+    "quality",
+    "security",
+    "tdd"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ]
+}

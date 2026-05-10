@@ -1,0 +1,22 @@
+{
+  "name": "ai-native",
+  "version": "0.1.0",
+  "description": "Extends core with AI self-learning and skill creation — for users who want Claude to improve with their personal workflow over time.",
+  "author": {
+    "name": "phantien133",
+    "email": "tienpq@hilab.asia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "ai-native",
+    "learning",
+    "self-improving",
+    "meta",
+    "personal"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "skills": [
+    "./skills/"
+  ]
+}
