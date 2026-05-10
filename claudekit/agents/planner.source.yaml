@@ -8,7 +8,6 @@ imported_at: 2026-05-08
 license: MIT
 modified: false
 modifications: null
-notes: null
 dependencies:
   required:
     agents: []
@@ -23,5 +22,19 @@ dependencies:
     hooks: []
     rules: []
   external: []
-tags: []
-categories: {}
+tags:
+  - js-examples
+  - typescript
+  - framework-preset-candidate
+notes: >-
+  Planning framework is language-agnostic, but the only worked example (Stripe billing)
+  uses TypeScript + Supabase SQL. Developers on other stacks may find the example
+  misleading but the methodology still applies.
+  Framework-preset candidate: recommended for presets/framework/typescript/ where the TS
+  examples are directly relevant. Works in cross-stack presets but examples may mislead
+  non-JS developers.
+categories:
+  stacks:
+    - typescript
+  coverage:
+    - js-example-heavy

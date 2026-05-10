@@ -8,7 +8,6 @@ imported_at: 2026-05-08
 license: MIT
 modified: false
 modifications: null
-notes: null
 dependencies:
   required:
     agents: []
@@ -23,5 +22,20 @@ dependencies:
     hooks: []
     rules: []
   external: []
-tags: []
-categories: {}
+tags:
+  - nodejs
+  - typescript
+  - js-specific
+  - framework-preset-candidate
+notes: >-
+  Examples are TypeScript/Next.js/Supabase-specific. OWASP principles apply universally
+  but all code snippets assume npm ecosystem. Not suitable as-is for Python/Go/Rust projects.
+  Framework-preset candidate: recommended for presets/framework/typescript/. In cross-stack
+  presets, use security-bounty-hunter instead (semgrep, supports 30+ languages).
+categories:
+  stacks:
+    - nodejs
+    - typescript
+    - nextjs
+  coverage:
+    - js-only

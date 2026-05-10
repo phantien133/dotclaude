@@ -8,7 +8,6 @@ imported_at: 2026-05-08
 license: MIT
 modified: false
 modifications: null
-notes: null
 dependencies:
   required:
     agents: []
@@ -23,5 +22,20 @@ dependencies:
     hooks: []
     rules: []
   external: []
-tags: []
-categories: {}
+tags:
+  - nodejs
+  - npm
+  - js-specific
+  - framework-preset-candidate
+notes: >-
+  Runs `npm audit` and `npx eslint --plugin security` as actual Bash commands.
+  Will fail or produce false negatives on projects without package.json.
+  For non-JS projects, use security-bounty-hunter skill instead.
+  Framework-preset candidate: recommended for presets/framework/typescript/. In cross-stack
+  presets, use security-bounty-hunter skill instead (no npm dependency).
+categories:
+  stacks:
+    - nodejs
+    - npm
+  coverage:
+    - js-only
