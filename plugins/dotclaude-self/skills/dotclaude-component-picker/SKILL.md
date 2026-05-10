@@ -65,6 +65,28 @@ Confirm before vendoring:
 3. External dependencies (python3, npm packages, binaries) — note them; they go in `dependencies.external`
 4. Internal dependencies (other skills, hooks, agents this component requires) — identified in Step 2.5 below
 
+### Step 2f — Coverage assessment
+
+Evaluate how broadly the component applies across languages/stacks. Record findings — they go into the sidecar in Step 4.
+
+**Signals that indicate language-specific coverage:**
+- Bash commands call `npm`, `npx`, `jest`, `vitest`, `pip`, `pytest`, `cargo`, `go test`, `mvn` — language/runtime-specific
+- All code examples are in one language/framework (TypeScript + Next.js, Python + FastAPI, etc.)
+- Import statements or config files are ecosystem-specific (`package.json`, `requirements.txt`, `go.mod`)
+
+**Coverage verdicts:**
+
+| Verdict | When | Sidecar value |
+|---|---|---|
+| `js-only` | Tooling or commands require npm/Node/Jest — will fail on non-JS projects | `coverage: [js-only]` |
+| `js-example-heavy` | Concept is cross-stack but all worked examples use TypeScript/JS | `coverage: [js-example-heavy]` |
+| `python-only`, `go-only` etc. | Analogous to js-only for other stacks | `coverage: [<lang>-only]` |
+| universal | No language-specific tooling or examples | omit `coverage` |
+
+**Tag to add when relevant:**
+- `js-specific` (or `python-specific`, etc.) — if the tooling itself is language-locked
+- `framework-preset-candidate` — if the component is best suited for a language-specific framework preset rather than a cross-stack core preset
+
 ---
 
 ## Step 2.5 — Cross-Reference & Dependency Scan
@@ -204,6 +226,24 @@ external:
     reason: "calls claude -p via subprocess"
 ```
 
+**Populate `tags` and `categories` from Step 2f findings:**
+
+```yaml
+tags:
+  - js-specific              # add if tooling is npm/Jest/etc. locked (from Step 2f)
+  - framework-preset-candidate  # add if better suited for a language-specific preset
+  # other descriptive tags (nodejs, typescript, jest, vitest, playwright, etc.)
+categories:
+  stacks:
+    - nodejs                 # list applicable stacks from Step 2f
+    - typescript
+  coverage:
+    - js-only                # or js-example-heavy, python-only, go-only — from Step 2f verdict
+                             # omit coverage entirely if universal
+```
+
+If the sidecar `notes` field names a cross-language alternative (e.g., "use security-bounty-hunter for non-JS projects"), this is the signal that `preset-wizard` and `dotclaude-setup` will use to auto-propose replacements — write it explicitly.
+
 **After creating the sidecar**, verify it parses correctly:
 ```bash
 pnpm typecheck
@@ -216,6 +256,18 @@ pnpm typecheck
 ## Step 5 — Preset
 
 Add the component to an existing preset or create a new one. Read `references/presets.md` for the full schema.
+
+**Coverage pre-check before adding to a preset:**
+
+Read the sidecar (`SOURCE.yaml` / `<name>.source.yaml`) for the component being added. Check `categories.coverage` and `tags`:
+
+| Sidecar signal | Target preset kind | Action |
+|---|---|---|
+| `coverage: [js-only]` or tag `js-specific` | `core` / cross-stack | ⚠ Warn: "This component is JS-specific. Sidecar notes suggest: `<alternative from notes>`" — confirm with user before adding |
+| `coverage: [js-only]` or tag `js-specific` | `framework` with matching stack | ✓ Proceed — good fit |
+| tag `framework-preset-candidate` | `core` / cross-stack | 📌 Note: "Better placed in a `framework/<stack>` preset" — confirm intent |
+| `coverage: [js-example-heavy]` | `core` / cross-stack | ℹ Note: "Examples are JS-focused but concept applies broadly" — no block |
+| No coverage signal | any | ✓ Proceed |
 
 **Add to an existing preset** — edit the `.yaml` in `presets/`:
 ```yaml

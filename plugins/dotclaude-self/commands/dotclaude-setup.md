@@ -132,6 +132,19 @@ If matches found, present ranked results:
 Ask:
 > "Which preset would you like to install? Reply with the preset name, or 'build new' to create a custom one."
 
+**Stack-fit check — run after the user selects a preset (before Phase 4):**
+
+Read the selected preset's `preset.yaml` `components` list (including recursively resolving `extends`). For each component, read its sidecar and check `categories.coverage` and `tags`:
+
+- If `coverage: [js-only]` or tag `js-specific`, and the user's stack (from Phase 2) does **not** include Node.js/TypeScript → surface a brief warning:
+  > ℹ `<preset>` includes `<component>` which is JS/TS-specific. You mentioned `<user-stack>` — you may want to replace it after install. Check the preset README or the component's sidecar `notes` for the suggested alternative.
+
+- Only warn for mismatches — no output for matching or universal components.
+- If the preset extends a parent, check inherited components too.
+- Limit to at most 3 warnings to avoid overwhelming the user; if more, summarise: "and N more js-specific components".
+
+If no mismatches found, proceed silently.
+
 If no matches found (score = 0 for all), or if the user chooses 'build new':
 
 > "No existing preset closely matches your setup. Let's build a custom one."

@@ -39,6 +39,21 @@ Wait for answers before continuing to Phase 2.
 | `framework` | Stack or language specific (e.g., `typescript-next`, `go-grpc`) |
 | `purpose` | Workflow or role specific (e.g., `data-science-workflow`, `devops-k8s`) |
 
+**If kind = `framework` and stack includes TypeScript/Node.js:**
+Automatically surface all claudekit components tagged `framework-preset-candidate` as strong candidates.
+These were intentionally scoped out of cross-stack core presets but are well-suited here — check their sidecar `notes` for context.
+
+**If Q7 answered with a parent preset (extends is set):**
+Before searching for new components, resolve the parent's inherited components:
+1. Read `presets/<kind>/<parent>/preset.yaml` → collect its `components` list
+2. For each inherited component, read its sidecar (`SOURCE.yaml` or `<name>.source.yaml`)
+3. Check `categories.coverage` and `tags` — note any `js-only` or `js-example-heavy` inherited components
+4. Present a brief **"Inherited coverage note"** section:
+   ```
+   Inherited from <parent>: <component-name> — ⚠ js-only / ℹ js-example-heavy / ✓ cross-stack
+   ```
+   This surfaces potential stack-fit issues before adding more components on top.
+
 ### Step 2b — Suggest a name
 
 Kebab-case, lowercase, descriptive. Examples: `typescript-fullstack`, `python-data-science`, `go-backend`.
@@ -54,6 +69,25 @@ Example searches to run:
 - `mgrep "<language>" claudekit/agents/ claudekit/skills/` — narrow to agents and skills
 
 Combine results across searches. For each proposed component, state one concise reason why it fits.
+
+**Coverage check — run after assembling candidate list:**
+
+For each candidate, read its sidecar (`SOURCE.yaml` for folder components, `<name>.source.yaml` for file components) and check `categories.coverage` and `tags`:
+
+| Sidecar signal | In a `core`/cross-stack preset | In a `framework/typescript` preset |
+|---|---|---|
+| `coverage: js-only` or tag `js-specific` | ⚠ Warn: JS-specific — suggest alternative or note none found | ✓ Good fit for this stack |
+| tag `framework-preset-candidate` | 📌 Note: "Better fit in `presets/framework/typescript/`" | ✓ Actively recommend |
+| `coverage: js-example-heavy` | ℹ Note: examples are JS but concept applies cross-stack | ✓ Good fit |
+| No coverage tag | ✓ Cross-stack, no caveats | ✓ Include normally |
+
+When warning about a JS-specific component in a cross-stack preset, check the sidecar `notes` for a suggested alternative and **auto-propose it as a replacement**:
+- Scan the sidecar `notes` text for patterns like "use X instead", "replaced by X", "use X skill instead", "use security-bounty-hunter", etc.
+- If an alternative is named, add it to the candidate list with ✓ marker and remove the js-only component:
+  ```
+  ~~security-review~~ (js-only — replaced)   →   security-bounty-hunter ✓ (from sidecar notes)
+  ```
+- If no alternative is named in notes, keep the ⚠ warning and note "no alternative found in claudekit".
 
 ### Step 2d — Suggest settings_patch
 
@@ -212,10 +246,10 @@ Format the proposal as:
 **recommended_install_level:** user / project
 
 ### Components
-| Type | Name | Why |
-|------|------|-----|
-| agent | ... | ... |
-| skill | ... | ... |
+| Type | Name | Why | Coverage |
+|------|------|-----|----------|
+| agent | ... | ... | ✓ cross-stack / ⚠ js-only / ℹ js-example-heavy |
+| skill | ... | ... | ... |
 | hook  | ... | Event: <event> — enabled by default: yes/no |
 
 ### Hook wiring (settings_patch.hooks)
