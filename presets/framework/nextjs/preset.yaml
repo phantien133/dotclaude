@@ -9,6 +9,7 @@ components:
   skills:
     - frontend-patterns
     - nextjs-turbopack
+    - api-design
     - verification-loop
 recommended_install_level: project
 tags:

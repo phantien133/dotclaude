@@ -12,6 +12,7 @@ components:
     - api-design
     - database-migrations
     - postgres-patterns
+    - security-review
     - verification-loop
 recommended_install_level: project
 tags:
