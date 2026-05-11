@@ -410,6 +410,76 @@ pnpm test
 
 Report pass/fail and any output.
 
+### Step 3f — Generate AGENTS.md
+
+Generate `presets/<kind>/<name>/AGENTS.md`. This file is auto-copied to the project root on `pnpm install:project`.
+
+**Step 3f.1 — Resolve full agent list**
+
+Collect agents from the preset and its entire `extends:` chain:
+1. Read `preset.yaml` → `components.agents`
+2. For each preset in the extends chain (already resolved in Phase 2): collect their `components.agents`
+3. Deduplicate. For each agent, read `claudekit/agents/<name>.md` → extract the `description:` frontmatter field.
+
+**Step 3f.2 — Derive Core Principles**
+
+Map `use_case_tags` and `stacks` to principles:
+
+| Signal | Principle to include |
+|---|---|
+| stack contains TypeScript/JS | **Type safety** — leverage TypeScript strictly; no `any` casts |
+| use_case includes `tdd` or skill `tdd-workflow` present | **Test-Driven** — write tests before implementation, 80%+ coverage |
+| use_case includes `api-development` or skill `api-design` present | **API contracts first** — design endpoints before implementing |
+| skill `security-review` present | **Security-first** — validate inputs, check auth on every route |
+| skill `verification-loop` present | **Verify before done** — run verification loop before marking complete |
+| (always) | **Plan before execute** — use planner for complex features |
+| (always) | **Agent-first** — delegate domain tasks to specialized agents |
+
+Include 4–6 principles maximum. Prefer specific ones over generic.
+
+**Step 3f.3 — Build AGENTS.md content**
+
+```markdown
+# <Preset Display Name> — Agent Instructions
+
+## Core Principles
+<bullet list of 4-6 principles from Step 3f.2>
+
+## Available Agents
+
+| Agent | Purpose | When to Use |
+|-------|---------|-------------|
+<one row per agent — name from filename, Purpose + When from description field>
+
+## Agent Orchestration
+
+- **planner** — invoke for any feature with more than 3 files changed
+- **code-architect** — invoke for architectural decisions, new module structure
+- Use parallel agent execution for independent sub-tasks
+<add any preset-specific orchestration rules based on components>
+
+## Security Guidelines
+
+- No hardcoded secrets (API keys, passwords, tokens)
+- Validate all user inputs at system boundaries
+- Never bypass authentication/authorization checks
+<add stack-specific security notes if security-review skill is included>
+
+## Stack Notes
+
+<one bullet per skill included (not inherited), describing its scope:>
+- **<skill-name>**: <one-line scope description from skill description frontmatter>
+```
+
+**Step 3f.4 — Write and confirm**
+
+Write to `presets/<kind>/<name>/AGENTS.md`.
+
+Show the user a preview. Ask:
+> "AGENTS.md generated. Does it look right? Reply **yes** to keep it, or describe changes."
+
+If the user requests changes, revise and re-present. Loop until approval.
+
 ---
 
 ## Phase 4: Handoff
@@ -417,9 +487,10 @@ Report pass/fail and any output.
 ### If all steps passed
 
 Report:
-- Files created (list paths)
+- Files created (list paths, including AGENTS.md)
 - Build: ✓
 - Tests: ✓ (or "skipped — no scripts in bundle")
+- AGENTS.md: ✓
 
 Then show install instructions:
 ```bash

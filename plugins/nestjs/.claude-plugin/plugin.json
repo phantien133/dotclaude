@@ -1,0 +1,24 @@
+{
+  "name": "nestjs",
+  "version": "0.1.0",
+  "description": "NestJS framework preset — modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.",
+  "author": {
+    "name": "phantien133",
+    "email": "tienpq@hilab.asia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "nestjs",
+    "typescript",
+    "backend",
+    "rest-api"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ]
+}
