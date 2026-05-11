@@ -1,4 +1,5 @@
-import { join } from 'node:path';
+import { copyFile, stat } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { homedir } from 'node:os';
 import { createInterface } from 'node:readline/promises';
 import { Command } from 'commander';
@@ -280,7 +281,23 @@ async function runInstall(
   // External setup instructions and complexity warnings.
   printExternalSetup(plan.preset.external_setup);
 
+  // Copy AGENTS.md to project root for project-level installs.
   if (scope === 'project') {
+    try {
+      const { presetDir } = await locatePreset(presetName, kind ? { kind } : {});
+      const agentsMdSrc = join(presetDir, 'AGENTS.md');
+      await stat(agentsMdSrc);
+      const projectRoot = dirname(targetRoot);
+      const agentsMdDst = join(projectRoot, 'AGENTS.md');
+      try {
+        await stat(agentsMdDst);
+        await copyFile(agentsMdDst, `${agentsMdDst}.bak`);
+        log.warn(`  Backed up existing AGENTS.md → AGENTS.md.bak`);
+      } catch { /* no existing file — nothing to backup */ }
+      await copyFile(agentsMdSrc, agentsMdDst);
+      log.info(`  AGENTS.md → ${agentsMdDst}`);
+    } catch { /* preset has no AGENTS.md — skip */ }
+
     log.warn(`Consider adding to your project .gitignore:\n  .claude/.dotclaude-manifest.yaml`);
   }
 

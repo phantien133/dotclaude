@@ -1,6 +1,7 @@
-import { copyFile, mkdir, readdir, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 import { buildInstallPlan, type PlannedComponent, type ResolveOptions } from './resolver.ts';
+import { locatePreset } from './preset.ts';
 import { PLUGINS_DIR } from './paths.ts';
 import { log } from './logger.ts';
 import type { Preset, ExternalSetupEntry } from './schema.ts';
@@ -212,6 +213,17 @@ export async function buildPlugin(
   if (setupMd !== null) {
     await writeFile(join(pluginRoot, 'SETUP.md'), setupMd, 'utf8');
     log.debug(`Wrote ${join(pluginRoot, 'SETUP.md')}`);
+  }
+
+  // Copy AGENTS.md from preset directory if present.
+  try {
+    const { presetDir } = await locatePreset(presetName, opts.kind ? { kind: opts.kind } : {});
+    const agentsMdSrc = join(presetDir, 'AGENTS.md');
+    await stat(agentsMdSrc);
+    await copyFile(agentsMdSrc, join(pluginRoot, 'AGENTS.md'));
+    log.debug(`Copied AGENTS.md from ${presetDir}`);
+  } catch {
+    // No AGENTS.md in preset — skip.
   }
 
   return { outDir: pluginRoot, manifest, componentCount, skipped };
