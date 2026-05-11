@@ -9,13 +9,20 @@ source:
   ref: main
 imported_at: "2026-05-08"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: |
+  - Added Step 3f: AGENTS.md generation as part of Phase 3 execution.
+    Resolves full agent list (preset + extends chain), derives Core Principles
+    from use_case_tags/skills, generates AGENTS.md and shows preview for confirmation.
+    AGENTS.md is auto-copied to project root on pnpm install:project.
+  - Updated Phase 4 success report to include AGENTS.md in file list.
 notes: >-
   Project-native command created as part of the wizard-features plan (2026-05-08).
   Implements a 4-phase interactive wizard: elicitation → planning → confirmation → execution.
   Calls plugin-discovery skill when claudekit lacks coverage for stated requirements.
   On build/test failure, hands off to preset-debugger skill rather than fixing inline.
+  Step 3f (2026-05-11): generates AGENTS.md with agent table, core principles, orchestration
+  rules, and stack notes — derived from the resolved preset component set.
 dependencies:
   required:
     agents: []
