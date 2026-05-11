@@ -3,7 +3,8 @@ name: dotclaude-bootstrap
 kind: purpose
 description: Bootstrap preset for new dotclaude users — includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.
 version: 0.1.0
-extends: []
+extends:
+  - core
 components:
   agents: []
   skills:
