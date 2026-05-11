@@ -14,6 +14,11 @@ const PAIRS = [
     dst: repoPath('presets', 'private'),
     label: 'presets/private/',
   },
+  {
+    src: repoPath('plugins', 'private.example'),
+    dst: repoPath('plugins', 'private'),
+    label: 'plugins/private/',
+  },
 ];
 
 async function pathExists(p: string): Promise<boolean> {
@@ -56,7 +61,7 @@ async function main(): Promise<void> {
   if (initCount === 0) {
     log.info('Nothing to initialize (all private/ dirs already present).');
   } else {
-    log.info(`Done. Edit the files in claudekit/private/ and presets/private/ to add your own content.`);
+    log.info(`Done. Edit the files in claudekit/private/, presets/private/, and plugins/private/ to add your own content.`);
   }
 }
 

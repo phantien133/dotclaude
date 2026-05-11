@@ -49,3 +49,5 @@ docs/plan/
 .tmp/
 .cache/
 coverage/
+
+/upstream/private/
