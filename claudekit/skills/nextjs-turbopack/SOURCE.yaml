@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/affaan-m/everything-claude-code
+  commit: 841beea45cb25ba51f29fa45b7e272938d19b80a
+  path: skills/nextjs-turbopack
+  ref: main
+imported_at: 2026-05-11
+license: MIT
+modified: false
+modifications: null

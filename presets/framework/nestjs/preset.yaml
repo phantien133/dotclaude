@@ -1,0 +1,37 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: nestjs
+kind: framework
+description: NestJS framework preset — modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.
+version: 0.1.0
+extends:
+  - developer
+components:
+  skills:
+    - nestjs-patterns
+    - backend-patterns
+    - api-design
+    - database-migrations
+    - postgres-patterns
+    - verification-loop
+recommended_install_level: project
+tags:
+  - nestjs
+  - typescript
+  - backend
+  - rest-api
+use_case_tags:
+  roles:
+    - backend-developer
+    - fullstack-developer
+  project_types:
+    - rest-api
+    - microservice
+    - monorepo
+  stacks:
+    - typescript
+    - nestjs
+    - nodejs
+  use_cases:
+    - api-development
+    - database-integration
+    - tdd

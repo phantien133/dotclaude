@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: nextjs
+kind: framework
+description: Next.js framework preset — React app structure, Turbopack dev server, and frontend patterns for production apps.
+version: 0.1.0
+extends:
+  - developer
+components:
+  skills:
+    - frontend-patterns
+    - nextjs-turbopack
+    - verification-loop
+recommended_install_level: project
+tags:
+  - nextjs
+  - react
+  - typescript
+  - frontend
+use_case_tags:
+  roles:
+    - frontend-developer
+    - fullstack-developer
+  project_types:
+    - web-app
+    - ssr-app
+  stacks:
+    - typescript
+    - react
+    - nextjs
+  use_cases:
+    - ui-development
+    - ssr
+    - frontend-architecture
