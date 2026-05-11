@@ -7,21 +7,8 @@ extends:
   - core
 components:
   skills:
-    - continuous-learning-v2
     - skill-creator
     - ai-regression-testing
-settings_patch:
-  hooks:
-    PreToolUse:
-      - matcher: "*"
-        hooks:
-          - type: command
-            command: "~/.claude/skills/continuous-learning-v2/hooks/observe.sh pre"
-    PostToolUse:
-      - matcher: "*"
-        hooks:
-          - type: command
-            command: "~/.claude/skills/continuous-learning-v2/hooks/observe.sh"
 recommended_install_level: user
 tags:
   - ai-native
