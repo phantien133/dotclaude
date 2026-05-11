@@ -24,6 +24,9 @@ modifications: |
     Dependency Scan — systematic grep scan, decision matrix (vendor/reuse/external), shared-code
     pattern guidance, existing-dep verification (Step 2.5d). Pipeline 7→8 steps. evals.json
     extended to 6 cases including cross-reference scenarios. Benchmark: 100% vs 50% old skill.
+  - SKILL.md v4 (2026-05-11): added anthropics/claude-code as sync_source upstream with nested
+    plugin layout note (components in plugins/<name>/.claude-plugin/). Updated upstream table
+    and description to include claude-code as valid vendor source.
 notes: >-
   Project-native skill created in step 5 of the continuous-learning-v2 plan
   (session 2026-05-08), improved via skill-creator in the same session.

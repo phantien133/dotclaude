@@ -53,3 +53,13 @@ sources:
     ref: main
     role: docs
     license: MIT
+
+  claude_code:
+    name: claude-code
+    description: Official Claude Code CLI — plugin collection with vendorable agents/skills/commands/hooks (plugins/ dir), plus AGENTS.md format and hook schema reference
+    repo: https://github.com/anthropics/claude-code
+    local_path: upstream/claude-code
+    pinned_commit: 831608a360511febd4b10c77d4d03b47afda2f5b
+    ref: main
+    role: sync_source
+    license: MIT

@@ -10,3 +10,6 @@
 [submodule "upstream/mcp-servers"]
 	path = upstream/mcp-servers
 	url = https://github.com/modelcontextprotocol/servers.git
+[submodule "upstream/claude-code"]
+	path = upstream/claude-code
+	url = https://github.com/anthropics/claude-code

@@ -1,6 +1,6 @@
 ---
 name: dotclaude-component-picker
-description: Use when picking, vendoring, porting, or syncing agents, skills, commands, hooks, or rules from any upstream source (ECC = everything-claude-code, anthropic-skills, mcp-servers, wshobson/agents, or other external repos) into this dotclaude project's claudekit/ directory. Trigger on phrases like "pick X from ECC", "vendor this skill", "add agent from upstream", "port this component", "sync component from source", "import this hook", "bring in this rule from ECC", or any time the user references an upstream component to add to claudekit/. This skill covers the full 8-step pipeline: browse → evaluate → cross-reference scan → vendor → sidecar → preset → install → verify. Also trigger for upgrade or sync tasks ("check if X has updates", "sync X from upstream").
+description: Use when picking, vendoring, porting, or syncing agents, skills, commands, hooks, or rules from any upstream source (ECC = everything-claude-code, anthropic-skills, claude-code plugins, mcp-servers, wshobson/agents, or other external repos) into this dotclaude project's claudekit/ directory. Trigger on phrases like "pick X from ECC", "vendor this skill", "add agent from upstream", "port this component", "sync component from source", "import this hook", "bring in this rule from ECC", "vendor from claude-code", or any time the user references an upstream component to add to claudekit/. This skill covers the full 8-step pipeline: browse → evaluate → cross-reference scan → vendor → sidecar → preset → install → verify. Also trigger for upgrade or sync tasks ("check if X has updates", "sync X from upstream").
 ---
 
 # dotclaude-component-picker
@@ -19,8 +19,16 @@ Full pipeline for picking a component from any upstream source and integrating i
 |---|---|---|
 | ECC | `upstream/everything-claude-code/` | agents, skills, commands, hooks, rules |
 | anthropic-skills | `upstream/anthropic-skills/` | skills |
+| claude-code | `upstream/claude-code/plugins/<name>/` | agents, skills, commands, hooks (nested in plugins) |
 | mcp-servers | `upstream/mcp-servers/` | reference only |
 | anthropic-cookbook | `upstream/anthropic-cookbook/` | reference only |
+
+**Note for claude-code:** components live inside `plugins/<plugin-name>/.claude-plugin/` (not top-level). Browse with:
+```bash
+ls upstream/claude-code/plugins/
+ls upstream/claude-code/plugins/<name>/.claude-plugin/
+cat upstream/claude-code/plugins/<name>/.claude-plugin/plugin.json
+```
 
 ---
 
