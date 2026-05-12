@@ -1,7 +1,6 @@
 import { copyFile, stat } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
-import { createInterface } from 'node:readline/promises';
 import { Command } from 'commander';
 import { COMPONENT_TYPES, PRESET_KINDS, type ComponentType, type PresetKind, type ExternalSetupEntry } from './lib/schema.ts';
 import { locateComponent, loadSidecar } from './lib/sidecar.ts';
@@ -124,8 +123,7 @@ program
   .description('Install preset at user level (~/.claude/)')
   .argument('<preset>', 'preset name')
   .option('--kind <kind>', `Disambiguate preset kind (${PRESET_KINDS.join(' | ')})`)
-  .option('--copy', 'Copy files instead of symlinking')
-  .option('--symlink', 'Symlink files instead of copying')
+  .option('--symlink', 'Symlink files instead of copying (default: copy)')
   .option('--force', 'Overwrite conflicts in-place (no backup)')
   .option('--skip-existing', 'Skip files that already exist at target')
   .option('--include-optional', 'Also install optional component deps')
@@ -143,8 +141,7 @@ program
   .description('Install preset at project level (<cwd>/.claude/)')
   .argument('<preset>', 'preset name')
   .option('--kind <kind>', `Disambiguate preset kind (${PRESET_KINDS.join(' | ')})`)
-  .option('--symlink', 'Symlink files instead of copying')
-  .option('--copy', 'Copy files instead of symlinking')
+  .option('--symlink', 'Symlink files instead of copying (default: copy)')
   .option('--force', 'Overwrite conflicts in-place (no backup)')
   .option('--skip-existing', 'Skip files that already exist at target')
   .option('--include-optional', 'Also install optional component deps')
@@ -160,7 +157,6 @@ program
 
 interface UserInstallOpts {
   kind?: string;
-  copy?: boolean;
   symlink?: boolean;
   force?: boolean;
   skipExisting?: boolean;
@@ -173,19 +169,6 @@ interface ProjectInstallOpts extends UserInstallOpts {
   // same flags, different defaults
 }
 
-async function promptInstallMode(): Promise<InstallMode> {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    const answer = await rl.question('Install mode? [symlink/copy]: ');
-    const normalized = answer.trim().toLowerCase();
-    if (normalized === 'symlink' || normalized === 's') return 'symlink';
-    if (normalized === 'copy' || normalized === 'c') return 'copy';
-    log.warn(`Unknown input "${answer}", defaulting to copy`);
-    return 'copy';
-  } finally {
-    rl.close();
-  }
-}
 
 async function runInstall(
   presetName: string,
@@ -193,11 +176,9 @@ async function runInstall(
   opts: UserInstallOpts,
   scope: 'user' | 'project',
 ): Promise<void> {
-  const mode: InstallMode = opts.copy === true
-    ? 'copy'
-    : opts.symlink === true
-      ? 'symlink'
-      : await promptInstallMode();
+  const mode: InstallMode = opts.symlink === true
+    ? 'symlink'
+    : 'copy';
 
   const conflictPolicy: ConflictPolicy = opts.force === true
     ? 'overwrite'
@@ -258,7 +239,16 @@ async function runInstall(
   if (Object.keys(plan.merged_settings_patch).length > 0) {
     const settingsPath = join(targetRoot, 'settings.json');
     const existing = await loadSettings(settingsPath);
-    const merged = mergeSettings(existing, plan.merged_settings_patch);
+    // Rewrite hook command paths: the preset's settings_patch may reference
+    // ~/.claude/hooks/ (the conventional user-level hooks dir), but when
+    // installing at project level the hook files land in <targetRoot>/hooks/.
+    // Serialise → replace → deserialise so every command path is correct for
+    // this install target, with no side-effects outside targetRoot.
+    const hooksDir = join(resolve(targetRoot), 'hooks');
+    const patchJson = JSON.stringify(plan.merged_settings_patch)
+      .replace(/~\/\.claude\/hooks\//g, `${hooksDir}/`);
+    const rewrittenPatch = JSON.parse(patchJson) as Record<string, unknown>;
+    const merged = mergeSettings(existing, rewrittenPatch);
     await writeSettings(settingsPath, merged);
     log.info('  settings.json updated');
   }
@@ -404,7 +394,6 @@ program
 
 interface UpgradeCmdOpts {
   target?: string;
-  copy?: boolean;
   symlink?: boolean;
   includeOptional?: boolean;
   dryRun?: boolean;
@@ -416,14 +405,13 @@ program
   .description('Upgrade an installed preset to the latest claudekit version')
   .argument('<preset>', 'preset name')
   .option('--target <path>', 'Override target root (default: ~/.claude)')
-  .option('--copy', 'Copy files instead of symlinking (default: symlink)')
-  .option('--symlink', 'Symlink files (default)')
+  .option('--symlink', 'Symlink files instead of copying (default: copy)')
   .option('--include-optional', 'Also upgrade optional component deps')
   .option('--dry-run', 'Print what would change without making changes')
   .option('--kind <kind>', `Disambiguate preset kind (${PRESET_KINDS.join(' | ')})`)
   .action(async (presetName: string, opts: UpgradeCmdOpts) => {
     const targetRoot = opts.target ?? join(homedir(), '.claude');
-    const mode: InstallMode = opts.copy === true ? 'copy' : 'symlink';
+    const mode: InstallMode = opts.symlink === true ? 'symlink' : 'copy';
     const kind = opts.kind !== undefined ? validateKind(opts.kind) : undefined;
     try {
       const upgradeOpts: Parameters<typeof upgradePreset>[2] = { mode };
