@@ -5,8 +5,17 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-// Deep-merges patch into existing. Arrays are concatenated. Objects are recursively
-// merged. Scalar conflicts: patch wins.
+// Merges two arrays, appending only items from `incoming` that are not
+// structurally identical (by JSON serialisation) to any existing item.
+function mergeArrayDedup(existing: unknown[], incoming: unknown[]): unknown[] {
+  const seen = new Set(existing.map((item) => JSON.stringify(item)));
+  const additions = incoming.filter((item) => !seen.has(JSON.stringify(item)));
+  return [...existing, ...additions];
+}
+
+// Deep-merges patch into existing. Arrays are merged with deduplication
+// (structural equality). Objects are recursively merged. Scalar conflicts:
+// patch wins.
 export function mergeSettings(
   existing: Record<string, unknown>,
   patch: Record<string, unknown>,
@@ -17,7 +26,7 @@ export function mergeSettings(
     if (isPlainObject(ex) && isPlainObject(v)) {
       result[k] = mergeSettings(ex, v);
     } else if (Array.isArray(ex) && Array.isArray(v)) {
-      result[k] = [...ex, ...v];
+      result[k] = mergeArrayDedup(ex, v);
     } else {
       result[k] = v;
     }

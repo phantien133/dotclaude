@@ -94,16 +94,18 @@ export async function applyComponent(
 ): Promise<ApplyResult> {
   guardTargetPath(dst, targetRoot);
 
-  // Idempotency: already installed in the correct mode pointing to same src.
-  if (mode === 'symlink' && (await isSymlinkTo(dst, src))) {
-    return 'idempotent';
-  }
-  if (mode === 'copy') {
-    try {
-      const s = await lstat(dst);
-      if (!s.isSymbolicLink()) return 'idempotent';
-    } catch {
-      // dst doesn't exist — proceed with install
+  // Idempotency checks are skipped when the caller requests an overwrite.
+  if (conflictPolicy !== 'overwrite') {
+    if (mode === 'symlink' && (await isSymlinkTo(dst, src))) {
+      return 'idempotent';
+    }
+    if (mode === 'copy') {
+      try {
+        const s = await lstat(dst);
+        if (!s.isSymbolicLink()) return 'idempotent';
+      } catch {
+        // dst doesn't exist — proceed with install
+      }
     }
   }
 
