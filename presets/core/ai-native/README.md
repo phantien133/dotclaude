@@ -15,12 +15,13 @@ knowledge base of instincts and skills. Stack-agnostic — the learning is about
 
 | Type | Name | Purpose |
 |------|------|---------|
-| skill | `continuous-learning-v2` | Observes every tool call via hooks, extracts atomic instincts with confidence scoring. Project-scoped by default (v2.1). |
+| skill | `continuous-learning-v2` | Extracts atomic instincts with confidence scoring. Project-scoped by default (v2.1). Hooks are **opt-in** — wire manually after install. |
 | skill | `skill-creator` | Create and improve skills directly from conversation — turns observed patterns into reusable commands. |
 
-## Hook wiring
+## Hook wiring (opt-in)
 
-The `continuous-learning-v2` observer runs on every tool call. Add to your
+The `continuous-learning-v2` observer hooks are **not auto-wired** — the preset installs
+the skill only. To activate observation, add the hooks manually to your
 `~/.claude/settings.json` (user-level install):
 
 ```json
