@@ -1,4 +1,4 @@
-import { copyFile, stat } from 'node:fs/promises';
+import { copyFile, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { Command } from 'commander';
@@ -288,13 +288,36 @@ async function runInstall(
       log.info(`  AGENTS.md → ${agentsMdDst}`);
     } catch { /* preset has no AGENTS.md — skip */ }
 
-    log.warn(`Consider adding to your project .gitignore:\n  .claude/.dotclaude-manifest.yaml`);
+    await ensureGitignoreEntry(dirname(targetRoot), '.claude/.dotclaude-manifest.yaml');
   }
 
   log.info(
     `Installed "${presetName}" → ${targetRoot}` +
     ` (${stats.installed} installed, ${stats.idempotent} already up-to-date, ${stats.skipped} skipped)`,
   );
+}
+
+async function ensureGitignoreEntry(projectRoot: string, entry: string): Promise<void> {
+  try {
+    await stat(join(projectRoot, '.git'));
+  } catch {
+    return; // not a git repo
+  }
+  const gitignorePath = join(projectRoot, '.gitignore');
+  let content = '';
+  try {
+    content = await readFile(gitignorePath, 'utf8');
+  } catch { /* file doesn't exist yet */ }
+  const lines = content.split('\n');
+  if (lines.some(l => l.trim() === entry)) {
+    log.info(`  .gitignore already contains ${entry}`);
+    return;
+  }
+  const newContent = content.endsWith('\n') || content === ''
+    ? `${content}${entry}\n`
+    : `${content}\n${entry}\n`;
+  await writeFile(gitignorePath, newContent, 'utf8');
+  log.info(`  .gitignore ← ${entry}`);
 }
 
 function printExternalSetup(entries: ExternalSetupEntry[]): void {
