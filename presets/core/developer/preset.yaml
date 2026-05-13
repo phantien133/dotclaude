@@ -15,6 +15,9 @@ components:
   agents:
     - planner
     - code-architect
+    - code-explorer
+    - code-reviewer
+    - code-simplifier
   hooks:
     - post-edit-typecheck
     - pre-bash-commit-quality
