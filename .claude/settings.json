@@ -9,5 +9,77 @@
   },
   "enabledPlugins": {
     "mgrep@Mixedbread-Grep": true
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/post-edit-typecheck.js"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/suggest-compact.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/doc-file-warning.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-bash-commit-quality.js"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/block-no-verify.js"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/pre-compact.js"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/desktop-notify.js"
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/cost-tracker.js"
+          }
+        ]
+      }
+    ]
   }
 }

@@ -21,6 +21,28 @@ settings_patch:
         repo: mixedbread-ai/mgrep
   enabledPlugins:
     "mgrep@Mixedbread-Grep": true
+  hooks:
+    PreToolUse:
+      - matcher: "Edit|Write"
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/suggest-compact.js"
+      - matcher: "Write"
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/doc-file-warning.js"
+    PreCompact:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/pre-compact.js"
+    Stop:
+      - matcher: "*"
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/desktop-notify.js"
+          - type: command
+            command: "node ~/.claude/hooks/cost-tracker.js"
 external_setup:
   - name: mgrep
     kind: claude_plugin
