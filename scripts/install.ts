@@ -1,4 +1,4 @@
-import { copyFile, readFile, stat, writeFile } from 'node:fs/promises';
+import { copyFile, cp, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { Command } from 'commander';
@@ -211,6 +211,12 @@ async function runInstall(
     await ensureDir(join(targetRoot, type));
   }
 
+  // Ensure hooks/*.js run as CommonJS even inside ESM projects (package.json
+  // with "type":"module" in a parent dir would otherwise break require() calls).
+  const cjsPkgPath = join(targetRoot, 'package.json');
+  const cjsPkg = '{"type":"commonjs"}\n';
+  await writeFile(cjsPkgPath, cjsPkg, 'utf8');
+
   const stats = { installed: 0, skipped: 0, idempotent: 0 };
 
   for (const component of plan.components) {
@@ -235,16 +241,40 @@ async function runInstall(
     }
   }
 
+  // In copy mode, also copy hooks/lib/ — shared runtime utilities required by
+  // hooks via require('./lib/utils'). Symlink mode doesn't need this because
+  // the symlink target resolves lib/ relative to the real file in claudekit/.
+  if (mode === 'copy') {
+    const hookFiles = plan.components.filter(
+      (c) => c.type === 'hooks' && c.layout.kind === 'file',
+    );
+    if (hookFiles.length > 0 && hookFiles[0] !== undefined) {
+      const sourceLibDir = join(dirname(hookFiles[0].layout.componentPath), 'lib');
+      const targetLibDir = join(targetRoot, 'hooks', 'lib');
+      try {
+        await cp(sourceLibDir, targetLibDir, {
+          recursive: true,
+          filter: (src) => !src.endsWith('.source.yaml'),
+        });
+        log.info('  copied: hooks/lib (shared runtime)');
+      } catch {
+        // lib/ may not exist in all claudekit variants — skip silently
+      }
+    }
+  }
+
   // Apply settings patch.
   if (Object.keys(plan.merged_settings_patch).length > 0) {
     const settingsPath = join(targetRoot, 'settings.json');
     const existing = await loadSettings(settingsPath);
     // Rewrite hook command paths: the preset's settings_patch may reference
-    // ~/.claude/hooks/ (the conventional user-level hooks dir), but when
-    // installing at project level the hook files land in <targetRoot>/hooks/.
-    // Serialise → replace → deserialise so every command path is correct for
-    // this install target, with no side-effects outside targetRoot.
-    const hooksDir = join(resolve(targetRoot), 'hooks');
+    // ~/.claude/hooks/ (the conventional user-level hooks dir), but the target
+    // hooks dir depends on install scope:
+    //   user    → absolute path (user-specific, not shared)
+    //   project → .claude/hooks/ (relative to project root, portable across users)
+    const hooksDir = scope === 'project'
+      ? '.claude/hooks'
+      : join(resolve(targetRoot), 'hooks');
     const patchJson = JSON.stringify(plan.merged_settings_patch)
       .replace(/~\/\.claude\/hooks\//g, `${hooksDir}/`);
     const rewrittenPatch = JSON.parse(patchJson) as Record<string, unknown>;
