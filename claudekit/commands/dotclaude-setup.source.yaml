@@ -1,18 +1,18 @@
 # yaml-language-server: $schema=../../presets/schema/sidecar.schema.json
 #
-# Project-native command (not vendored from upstream).
-# repo/commit point to dotclaude itself at the commit when this command was created.
+# Vendored from upstream/dotclaude (components branch) — the self-authored component library.
+# Source of truth: upstream/dotclaude/dotclaude-self/commands/dotclaude-setup.md
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: 3d4d7a43eaad7b2b0fc9eaf31d98e8f8d0b50e04
-  path: claudekit/commands/dotclaude-setup.md
-  ref: main
-imported_at: "2026-05-08"
+  commit: 8b40c89f165e1afb41795b58ef97551217560b1c
+  path: dotclaude-self/commands/dotclaude-setup.md
+  ref: components
+imported_at: "2026-05-13"
 license: MIT
 modified: false
 modifications: null
 notes: >-
-  Project-native command created as part of the wizard-features plan (2026-05-08).
+  Self-authored command, source of truth in upstream/dotclaude branch components.
   One-time bootstrap wizard for users who know Claude Code but are new to dotclaude.
   5-phase flow: environment check → onboarding → catalog search → install → confirm.
   Saves dotclaude path + install level to ~/.claude/dotclaude-config.json.

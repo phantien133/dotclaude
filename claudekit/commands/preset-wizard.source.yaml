@@ -1,28 +1,23 @@
 # yaml-language-server: $schema=../../presets/schema/sidecar.schema.json
 #
-# Project-native command (not vendored from upstream).
-# repo/commit point to dotclaude itself at the commit when this command was created.
+# Vendored from upstream/dotclaude (components branch) — the self-authored component library.
+# Source of truth: upstream/dotclaude/dotclaude-self/commands/preset-wizard.md
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: 3d4d7a43eaad7b2b0fc9eaf31d98e8f8d0b50e04
-  path: claudekit/commands/preset-wizard.md
-  ref: main
-imported_at: "2026-05-08"
+  commit: 8b40c89f165e1afb41795b58ef97551217560b1c
+  path: dotclaude-self/commands/preset-wizard.md
+  ref: components
+imported_at: "2026-05-13"
 license: MIT
-modified: true
-modifications: |
-  - Added Step 3f: AGENTS.md generation as part of Phase 3 execution.
-    Resolves full agent list (preset + extends chain), derives Core Principles
-    from use_case_tags/skills, generates AGENTS.md and shows preview for confirmation.
-    AGENTS.md is auto-copied to project root on pnpm install:project.
-  - Updated Phase 4 success report to include AGENTS.md in file list.
+modified: false
+modifications: null
 notes: >-
-  Project-native command created as part of the wizard-features plan (2026-05-08).
+  Self-authored command, source of truth in upstream/dotclaude branch components.
   Implements a 4-phase interactive wizard: elicitation → planning → confirmation → execution.
   Calls plugin-discovery skill when claudekit lacks coverage for stated requirements.
   On build/test failure, hands off to preset-debugger skill rather than fixing inline.
-  Step 3f (2026-05-11): generates AGENTS.md with agent table, core principles, orchestration
-  rules, and stack notes — derived from the resolved preset component set.
+  Generates AGENTS.md with agent table, core principles, orchestration rules, and stack
+  notes — derived from the resolved preset component set.
 dependencies:
   required:
     agents: []

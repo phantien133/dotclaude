@@ -3,19 +3,19 @@
 # SOURCE.yaml is INSIDE the skill folder.
 # Installer MUST exclude this file when copying the skill folder to a target.
 #
-# Project-native skill (not vendored from upstream). repo/commit point to
-# dotclaude itself at the commit when this skill was first created.
+# Vendored from upstream/dotclaude (components branch) — the self-authored component library.
+# Source of truth: upstream/dotclaude/dotclaude-self/skills/preset-debugger/
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: 3d4d7a43eaad7b2b0fc9eaf31d98e8f8d0b50e04
-  path: claudekit/skills/preset-debugger
-  ref: main
-imported_at: "2026-05-08"
+  commit: 8b40c89f165e1afb41795b58ef97551217560b1c
+  path: dotclaude-self/skills/preset-debugger
+  ref: components
+imported_at: "2026-05-13"
 license: MIT
 modified: false
 modifications: null
 notes: >-
-  Project-native skill created as part of the wizard-features plan (2026-05-08).
+  Self-authored skill, source of truth in upstream/dotclaude branch components.
   Diagnoses and fixes failures in dotclaude preset artifacts (YAML, sidecars,
   plugin builds, vitest stubs). Called from /preset-wizard on verify failure, or
   manually by the user. Scope strictly limited to dotclaude preset/plugin artifacts.

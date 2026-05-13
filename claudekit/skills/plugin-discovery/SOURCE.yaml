@@ -3,19 +3,19 @@
 # SOURCE.yaml is INSIDE the skill folder.
 # Installer MUST exclude this file when copying the skill folder to a target.
 #
-# Project-native skill (not vendored from upstream). repo/commit point to
-# dotclaude itself at the commit when this skill was first created.
+# Vendored from upstream/dotclaude (components branch) — the self-authored component library.
+# Source of truth: upstream/dotclaude/dotclaude-self/skills/plugin-discovery/
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: 3d4d7a43eaad7b2b0fc9eaf31d98e8f8d0b50e04
-  path: claudekit/skills/plugin-discovery
-  ref: main
-imported_at: "2026-05-08"
+  commit: 8b40c89f165e1afb41795b58ef97551217560b1c
+  path: dotclaude-self/skills/plugin-discovery
+  ref: components
+imported_at: "2026-05-13"
 license: MIT
 modified: false
 modifications: null
 notes: >-
-  Project-native skill created as part of the wizard-features plan (2026-05-08).
+  Self-authored skill, source of truth in upstream/dotclaude branch components.
   Searches GitHub (auto) and optionally npm (user opt-in) for external Claude Code
   components to vendor into claudekit/. Quality filter: ≥50 stars minimum, active
   within 12 months, MIT/Apache-2.0 license, recognisable component structure.

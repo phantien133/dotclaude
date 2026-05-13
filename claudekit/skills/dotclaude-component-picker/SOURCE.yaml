@@ -3,33 +3,19 @@
 # SOURCE.yaml is INSIDE the skill folder.
 # Installer MUST exclude this file when copying the skill folder to a target.
 #
-# This is a project-native skill (not vendored from upstream). The repo/commit
-# below point to dotclaude itself at the commit when the skill was first created.
+# Vendored from upstream/dotclaude (components branch) — the self-authored component library.
+# Source of truth: upstream/dotclaude/dotclaude-self/skills/dotclaude-component-picker/
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: 4b6cdef1a8daa7411670036a2ff4596060c03a0f
-  path: claudekit/skills/dotclaude-component-picker
-  ref: main
-imported_at: "2026-05-08"
+  commit: 8b40c89f165e1afb41795b58ef97551217560b1c
+  path: dotclaude-self/skills/dotclaude-component-picker
+  ref: components
+imported_at: "2026-05-13"
 license: MIT
-modified: true
-modifications: |
-  - Added references/ directory: sidecar.md (full schema, layout rules, dep resolution,
-    modify/upgrade workflows) and presets.md (preset schema, extends, settings_patch,
-    install flags).
-  - SKILL.md v2: added bundled reference pointers, tags/categories in sidecar template,
-    modify-after-import workflow, pnpm sync upgrade path, --force --symlink install flags,
-    "Upgrade an existing component" section, richer Step 2 (eval) and Step 6 (install).
-  - SKILL.md v3 (skill-creator eval loop, 2026-05-08): added Step 2.5 Cross-Reference &
-    Dependency Scan — systematic grep scan, decision matrix (vendor/reuse/external), shared-code
-    pattern guidance, existing-dep verification (Step 2.5d). Pipeline 7→8 steps. evals.json
-    extended to 6 cases including cross-reference scenarios. Benchmark: 100% vs 50% old skill.
-  - SKILL.md v4 (2026-05-11): added anthropics/claude-code as sync_source upstream with nested
-    plugin layout note (components in plugins/<name>/.claude-plugin/). Updated upstream table
-    and description to include claude-code as valid vendor source.
+modified: false
+modifications: null
 notes: >-
-  Project-native skill created in step 5 of the continuous-learning-v2 plan
-  (session 2026-05-08), improved via skill-creator in the same session.
+  Self-authored skill, source of truth in upstream/dotclaude branch components.
   Encodes the full dotclaude component pick/vendor/install pipeline with
   bundled references for sidecar and preset schemas. Key pitfall: pnpm
   install intercepts `pnpm install <preset>` as npm install — always use
