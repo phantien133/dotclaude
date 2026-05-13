@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../presets/schema/sidecar.schema.json
+#
+# Vendored from upstream/dotclaude (components branch) — self-authored component library.
+# Source of truth: upstream/dotclaude/workflow/commands/w-reset.md
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  path: workflow/commands/w-reset.md
+  ref: components
+imported_at: "2026-05-13"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Workflow task reset. Default: resets state.yaml to phase 0, preserves docs.
+  --wipe: removes the entire task folder. Reads state_root from .claude/workflow.yaml.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - workflow
+  - reset
+  - state
+categories:
+  purpose:
+    - dev-workflow
+  mechanism:
+    - destructive
+    - interactive

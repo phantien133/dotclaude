@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+#
+# Vendored from upstream/dotclaude (components branch) — self-authored component library.
+# Source of truth: upstream/dotclaude/figma/skills/f-page/
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  path: figma/skills/f-page
+  ref: components
+imported_at: "2026-05-13"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Figma page integration. Replaces build-static-page. Uses f-import manifest to
+  identify page-role components, builds UI kit catalogue from installed_path fields,
+  and substitutes ad-hoc inline components with UI kit equivalents. Framework-aware
+  page target path resolution (Next.js App Router / Pages / Vite / CRA).
+dependencies:
+  required:
+    agents: []
+    skills:
+      - f-ui-kit
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands:
+      - f-setup
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - ui
+  - pages
+  - react
+categories:
+  purpose:
+    - ui-integration
+    - figma
+  mechanism:
+    - transform
+    - file-generation

@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+#
+# Vendored from upstream/dotclaude (components branch) — self-authored component library.
+# Source of truth: upstream/dotclaude/figma/skills/f-import/
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  path: figma/skills/f-import
+  ref: components
+imported_at: "2026-05-13"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Figma import orchestrator. Entry point for all Figma work — detects input mode
+  (MCP URL / export folder / hybrid), extracts data, generates a semantic manifest
+  at .figma-import/<module>/<timestamp>/manifest.yaml, then invokes f-ui-kit and
+  f-page. Reads .claude/figma.yaml (run /f-setup first).
+dependencies:
+  required:
+    agents: []
+    skills:
+      - f-ui-kit
+      - f-page
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - mcp__figma__get_file
+    - mcp__figma__get_file_components
+    - mcp__figma__get_local_variables
+    - mcp__figma__get_file_nodes
+tags:
+  - figma
+  - ui
+  - import
+  - mcp
+categories:
+  purpose:
+    - ui-integration
+    - figma
+  mechanism:
+    - orchestrator
+    - multi-mode

@@ -1,0 +1,57 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+#
+# Vendored from upstream/dotclaude (components branch) — self-authored component library.
+# Source of truth: upstream/dotclaude/workflow/skills/w-task/
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  path: workflow/skills/w-task
+  ref: components
+imported_at: "2026-05-13"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Full feature development workflow. 7-phase state machine (intake → context →
+  plan → impact → UI → TDD → docs → PR). Config-driven via .claude/workflow.yaml —
+  supports GitHub Issues, Plane (MCP/paste), Jira, Linear, or free text. Reads
+  state from .workflow/<task-slug>/state.yaml. Gate-based: advances only on explicit
+  /w-task invocation. Phase 3 references /f-import for Figma integration.
+dependencies:
+  required:
+    agents:
+      - planner
+      - tdd-guide
+      - code-reviewer
+    skills:
+      - w-checkpoint
+      - tdd-workflow
+    commands:
+      - w-pr
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills:
+      - f-import
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - gh
+tags:
+  - workflow
+  - tdd
+  - feature-dev
+  - config-driven
+categories:
+  purpose:
+    - dev-workflow
+    - tdd
+  mechanism:
+    - state-machine
+    - gate-based
+    - interactive
