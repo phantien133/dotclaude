@@ -69,7 +69,7 @@ sources:
     description: Self-authored component library — domain-grouped skills/commands/agents/hooks created by this repo. Source of truth for components vendored into claudekit/.
     repo: git@github.com:phantien133/dotclaude.git
     local_path: upstream/dotclaude
-    pinned_commit: 8b40c89f165e1afb41795b58ef97551217560b1c
+    pinned_commit: 61c49894c560e2108be439c212e22637c82fe5c6
     ref: components
     role: sync_source
     license: MIT
