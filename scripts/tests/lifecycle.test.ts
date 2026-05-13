@@ -229,7 +229,7 @@ describe('upgradePreset', () => {
       await ensureDirFn(join(targetRoot, type));
     }
 
-    const plan = await buildInstallPlan('personal-baseline');
+    const plan = await buildInstallPlan('developer');
     for (const c of plan.components) {
       const dst = cpFn(c, targetRoot);
       await applyFn(
@@ -245,7 +245,7 @@ describe('upgradePreset', () => {
     const m = mergeFn(null, additions);
     await writeManifest(join(targetRoot, '.dotclaude-manifest.yaml'), m);
 
-    const result = await upgradePreset('personal-baseline', targetRoot, {
+    const result = await upgradePreset('developer', targetRoot, {
       dryRun: true,
       mode: 'copy',
     });
@@ -258,7 +258,7 @@ describe('upgradePreset', () => {
     expect(total).toBeGreaterThan(0);
     // Dry-run: manifest should be unchanged.
     const raw = await readFile(join(targetRoot, '.dotclaude-manifest.yaml'), 'utf8');
-    expect(raw).toContain('personal-baseline');
+    expect(raw).toContain('developer');
   });
 });
 

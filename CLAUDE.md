@@ -81,8 +81,8 @@ See `docs/PROVENANCE.md` for sidecar schema.
 ```bash
 KIND=core; NAME=my-baseline
 mkdir -p presets/$KIND/$NAME
-cp presets/core/personal-baseline/preset.yaml presets/$KIND/$NAME/preset.yaml
-cp presets/core/personal-baseline/README.md   presets/$KIND/$NAME/README.md
+cp presets/core/developer/preset.yaml presets/$KIND/$NAME/preset.yaml
+cp presets/core/developer/README.md   presets/$KIND/$NAME/README.md
 $EDITOR presets/$KIND/$NAME/preset.yaml
 pnpm validate $NAME --kind $KIND
 ```

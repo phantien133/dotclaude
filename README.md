@@ -64,17 +64,17 @@ level) activates the full working environment: `/preset-wizard`, `/dotclaude-set
 
 ```bash
 # Install a preset to your global Claude config
-pnpm install:user personal-baseline
+pnpm install:user developer
 
 # Or to the current project
-pnpm install:project personal-baseline
+pnpm install:project developer
 ```
 
 #### Subcommands
 
 ```bash
 pnpm run list                                  # List presets (public + private)
-pnpm validate personal-baseline --kind core    # Schema + reference + sidecar check
+pnpm validate developer --kind core            # Schema + reference + sidecar check
 pnpm sync agents/code-reviewer                 # Diff sidecar.commit ↔ upstream HEAD
 pnpm schema:generate                           # Regen JSON Schema from zod
 

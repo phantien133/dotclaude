@@ -126,7 +126,7 @@ If matches found, present ranked results:
 | Score | Preset | Kind | Description |
 |-------|--------|------|-------------|
 | 4/4   | typescript-fullstack | framework | Full-stack TS preset with code review + testing |
-| 2/4   | personal-baseline    | core       | Cross-stack baseline for any project |
+| 2/4   | developer            | core       | Cross-stack developer tooling for any project |
 ```
 
 Ask:

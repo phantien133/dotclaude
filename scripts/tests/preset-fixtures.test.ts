@@ -7,16 +7,16 @@ import { PresetSchema, SidecarSchema } from '../lib/schema.ts';
 const REPO_ROOT = new URL('../..', import.meta.url).pathname;
 
 describe('shipped fixtures parse against schema', () => {
-  it('presets/core/personal-baseline/preset.yaml is valid', async () => {
+  it('presets/core/developer/preset.yaml is valid', async () => {
     const raw = await readFile(
-      join(REPO_ROOT, 'presets/core/personal-baseline/preset.yaml'),
+      join(REPO_ROOT, 'presets/core/developer/preset.yaml'),
       'utf8',
     );
     const data = loadYaml(raw);
     const parsed = PresetSchema.parse(data);
-    expect(parsed.name).toBe('personal-baseline');
+    expect(parsed.name).toBe('developer');
     expect(parsed.kind).toBe('core');
-    expect(parsed.components.agents).toContain('code-reviewer');
+    expect(parsed.components.skills).toContain('tdd-workflow');
   });
 
   it('claudekit/agents/code-reviewer.source.yaml is valid', async () => {

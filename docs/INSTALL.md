@@ -43,7 +43,7 @@ Validate a preset:
 5. Verify each component sidecar can be parsed.
 
 ```bash
-pnpm validate personal-baseline --kind core
+pnpm validate developer --kind core
 ```
 
 Exit codes:

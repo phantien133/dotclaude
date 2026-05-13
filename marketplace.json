@@ -9,9 +9,9 @@
   },
   "plugins": [
     {
-      "name": "personal-baseline",
-      "source": "./plugins/personal-baseline/",
-      "description": "Cross-stack baseline for any project — code review + coding standards.",
+      "name": "developer",
+      "source": "./plugins/developer/",
+      "description": "Cross-stack developer tooling — GitHub ops, quality gates, and architecture planning.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -19,13 +19,15 @@
       },
       "license": "MIT",
       "keywords": [
-        "baseline",
-        "cross-stack"
+        "developer",
+        "cross-stack",
+        "quality"
       ],
       "category": "workflow",
       "tags": [
-        "baseline",
-        "cross-stack"
+        "developer",
+        "cross-stack",
+        "quality"
       ],
       "strict": false,
       "repository": "https://github.com/phantien133/claudekit-marketplace"

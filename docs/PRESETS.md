@@ -79,8 +79,8 @@ NAME=my-baseline
 
 # 2. Create folder and copy template
 mkdir -p presets/$KIND/$NAME
-cp presets/core/personal-baseline/preset.yaml presets/$KIND/$NAME/preset.yaml
-cp presets/core/personal-baseline/README.md   presets/$KIND/$NAME/README.md
+cp presets/core/developer/preset.yaml presets/$KIND/$NAME/preset.yaml
+cp presets/core/developer/README.md   presets/$KIND/$NAME/README.md
 
 # 3. Edit — update name/description/components/tags
 
@@ -99,10 +99,10 @@ pnpm run list
 # presets/framework/nextjs-app/preset.yaml
 name: nextjs-app
 kind: framework
-description: Next.js App Router preset (extends personal-baseline)
+description: Next.js App Router preset (extends developer)
 version: 0.1.0
 extends:
-  - personal-baseline    # pulls in all agents+skills from the baseline automatically
+  - developer    # pulls in all agents+skills from the developer preset automatically
 components:
   skills:
     - web-frontend-patterns
@@ -140,4 +140,4 @@ Conflict policy:
 - `scripts/lib/schema.ts → PresetSchema` — zod schema.
 - `scripts/lib/preset.ts` — locate/load/list helpers.
 - `presets/schema/preset.schema.json` — generated JSON Schema for IDE.
-- `presets/core/personal-baseline.yaml` — first preset (Phase 1).
+- `presets/core/developer/preset.yaml` — default developer preset.
