@@ -25,7 +25,7 @@ dotclaude/
 │   │   ├── dotclaude-self/         # preset wizards, component picker, plugin discovery
 │   │   ├── workflow/               # w-* dev workflow (w-task, w-fix, …)
 │   │   └── figma/                  # f-* Figma integration suite
-│   ├── private/                    # GITIGNORED — per-project / hilab overrides
+│   ├── private/                    # GITIGNORED — per-project overrides
 │   └── private.example/            # TRACKED skeleton
 │
 ├── presets/                        # Pure manifest
@@ -74,7 +74,7 @@ pnpm typecheck && pnpm test
 | `dotclaude-self` | `claudekit/dotclaude/dotclaude-self/` | self — preset wizards |
 | `workflow` | `claudekit/dotclaude/workflow/` | self — w-* dev workflow |
 | `figma` | `claudekit/dotclaude/figma/` | self — f-* Figma suite |
-| `private` | `claudekit/private/` | gitignored — per-project |
+| `private` | `claudekit/private/` | gitignored — per-project overrides |
 
 ### Vendor a new component from upstream
 

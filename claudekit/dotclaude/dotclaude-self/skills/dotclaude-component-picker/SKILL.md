@@ -30,7 +30,7 @@ Full pipeline for picking a component from any upstream source and integrating i
 | `dotclaude-self` | `claudekit/dotclaude/dotclaude-self/` | This picker, preset-wizard, preset-debugger, plugin-discovery, dotclaude-setup |
 | `workflow` | `claudekit/dotclaude/workflow/` | `w-*` dev workflow (w-task, w-fix, w-pr, w-status, w-reset, w-setup, w-checkpoint, workflow-setup) |
 | `figma` | `claudekit/dotclaude/figma/` | `f-*` Figma suite (f-import, f-ui-kit, f-page, f-review, f-setup) |
-| `private` | `claudekit/private/` (gitignored) | per-project / hilab overrides |
+| `private` | `claudekit/private/` (gitignored) | per-project overrides |
 
 **Layout note (source-grouped):** Components live under
 `claudekit/<source>/<type>/<name>` — not the legacy flat `claudekit/<type>/<name>`.
