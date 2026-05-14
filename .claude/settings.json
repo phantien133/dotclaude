@@ -1,15 +1,4 @@
 {
-  "extraKnownMarketplaces": {
-    "Mixedbread-Grep": {
-      "source": {
-        "source": "github",
-        "repo": "mixedbread-ai/mgrep"
-      }
-    }
-  },
-  "enabledPlugins": {
-    "mgrep@Mixedbread-Grep": true
-  },
   "hooks": {
     "PostToolUse": [
       {
@@ -17,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/post-edit-typecheck.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-typecheck.js"
           }
         ]
       }
@@ -28,7 +17,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/suggest-compact.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/suggest-compact.js"
           }
         ]
       },
@@ -37,7 +26,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/doc-file-warning.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/doc-file-warning.js"
           }
         ]
       },
@@ -46,11 +35,11 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/pre-bash-commit-quality.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-bash-commit-quality.js"
           },
           {
             "type": "command",
-            "command": "node .claude/hooks/block-no-verify.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/block-no-verify.js"
           }
         ]
       }
@@ -61,7 +50,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/pre-compact.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-compact.js"
           }
         ]
       }
@@ -72,14 +61,25 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude/hooks/desktop-notify.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/desktop-notify.js"
           },
           {
             "type": "command",
-            "command": "node .claude/hooks/cost-tracker.js"
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/cost-tracker.js"
           }
         ]
       }
     ]
+  },
+  "extraKnownMarketplaces": {
+    "Mixedbread-Grep": {
+      "source": {
+        "source": "github",
+        "repo": "mixedbread-ai/mgrep"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "mgrep@Mixedbread-Grep": true
   }
 }

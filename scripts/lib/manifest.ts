@@ -49,10 +49,17 @@ export async function writeManifest(path: string, manifest: Manifest): Promise<v
 }
 
 // Derives the manifest additions (presets, components, patches, ext deps) from a plan.
+//
+// `rewrittenPatches` (optional) is a map from preset name to the patch value
+// actually applied to settings.json (after hook-path rewriting). When provided,
+// each settings_patches entry stores its `patch` so future installs/upgrades
+// can subtract the exact prior contribution. When absent, only `patch_keys`
+// is recorded (legacy behavior; consumers fall back to top-level-key removal).
 export function buildManifestAdditions(
   plan: InstallPlan,
   mode: InstallMode,
   targetRoot: string,
+  rewrittenPatches?: ReadonlyMap<string, Record<string, unknown>>,
 ): {
   presets: InstalledPreset[];
   components: InstalledComponent[];
@@ -83,10 +90,17 @@ export function buildManifestAdditions(
 
   const settings_patches: SettingsPatchEntry[] = plan.all_presets
     .filter((p) => Object.keys(p.settings_patch).length > 0)
-    .map((p) => ({
-      preset: p.name,
-      patch_keys: Object.keys(p.settings_patch),
-    }));
+    .map((p) => {
+      const entry: SettingsPatchEntry = {
+        preset: p.name,
+        patch_keys: Object.keys(p.settings_patch),
+      };
+      const rewritten = rewrittenPatches?.get(p.name);
+      if (rewritten !== undefined && Object.keys(rewritten).length > 0) {
+        entry.patch = rewritten;
+      }
+      return entry;
+    });
 
   return {
     presets,

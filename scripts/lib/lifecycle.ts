@@ -8,7 +8,13 @@ import {
   buildManifestAdditions,
   mergeManifest,
 } from './manifest.ts';
-import { loadSettings, writeSettings, mergeSettings } from './settings-merge.ts';
+import {
+  loadSettings,
+  writeSettings,
+  mergeSettings,
+  subtractSettings,
+  rewriteHookPaths,
+} from './settings-merge.ts';
 import { buildInstallPlan } from './resolver.ts';
 import {
   applyComponent,
@@ -64,7 +70,9 @@ export async function uninstallPreset(
     removed.push(`${c.type}:${c.id}`);
   }
 
-  // Settings patch revert: remove top-level keys that belong only to this preset.
+  // Settings patch revert. Prefer surgical subtraction (when the recorded
+  // patch value is available) so we only undo this preset's contribution;
+  // fall back to top-level-key removal for legacy manifest entries.
   const settingsReverted: string[] = [];
   const settingsKept: string[] = [];
 
@@ -84,13 +92,18 @@ export async function uninstallPreset(
       }
     }
 
-    if (!opts.dryRun && settingsReverted.length > 0) {
+    if (!opts.dryRun && (removingPatch.patch !== undefined || settingsReverted.length > 0)) {
       const settingsPath = join(targetRoot, 'settings.json');
       const existing = await loadSettings(settingsPath);
-      const revertedEntries = Object.entries(existing).filter(
-        ([k]) => !settingsReverted.includes(k),
-      );
-      await writeSettings(settingsPath, Object.fromEntries(revertedEntries));
+      let next: Record<string, unknown>;
+      if (removingPatch.patch !== undefined) {
+        next = subtractSettings(existing, removingPatch.patch);
+      } else {
+        next = Object.fromEntries(
+          Object.entries(existing).filter(([k]) => !settingsReverted.includes(k)),
+        );
+      }
+      await writeSettings(settingsPath, next);
     }
   }
 
@@ -124,6 +137,11 @@ export interface UpgradeOptions {
   conflictPolicy?: ConflictPolicy;
   includeOptional?: boolean;
   kind?: PresetKind;
+  // Install scope. Determines how `~/.claude/hooks/` in settings_patches is
+  // rewritten: `project` → ${CLAUDE_PROJECT_DIR}/.claude/hooks/, `user` →
+  // absolute path under targetRoot/hooks. Defaults to 'user' for back-compat
+  // (matches the prior behavior when scope was unspecified).
+  scope?: 'user' | 'project';
 }
 
 export async function upgradePreset(
@@ -212,32 +230,48 @@ export async function upgradePreset(
     await applyComponent(src, dst, mode, conflictPolicy, component.layout.kind, targetRoot);
   }
 
-  // Update settings: revert old-only keys, then apply new patch.
+  // Rewrite hook paths in this upgrade's incoming patches to match the
+  // install-target convention before applying or recording them.
+  const scope: 'user' | 'project' = opts.scope ?? 'user';
+  const hooksDir = scope === 'project'
+    ? '${CLAUDE_PROJECT_DIR}/.claude/hooks'
+    : join(resolve(targetRoot), 'hooks');
+  const rewrittenMergedPatch = rewriteHookPaths(plan.merged_settings_patch, hooksDir);
+  const rewrittenPerPresetPatches = new Map<string, Record<string, unknown>>(
+    plan.all_presets.map((p) => [p.name, rewriteHookPaths(p.settings_patch, hooksDir)]),
+  );
+
+  // Update settings: subtract this preset's prior contribution, then apply
+  // the new patch. Subtraction prefers the recorded rewritten patch value
+  // (precise) and falls back to top-level-key removal for legacy manifests.
   const settingsPath = join(targetRoot, 'settings.json');
   const existingSettings = await loadSettings(settingsPath);
   let nextSettings = existingSettings;
 
   const removingPatch = manifest.settings_patches.find((p) => p.preset === presetName);
-  const newPatchTopKeys = new Set(Object.keys(plan.merged_settings_patch));
-  const otherPatchedKeys = new Set(
-    manifest.settings_patches
-      .filter((p) => p.preset !== presetName)
-      .flatMap((p) => p.patch_keys),
-  );
-
   if (removingPatch !== undefined) {
-    const keysToRevert = removingPatch.patch_keys.filter(
-      (k) => !newPatchTopKeys.has(k) && !otherPatchedKeys.has(k),
-    );
-    if (keysToRevert.length > 0) {
-      nextSettings = Object.fromEntries(
-        Object.entries(nextSettings).filter(([k]) => !keysToRevert.includes(k)),
+    if (removingPatch.patch !== undefined) {
+      nextSettings = subtractSettings(nextSettings, removingPatch.patch);
+    } else {
+      const newPatchTopKeys = new Set(Object.keys(rewrittenMergedPatch));
+      const otherPatchedKeys = new Set(
+        manifest.settings_patches
+          .filter((p) => p.preset !== presetName)
+          .flatMap((p) => p.patch_keys),
       );
+      const keysToRevert = removingPatch.patch_keys.filter(
+        (k) => !newPatchTopKeys.has(k) && !otherPatchedKeys.has(k),
+      );
+      if (keysToRevert.length > 0) {
+        nextSettings = Object.fromEntries(
+          Object.entries(nextSettings).filter(([k]) => !keysToRevert.includes(k)),
+        );
+      }
     }
   }
 
-  if (Object.keys(plan.merged_settings_patch).length > 0) {
-    nextSettings = mergeSettings(nextSettings, plan.merged_settings_patch);
+  if (Object.keys(rewrittenMergedPatch).length > 0) {
+    nextSettings = mergeSettings(nextSettings, rewrittenMergedPatch);
   }
 
   if (nextSettings !== existingSettings) {
@@ -253,7 +287,7 @@ export async function upgradePreset(
     settings_patches: manifest.settings_patches.filter((p) => p.preset !== presetName),
     external_deps: manifest.external_deps,
   };
-  const additions = buildManifestAdditions(plan, mode, targetRoot);
+  const additions = buildManifestAdditions(plan, mode, targetRoot, rewrittenPerPresetPatches);
   const newManifest = mergeManifest(baseManifest, additions);
   await writeManifest(manifestPath, newManifest);
 

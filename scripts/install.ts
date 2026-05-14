@@ -7,7 +7,7 @@ import { locateComponent, loadSidecar } from './lib/sidecar.ts';
 import { locatePreset, listAllPresets } from './lib/preset.ts';
 import { buildInstallPlan, type PlannedComponent } from './lib/resolver.ts';
 import { applyComponent, ensureDir, componentTargetPath, type InstallMode, type ConflictPolicy } from './lib/fs-ops.ts';
-import { loadSettings, writeSettings, mergeSettings } from './lib/settings-merge.ts';
+import { loadSettings, writeSettings, mergeSettings, subtractSettings, rewriteHookPaths } from './lib/settings-merge.ts';
 import { loadManifest, writeManifest, buildManifestAdditions, mergeManifest } from './lib/manifest.ts';
 import { log } from './lib/logger.ts';
 import { uninstallPreset, upgradePreset, auditTarget } from './lib/lifecycle.ts';
@@ -263,30 +263,60 @@ async function runInstall(
     }
   }
 
-  // Apply settings patch.
-  if (Object.keys(plan.merged_settings_patch).length > 0) {
+  // Rewrite hook command paths in settings_patch. The preset's settings_patch
+  // uses `~/.claude/hooks/` (the conventional user-level hooks dir); we rewrite
+  // it to the install-target dir:
+  //   user    → absolute path (user-specific, not shared)
+  //   project → ${CLAUDE_PROJECT_DIR}/.claude/hooks/ — anchored to the project
+  //             root via Claude Code's env var so hooks still resolve when cwd
+  //             is a subdirectory (e.g. a submodule) of the project.
+  const hooksDir = scope === 'project'
+    ? '${CLAUDE_PROJECT_DIR}/.claude/hooks'
+    : join(resolve(targetRoot), 'hooks');
+  const rewrittenMergedPatch = rewriteHookPaths(plan.merged_settings_patch, hooksDir);
+  const rewrittenPerPresetPatches = new Map<string, Record<string, unknown>>(
+    plan.all_presets.map((p) => [p.name, rewriteHookPaths(p.settings_patch, hooksDir)]),
+  );
+
+  // Load existing manifest so we can subtract any prior contribution from
+  // these presets before applying the new patch — otherwise repeated installs
+  // accumulate stale entries (e.g. when a hook path format changes).
+  const manifestPath = join(targetRoot, '.dotclaude-manifest.yaml');
+  const existingManifest = await loadManifest(manifestPath);
+
+  if (Object.keys(rewrittenMergedPatch).length > 0) {
     const settingsPath = join(targetRoot, 'settings.json');
-    const existing = await loadSettings(settingsPath);
-    // Rewrite hook command paths: the preset's settings_patch may reference
-    // ~/.claude/hooks/ (the conventional user-level hooks dir), but the target
-    // hooks dir depends on install scope:
-    //   user    → absolute path (user-specific, not shared)
-    //   project → .claude/hooks/ (relative to project root, portable across users)
-    const hooksDir = scope === 'project'
-      ? '.claude/hooks'
-      : join(resolve(targetRoot), 'hooks');
-    const patchJson = JSON.stringify(plan.merged_settings_patch)
-      .replace(/~\/\.claude\/hooks\//g, `${hooksDir}/`);
-    const rewrittenPatch = JSON.parse(patchJson) as Record<string, unknown>;
-    const merged = mergeSettings(existing, rewrittenPatch);
-    await writeSettings(settingsPath, merged);
+    let next = await loadSettings(settingsPath);
+
+    if (existingManifest !== null) {
+      for (const prior of existingManifest.settings_patches) {
+        if (!rewrittenPerPresetPatches.has(prior.preset)) continue;
+        if (prior.patch !== undefined) {
+          next = subtractSettings(next, prior.patch);
+        } else if (prior.patch_keys.length > 0) {
+          // Legacy manifest entry without recorded patch value: fall back to
+          // dropping the top-level keys it owns (preserves keys still owned
+          // by other installed presets).
+          const otherKeys = new Set(
+            existingManifest.settings_patches
+              .filter((p) => p.preset !== prior.preset)
+              .flatMap((p) => p.patch_keys),
+          );
+          const toDrop = prior.patch_keys.filter((k) => !otherKeys.has(k));
+          if (toDrop.length > 0) {
+            next = Object.fromEntries(Object.entries(next).filter(([k]) => !toDrop.includes(k)));
+          }
+        }
+      }
+    }
+
+    next = mergeSettings(next, rewrittenMergedPatch);
+    await writeSettings(settingsPath, next);
     log.info('  settings.json updated');
   }
 
   // Write manifest.
-  const manifestPath = join(targetRoot, '.dotclaude-manifest.yaml');
-  const existingManifest = await loadManifest(manifestPath);
-  const additions = buildManifestAdditions(plan, mode, targetRoot);
+  const additions = buildManifestAdditions(plan, mode, targetRoot, rewrittenPerPresetPatches);
   const newManifest = mergeManifest(existingManifest, additions);
   await writeManifest(manifestPath, newManifest);
 

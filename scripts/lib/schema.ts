@@ -184,6 +184,13 @@ const SettingsPatchEntrySchema = z
   .object({
     preset: z.string().min(1),
     patch_keys: z.array(z.string()).default([]),
+    // The rewritten patch value actually applied to settings.json
+    // (after ~/.claude/hooks/ → ${CLAUDE_PROJECT_DIR}/.claude/hooks/ rewriting).
+    // Recorded so reinstall/upgrade/uninstall can subtract the exact prior
+    // contribution from settings instead of only removing top-level keys.
+    // Optional for backward compat with manifests written before this field
+    // existed; falls back to patch_keys-based revert when absent.
+    patch: z.record(z.string(), z.unknown()).optional(),
   })
   .strict();
 export type SettingsPatchEntry = z.infer<typeof SettingsPatchEntrySchema>;
