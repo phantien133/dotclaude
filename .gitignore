@@ -15,11 +15,9 @@ upstream/everything-claude-code/node_modules/
 /presets/private/
 /plugins/private/
 
-# Plugin build artifacts — committed selectively when publishing to marketplace repo
+# Plugin build artifacts — committed selectively when publishing to marketplace repo.
 # Uncomment to gitignore all built plugin bundles:
 # /plugins/*/
-# Private preset builds (contain private rule/skill content — never publish to public repo):
-/plugins/hilab-streaming-v2/
 
 # Backup files from installer (CQ-5c — backup-then-overwrite default)
 *.bak.*

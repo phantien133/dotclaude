@@ -1,0 +1,76 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: cistreaming-v3
+kind: purpose
+description: >-
+  Dev workflow preset for the cistreaming platform v3 (NestJS + Next.js + SRS + GraphQL).
+  Inherits full developer → nestjs/nextjs chain. Adds f-* Figma suite (f-import / f-ui-kit /
+  f-page / f-review) replacing build-ui-kit / build-static-page / streaming-figma.
+  Retains v2 workflow skills (dev-task / quick-fix / streaming-checkpoint) and
+  streaming-specific rules.
+version: 0.1.0
+extends:
+  - nestjs
+  - nextjs
+components:
+  agents:
+    # tdd-guide is not in developer chain — must declare explicitly
+    - tdd-guide
+  skills:
+    # Private workflow skills (not in any public preset)
+    - dev-task
+    - dev-task-status
+    - dev-task-reset
+    - quick-fix
+    - streaming-checkpoint
+    - create-pr
+    # Figma suite — NEW in v3, replaces build-ui-kit + build-static-page + streaming-figma
+    - f-import
+    - f-ui-kit
+    - f-page
+    - f-review
+    # Private streaming utilities
+    - streaming-oq-check
+    - streaming-adr
+    - streaming-test-stubs
+  commands:
+    - hsd-story-lint
+    - hsd-post-merge
+    # Figma config wizard — NEW in v3
+    - f-setup
+  rules:
+    - streaming-context
+    - hilab-streaming-rules
+    - streaming-docs-governance
+recommended_install_level: project
+tags:
+  - hilab
+  - private
+  - streaming
+  - nestjs
+  - nextjs
+  - graphql
+  - figma
+use_case_tags:
+  roles:
+    - fullstack-developer
+    - backend-developer
+    - developer
+  project_types:
+    - monorepo
+    - streaming-service
+    - web-app
+  stacks:
+    - typescript
+    - nestjs
+    - nextjs
+    - graphql
+    - prisma
+    - redis
+  use_cases:
+    - dev-workflow
+    - tdd
+    - ui-integration
+    - figma
+    - pr-workflow
+    - api-development
+    - doc-governance

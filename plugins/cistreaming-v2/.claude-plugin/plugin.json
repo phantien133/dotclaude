@@ -1,0 +1,26 @@
+{
+  "name": "cistreaming-v2",
+  "version": "0.1.0",
+  "description": "Dev workflow preset for the cistreaming platform v2 (NestJS + Next.js + SRS + GraphQL). 8-phase workflow (Plane ticket intake → context → plan → impact → UI → TDD → verify → PR), Figma integration, doc governance, and streaming-specific rules.",
+  "author": {
+    "name": "hilabaikit",
+    "email": "tienpq@hilab.asia"
+  },
+  "license": "MIT",
+  "keywords": [
+    "hilab",
+    "private",
+    "streaming",
+    "nestjs",
+    "nextjs",
+    "graphql"
+  ],
+  "mcpServers": {},
+  "repository": "https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ]
+}

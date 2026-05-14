@@ -28,8 +28,8 @@ program
           ...(opts.out !== undefined && { outDir: opts.out }),
           include_optional: opts.includeOptional,
           clean: opts.clean,
-          author: { name: 'phantien133', email: 'tienpq@hilab.asia' },
-          repository: 'https://github.com/phantien133/claudekit-marketplace',
+          author: { name: 'hilabaikit', email: 'tienpq@hilab.asia' },
+          repository: 'https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace',
           license: 'MIT',
         });
 
