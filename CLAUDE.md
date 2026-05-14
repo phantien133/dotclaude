@@ -16,11 +16,16 @@ dotclaude/
 ├── CLAUDE.md / README.md / dependencies.yaml
 ├── package.json + tsconfig.json + vitest.config.ts + pnpm-lock.yaml
 │
-├── claudekit/                      # Core kit, type-first
-│   ├── agents/<n>.md + <n>.source.yaml
-│   ├── skills/<n>/SKILL.md + SOURCE.yaml
-│   ├── {commands,hooks,rules}/
-│   ├── private/                    # GITIGNORED
+├── claudekit/                      # Core kit, source-grouped (see § Source layout below)
+│   ├── everything-claude-code/     # vendored from affaan-m/everything-claude-code
+│   │   └── {agents,skills,commands,hooks,rules}/
+│   ├── anthropic-skills/           # vendored from anthropics/skills
+│   │   └── skills/
+│   ├── dotclaude/                  # self-authored — phantien133/dotclaude
+│   │   ├── dotclaude-self/         # preset wizards, component picker, plugin discovery
+│   │   ├── workflow/               # w-* dev workflow (w-task, w-fix, …)
+│   │   └── figma/                  # f-* Figma integration suite
+│   ├── private/                    # GITIGNORED — per-project / hilab overrides
 │   └── private.example/            # TRACKED skeleton
 │
 ├── presets/                        # Pure manifest
@@ -56,6 +61,21 @@ pnpm typecheck && pnpm test
 # Then: pnpm init-private + restore private content from cloud sync
 ```
 
+### Source layout
+
+`claudekit/` is grouped by upstream source. Each component lives under
+`claudekit/<source>/<type>/<name>` and presets reference it as
+`{name, source}`:
+
+| Source alias | Folder | Origin |
+|---|---|---|
+| `everything-claude-code` | `claudekit/everything-claude-code/` | affaan-m/everything-claude-code |
+| `anthropic-skills` | `claudekit/anthropic-skills/` | anthropics/skills |
+| `dotclaude-self` | `claudekit/dotclaude/dotclaude-self/` | self — preset wizards |
+| `workflow` | `claudekit/dotclaude/workflow/` | self — w-* dev workflow |
+| `figma` | `claudekit/dotclaude/figma/` | self — f-* Figma suite |
+| `private` | `claudekit/private/` | gitignored — per-project |
+
 ### Vendor a new component from upstream
 
 Use the `dotclaude-component-picker` skill — it covers the full 8-step pipeline
@@ -64,8 +84,8 @@ Use the `dotclaude-component-picker` skill — it covers the full 8-step pipelin
 Quick manual path if needed:
 
 ```bash
-# Copy file/folder
-cp upstream/<alias>/<type>/<name>.md claudekit/<type>/<name>.md
+# Copy file/folder into the matching source folder
+cp upstream/<alias>/<type>/<name>.md claudekit/<source>/<type>/<name>.md
 
 # Get pin
 git -C upstream/<alias> rev-parse HEAD
@@ -156,6 +176,9 @@ Claude Code — never declared in plugin.json.
 - **Sidecar path**: file-component sidecar = `<name>.source.yaml` in same dir;
   folder-component = `SOURCE.yaml` INSIDE the folder. Installer must EXCLUDE
   `SOURCE.yaml` when copying a folder to a target.
+- **Preset component refs are objects, not strings**: every entry under
+  `components.<type>` is `{name, source}` — bare strings no longer parse. The
+  `source` value must be one of the aliases in § Source layout above.
 
 ---
 
