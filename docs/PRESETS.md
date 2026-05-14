@@ -38,8 +38,12 @@ description: ...                       # one line, shown in list output
 version: 0.1.0                         # SemVer X.Y.Z
 extends: []                            # parent preset names (CQ-3b)
 components:
-  agents: []                           # IDs in claudekit/agents/
-  skills: []                           # IDs in claudekit/skills/
+  agents:                              # each entry = {name, source}; source picks the folder
+    - name: code-reviewer              # under claudekit/<source>/agents/<name>.md
+      source: everything-claude-code
+  skills:
+    - name: dotclaude-component-picker # under claudekit/<source>/skills/<name>/
+      source: dotclaude-self
   commands: []
   hooks: []
   rules: []

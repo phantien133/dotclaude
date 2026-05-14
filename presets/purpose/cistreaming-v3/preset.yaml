@@ -14,33 +14,53 @@ extends:
 components:
   agents:
     # tdd-guide is not in developer chain — must declare explicitly
-    - tdd-guide
+    - name: tdd-guide
+      source: everything-claude-code
   skills:
     # Private workflow skills (not in any public preset)
-    - dev-task
-    - dev-task-status
-    - dev-task-reset
-    - quick-fix
-    - streaming-checkpoint
-    - create-pr
+    - name: dev-task
+      source: private
+    - name: dev-task-status
+      source: private
+    - name: dev-task-reset
+      source: private
+    - name: quick-fix
+      source: private
+    - name: streaming-checkpoint
+      source: private
+    - name: create-pr
+      source: private
     # Figma suite — NEW in v3, replaces build-ui-kit + build-static-page + streaming-figma
-    - f-import
-    - f-ui-kit
-    - f-page
-    - f-review
+    - name: f-import
+      source: figma
+    - name: f-ui-kit
+      source: figma
+    - name: f-page
+      source: figma
+    - name: f-review
+      source: figma
     # Private streaming utilities
-    - streaming-oq-check
-    - streaming-adr
-    - streaming-test-stubs
+    - name: streaming-oq-check
+      source: private
+    - name: streaming-adr
+      source: private
+    - name: streaming-test-stubs
+      source: private
   commands:
-    - hsd-story-lint
-    - hsd-post-merge
+    - name: hsd-story-lint
+      source: private
+    - name: hsd-post-merge
+      source: private
     # Figma config wizard — NEW in v3
-    - f-setup
+    - name: f-setup
+      source: figma
   rules:
-    - streaming-context
-    - hilab-streaming-rules
-    - streaming-docs-governance
+    - name: streaming-context
+      source: private
+    - name: hilab-streaming-rules
+      source: private
+    - name: streaming-docs-governance
+      source: private
 recommended_install_level: project
 tags:
   - hilab

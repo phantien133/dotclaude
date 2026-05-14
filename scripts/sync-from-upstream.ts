@@ -63,7 +63,7 @@ async function main(): Promise<void> {
     log.error(`Component not found in claudekit (public or private): ${ref.type}/${ref.id}`);
     process.exit(1);
   }
-  log.info(`Scope: ${located.scope}`);
+  log.info(`Source: ${located.source}`);
   log.info(`Sidecar: ${located.layout.sidecarPath}`);
 
   const sidecar = await loadSidecar(located.layout.sidecarPath);

@@ -9,32 +9,52 @@ extends:
 components:
   skills:
     # UI integration (Phase 3)
-    - build-ui-kit
-    - build-static-page
+    - name: build-ui-kit
+      source: private
+    - name: build-static-page
+      source: private
     # PR creation (Phase 6)
-    - create-pr
+    - name: create-pr
+      source: private
     # Streaming workflow orchestration
-    - dev-task
-    - dev-task-status
-    - dev-task-reset
-    - quick-fix
-    - streaming-figma
+    - name: dev-task
+      source: private
+    - name: dev-task-status
+      source: private
+    - name: dev-task-reset
+      source: private
+    - name: quick-fix
+      source: private
+    - name: streaming-figma
+      source: private
     # Streaming utility skills
-    - streaming-oq-check
-    - streaming-adr
-    - streaming-checkpoint
-    - streaming-test-stubs
+    - name: streaming-oq-check
+      source: private
+    - name: streaming-adr
+      source: private
+    - name: streaming-checkpoint
+      source: private
+    - name: streaming-test-stubs
+      source: private
   rules:
-    - streaming-context
-    - hilab-streaming-rules
-    - streaming-docs-governance
+    - name: streaming-context
+      source: private
+    - name: hilab-streaming-rules
+      source: private
+    - name: streaming-docs-governance
+      source: private
   agents:
-    - planner
-    - tdd-guide
-    - code-reviewer
+    - name: planner
+      source: everything-claude-code
+    - name: tdd-guide
+      source: everything-claude-code
+    - name: code-reviewer
+      source: everything-claude-code
   commands:
-    - hsd-story-lint
-    - hsd-post-merge
+    - name: hsd-story-lint
+      source: private
+    - name: hsd-post-merge
+      source: private
 recommended_install_level: project
 tags:
   - hilab

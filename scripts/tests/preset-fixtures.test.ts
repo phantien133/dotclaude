@@ -16,12 +16,15 @@ describe('shipped fixtures parse against schema', () => {
     const parsed = PresetSchema.parse(data);
     expect(parsed.name).toBe('developer');
     expect(parsed.kind).toBe('core');
-    expect(parsed.components.skills).toContain('tdd-workflow');
+    expect(parsed.components.skills.map((s) => s.name)).toContain('tdd-workflow');
+    expect(
+      parsed.components.skills.find((s) => s.name === 'tdd-workflow')?.source,
+    ).toBe('everything-claude-code');
   });
 
-  it('claudekit/agents/code-reviewer.source.yaml is valid', async () => {
+  it('claudekit/everything-claude-code/agents/code-reviewer.source.yaml is valid', async () => {
     const raw = await readFile(
-      join(REPO_ROOT, 'claudekit/agents/code-reviewer.source.yaml'),
+      join(REPO_ROOT, 'claudekit/everything-claude-code/agents/code-reviewer.source.yaml'),
       'utf8',
     );
     const data = loadYaml(raw);
@@ -31,9 +34,9 @@ describe('shipped fixtures parse against schema', () => {
     expect(parsed.modified).toBe(false);
   });
 
-  it('claudekit/skills/coding-standards/SOURCE.yaml is valid', async () => {
+  it('claudekit/everything-claude-code/skills/coding-standards/SOURCE.yaml is valid', async () => {
     const raw = await readFile(
-      join(REPO_ROOT, 'claudekit/skills/coding-standards/SOURCE.yaml'),
+      join(REPO_ROOT, 'claudekit/everything-claude-code/skills/coding-standards/SOURCE.yaml'),
       'utf8',
     );
     const data = loadYaml(raw);
