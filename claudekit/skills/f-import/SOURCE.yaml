@@ -7,7 +7,7 @@
 # Source of truth: upstream/dotclaude/figma/skills/f-import/
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  commit: 59b24718803df9a85cdf1914a4225d3978520dd2
   path: figma/skills/f-import
   ref: components
 imported_at: "2026-05-13"
@@ -18,7 +18,9 @@ notes: >-
   Figma import orchestrator. Entry point for all Figma work — detects input mode
   (MCP URL / export folder / hybrid), extracts data, generates a semantic manifest
   at .figma-import/<module>/<timestamp>/manifest.yaml, then invokes f-ui-kit and
-  f-page. Reads .claude/figma.yaml (run /f-setup first).
+  f-page. Reads .claude/figma.yaml (run /f-setup first). Runtime: requires Figma
+  MCP server (mcp__figma__get_file, get_file_components, get_local_variables,
+  get_file_nodes) when in MCP/hybrid mode. Export mode works without MCP.
 dependencies:
   required:
     agents: []
@@ -34,11 +36,7 @@ dependencies:
     commands: []
     hooks: []
     rules: []
-  external:
-    - mcp__figma__get_file
-    - mcp__figma__get_file_components
-    - mcp__figma__get_local_variables
-    - mcp__figma__get_file_nodes
+  external: []
 tags:
   - figma
   - ui

@@ -2,7 +2,6 @@
 
 Integrates generated page components from a Figma manifest into the project,
 substituting UI kit components for any ad-hoc inline equivalents.
-Replaces the old `build-static-page` skill.
 
 Called by `f-import` after `f-ui-kit` completes. Can also be invoked directly.
 

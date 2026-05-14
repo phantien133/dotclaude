@@ -7,7 +7,7 @@
 # Source of truth: upstream/dotclaude/figma/skills/f-page/
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  commit: 59b24718803df9a85cdf1914a4225d3978520dd2
   path: figma/skills/f-page
   ref: components
 imported_at: "2026-05-13"
@@ -15,10 +15,10 @@ license: MIT
 modified: false
 modifications: null
 notes: >-
-  Figma page integration. Replaces build-static-page. Uses f-import manifest to
-  identify page-role components, builds UI kit catalogue from installed_path fields,
-  and substitutes ad-hoc inline components with UI kit equivalents. Framework-aware
-  page target path resolution (Next.js App Router / Pages / Vite / CRA).
+  Figma page integration. Uses f-import manifest to identify page-role
+  components, builds UI kit catalogue from installed_path fields, and substitutes
+  ad-hoc inline components with UI kit equivalents. Framework-aware page target
+  path resolution (Next.js App Router / Pages / Vite / CRA).
 dependencies:
   required:
     agents: []

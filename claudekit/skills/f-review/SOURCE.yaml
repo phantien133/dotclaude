@@ -7,7 +7,7 @@
 # Source of truth: upstream/dotclaude/figma/skills/f-review/
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  commit: 59b24718803df9a85cdf1914a4225d3978520dd2
   path: figma/skills/f-review
   ref: components
 imported_at: "2026-05-13"
@@ -18,7 +18,9 @@ notes: >-
   Figma design vs implementation diff. Compares current Figma state (via MCP) or
   a new export folder against installed components from the latest manifest.
   Generates per-component change report (new props, removed variants, token drift)
-  and applies updates selectively — preserving local customizations.
+  and applies updates selectively — preserving local customizations. Runtime:
+  requires Figma MCP server (mcp__figma__get_file_components, get_local_variables,
+  get_file_nodes) when comparing via MCP. Export-folder mode works without MCP.
 dependencies:
   required:
     agents: []
@@ -33,10 +35,7 @@ dependencies:
       - f-setup
     hooks: []
     rules: []
-  external:
-    - mcp__figma__get_file_components
-    - mcp__figma__get_local_variables
-    - mcp__figma__get_file_nodes
+  external: []
 tags:
   - figma
   - ui

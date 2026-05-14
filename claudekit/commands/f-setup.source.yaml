@@ -4,7 +4,7 @@
 # Source of truth: upstream/dotclaude/figma/commands/f-setup.md
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  commit: 59b24718803df9a85cdf1914a4225d3978520dd2
   path: figma/commands/f-setup.md
   ref: components
 imported_at: "2026-05-13"

@@ -1,8 +1,7 @@
 # f-ui-kit — Integrate Figma Components into UI Kit
 
 Integrates shared components, layout, and playground from a Figma manifest into the
-project's component library. Replaces the old `build-ui-kit` skill with manifest-aware,
-semantically-classified integration.
+project's component library with manifest-aware, semantically-classified integration.
 
 Called by `f-import` after manifest generation. Can also be invoked directly
 for export-only workflows.
