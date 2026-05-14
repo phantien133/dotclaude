@@ -164,6 +164,66 @@ Use `survey.docs_root` as the suggestion:
   Docs folder for persistent feature records? (blank to skip Phase 5 in w-task): ___
   ```
 
+If `docs_root` provided, ask the follow-up questions below. Each is optional — blank
+leaves the field unset and w-task silently skips the corresponding write. Together these
+fields let w-task hit dev-task parity: module-aware Phase 0b context, structured Phase 5
+doc persistence, ADR + OQ tracking.
+
+```
+Module docs subdirectory (NN-name folders, one per feature module)
+  Default: <docs_root>/modules     [Enter / path / blank]: ___
+
+Feature record subfolder inside each module
+  Default: features                [Enter / blank]: ___
+
+API doc filename inside each module
+  Default: api.md                  [Enter / blank]: ___
+
+Workflow-links filename inside each module
+  Default: workflow-links.md       [Enter / blank]: ___
+
+Database docs root (only if project has relational DB)
+  Default: <docs_root>/database               [Enter / path / blank]: ___
+
+Diagrams root (PlantUML .puml files for sub-ERDs)
+  Default: <db_docs_root>/diagrams            [Enter / path / blank]: ___
+
+Master ERD path (auto-synced on any sub-ERD change)
+  Default: <diagrams_root>/00-database-overview-erd.puml   [Enter / path / blank]: ___
+
+Open Questions doc (Phase 0b surfaces relevant OQs)
+  Default: <docs_root>/overview/open-questions.md           [Enter / path / blank]: ___
+
+ADR doc (Phase 2 appends new architecture decisions)
+  Default: <docs_root>/overview/architecture-overview.md    [Enter / path / blank]: ___
+```
+
+---
+
+## Step 5b — Project conventions
+
+Survey detected (if any):
+- Module glob pattern (auto-detect modules during Phase 0b + w-document-build-up):
+  - Suggestion: scan for `src/modules/*`, `apps/*`, `packages/*`, `services/*`,
+    `src/features/*` — pick the one with most subdirs that contain at least one
+    source file. Show what was found.
+
+```
+Module glob (folders that define feature module boundaries)
+  Suggested: <detected pattern or blank>
+  Press Enter / type a glob / blank to skip: ___
+
+Prisma schema path (enables w-impact-analyzer to diff DB changes)
+  Detected: <prisma/schema.prisma or "none">      [Enter / path / blank]: ___
+
+GraphQL schema glob (enables w-impact-analyzer + w-api-doc)
+  Detected: <pattern or "none">                   [Enter / glob / blank]: ___
+
+Test layers (comma-separated — drives w-test-stubs imports)
+  Common values: unit, integration, e2e, graphql, bullmq, nestjs
+  Default: unit                                   [Enter / list / blank]: ___
+```
+
 ---
 
 ## Step 6 — Commands
@@ -219,14 +279,29 @@ issue_tracker:
   mcp_available: <true|false>      # plane only
 
 workflow:
-  state_root: <path>               # default: .workflow
-  docs_root: <path or null>        # null = skip Phase 5 in w-task
+  state_root: <path>                       # default: .workflow
+  docs_root: <path or null>                # null = skip Phase 5 in w-task
+  # Structured doc paths (all optional — blank disables the corresponding skill)
+  module_docs_root: <path or null>         # e.g. docs/modules — <NN>-<name>/ folders
+  feature_records_subdir: <string or null> # e.g. features (inside each module dir)
+  api_docs_filename: <string or null>      # e.g. api.md
+  workflow_links_filename: <string or null># e.g. workflow-links.md
+  db_docs_root: <path or null>             # e.g. docs/database
+  diagrams_root: <path or null>            # e.g. docs/database/diagrams
+  master_erd_path: <path or null>          # mandatory sync target on any sub-ERD change
+  oq_docs_path: <path or null>             # e.g. docs/overview/open-questions.md
+  adr_docs_path: <path or null>            # e.g. docs/overview/architecture-overview.md
 
 project:
   test_command: <command or null>
   typecheck_command: <command or null>
   lint_command: <command or null>
   src_dirs: <list from survey, or []>
+  module_glob: <glob or null>              # e.g. src/modules/* — drives module auto-detect
+  schema_paths:
+    prisma: <path or null>                 # e.g. prisma/schema.prisma
+    graphql: <glob or null>                # e.g. src/**/*.graphql
+  test_layers: <list or [unit]>            # e.g. [unit, integration, graphql, bullmq]
 
 pr:
   default_branch: <branch>
@@ -256,13 +331,21 @@ Config written:
   Issue tracker:  <type>
   State root:     .workflow/  (added to .gitignore)
   Docs root:      <path or "skipped">
+   ├ Module docs:  <module_docs_root or "—">
+   ├ DB docs:      <db_docs_root or "—">
+   ├ Master ERD:   <master_erd_path or "—">
+   ├ OQ doc:       <oq_docs_path or "—">
+   └ ADR doc:      <adr_docs_path or "—">
+  Module glob:    <module_glob or "—">
   Test:           <command or "none">
   Typecheck:      <command or "none">
   Lint:           <command or "none">
   PR branch:      <branch> (<draft/open>)
 
 Next steps:
-  /w-task <title or issue URL>   — start a feature task
-  /w-fix  <title or issue URL>   — fix a bug or small change
-  /w-status                      — check current task state
+  /w-task <title or issue URL>      — start a feature task
+  /w-fix  <title or issue URL>      — fix a bug or small change
+  /w-status                         — check current task state
+  /w-document-build-up              — bootstrap docs from existing source code
+                                      (run BEFORE /w-task if docs/ is empty)
 ```
