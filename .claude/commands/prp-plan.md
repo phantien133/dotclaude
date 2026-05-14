@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/commands/prp-plan.md
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/commands/prp-plan.md

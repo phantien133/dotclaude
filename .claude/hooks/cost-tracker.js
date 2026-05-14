@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/hooks/cost-tracker.js
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/hooks/cost-tracker.js

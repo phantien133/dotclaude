@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/hooks/desktop-notify.js
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/hooks/desktop-notify.js

@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/commands/feature-dev.md
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/commands/feature-dev.md
