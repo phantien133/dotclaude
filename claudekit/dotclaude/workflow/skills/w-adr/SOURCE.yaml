@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: d7f9ffeee8a34f15f4b55cddfe6b0fd1655067a7
+  path: workflow/skills/w-adr
+  ref: components
+imported_at: "2026-05-14"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Phase 2 helper. Appends ADR entry to workflow.adr_docs_path with auto-numbering.
+  Pauses if alternatives/consequences are not derivable from plan.md.
+  Generic version of streaming-adr.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - workflow
+  - adr
+  - phase-2
+  - doc-governance
+categories:
+  purpose:
+    - dev-workflow
+    - doc-governance
+  mechanism:
+    - file-append
+    - template

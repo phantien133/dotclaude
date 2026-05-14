@@ -1,7 +1,7 @@
 ---
-description: Create a pull request for the current branch using gh CLI. Reads PR settings from .claude/workflow.yaml. Pass a task slug to use plan.md as PR body, or provide a free description.
-argument-hint: [task-slug | description]
-allowed-tools: Bash, Read
+description: Create a pull request for the current branch using gh CLI. Reads PR settings from .claude/workflow.yaml. Pass a task slug to use plan.md as PR body, or provide a free description. Runs w-doc-gate first to enforce docs-with-code invariant.
+argument-hint: [task-slug | description] [--skip-doc-gate]
+allowed-tools: Bash, Read, Skill
 ---
 
 # w-pr
@@ -24,6 +24,30 @@ Extract:
 - `pr.draft` → default `true`
 - `pr.template` → default `null`
 - `workflow.state_root` → default `.workflow`
+
+Parse `$ARGUMENTS` for `--skip-doc-gate` flag (escape hatch — see Step 1b).
+
+---
+
+## Step 1b — Doc gate (invariant check)
+
+If `$ARGUMENTS` looks like a task slug AND `--skip-doc-gate` is NOT present:
+
+**Invoke skill** `w-doc-gate <task-slug>`. The skill compares the branch diff
+against `pr.default_branch` and verifies that every module with code changes
+also has corresponding doc updates (module README, features/*.md, api.md,
+DB docs + sub-ERD, and mandatorily the master ERD if any sub-ERD changed).
+
+- If `w-doc-gate` exits 0: proceed to Step 2.
+- If `w-doc-gate` exits non-zero: ABORT PR creation. Print the gate's violation
+  report and instruct developer to return to Phase 5:
+  > Doc gate blocked PR creation. Run `/w-task` to re-enter Phase 5 and persist
+  > the missing docs. Re-run `/w-pr <task-slug>` once docs are committed.
+
+If `--skip-doc-gate` is present: skip the check, but record the skip in the
+PR body under § Warnings:
+> ⚠️ `--skip-doc-gate` was used — docs may lag behind code in this PR.
+> The doc gate exists for a reason; only use this flag in true emergencies.
 
 ---
 

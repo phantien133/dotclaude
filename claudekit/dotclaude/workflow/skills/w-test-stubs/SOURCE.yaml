@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: d7f9ffeee8a34f15f4b55cddfe6b0fd1655067a7
+  path: workflow/skills/w-test-stubs
+  ref: components
+imported_at: "2026-05-14"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Phase 4 helper. Classifies each affected file by layer (unit/graphql/bullmq/
+  nestjs/nextjs/integration) and writes layer-appropriate test boilerplate, so
+  TDD starts with correct imports + setup, not a blank file. Generic version of
+  streaming-test-stubs.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - workflow
+  - tdd
+  - phase-4
+  - test-boilerplate
+categories:
+  purpose:
+    - dev-workflow
+    - tdd
+  mechanism:
+    - file-write
+    - layer-aware
+    - template

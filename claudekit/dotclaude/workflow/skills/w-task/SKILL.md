@@ -49,8 +49,25 @@ Extract and store for this session:
 - `issue_tracker.*` — how to fetch ticket data
 - `workflow.state_root` → default `.workflow`
 - `workflow.docs_root` → null means skip Phase 5
+- `workflow.module_docs_root`, `feature_records_subdir`, `api_docs_filename`,
+  `workflow_links_filename` — drive Phase 0b context load + Phase 5 doc persistence
+- `workflow.db_docs_root`, `diagrams_root`, `master_erd_path` — drive Phase 5 DB pipeline
+- `workflow.oq_docs_path`, `adr_docs_path` — drive OQ surfacing (Phase 0b) + ADR generation (Phase 2)
 - `project.test_command`, `.typecheck_command`, `.lint_command`
+- `project.module_glob`, `schema_paths.{prisma,graphql}`, `test_layers` — drive
+  Phase 0b module detection, Phase 2 impact analysis, Phase 4 test stubs
 - `pr.default_branch`, `.draft`, `.template`
+
+**Per-phase helper skills** (invoked when the relevant config fields are set;
+silently skipped otherwise):
+
+| Phase | Helper skills |
+|-------|---------------|
+| 0b | `w-context-load`, `w-oq-check` |
+| 2 | `w-impact-analyzer`, `w-adr` |
+| 4 | `w-test-stubs` |
+| 5 | `w-feature-record`, `w-api-doc`, `w-db-doc` |
+| 6 | `w-doc-gate` (called from `/w-pr` — see Phase 6) |
 
 ---
 
@@ -136,52 +153,41 @@ last_updated: <timestamp>
 
 Read developer's reply from GATE 0. Update `intake.md` with any corrections.
 
-1. **File inventory** — understand the codebase shape:
+**If `workflow.module_docs_root` is SET → use module-aware context load:**
 
+1. **Invoke skill** `w-context-load <task-slug>`:
+   - Reads `<module_docs_root>/<NN>-<module>/README.md` to get Implementation Status
+   - Reads `<module_docs_root>/<NN>-<module>/<feature_records_subdir>/*.md` to surface
+     prior constraints
+   - Auto-invokes `w-oq-check <module>` to flag blocker OQs
+   - Reads code scoped by README "✅ Complete" list
+   - Writes `context.md` with structured sections (Task Summary, Module Snapshot,
+     Relevant Files, Patterns Observed, Available Utilities, Previous Feature
+     Decisions, Known Constraints, Suggested Approach)
+   - Creates/updates `workflow-links.md` row
+
+   If `w-oq-check` returns non-zero (blocker found): pause, write
+   `state.yaml.status: blocked`, surface the OQ, and wait for developer.
+
+**If `workflow.module_docs_root` is NULL → fall back to generic git-grep load:**
+
+1. **File inventory:**
    ```bash
    git ls-files | head -300
    ```
+2. **Keyword grep:** extract 3-5 keywords, run `git grep -l "<keyword>"` per keyword.
+3. **Read top 3-5** relevant files (scope by `project.src_dirs` if set).
+4. **Write context.md** with the minimal generic template (Task Summary, Relevant
+   Files, Patterns Observed, Suggested Approach — no module-specific sections).
 
-   Filter to source files (exclude lock files, dist, .git).
-
-2. **Keyword grep** — find immediately relevant files:
-
-   Extract 3-5 keywords from intake title + description (nouns, class names, function names).
-   
-   ```bash
-   git grep -l "<keyword>" 2>/dev/null | head -20
-   ```
-
-   Run for each keyword, deduplicate results.
-
-3. **Read relevant files** — read the top 3-5 most relevant files found above.
-   If `project.src_dirs` is set in config: scope the search there.
-
-4. **Write context.md**:
-
-   ```markdown
-   # Context — <title>
-
-   ## Task Summary
-   <intake title, issue ID, description>
-
-   ## Relevant Files
-   | File | Why relevant |
-   |------|-------------|
-   | `<path>` | <reason> |
-
-   ## Patterns Observed
-   <key patterns, naming conventions, existing similar features>
-
-   ## Suggested Approach
-   <based on codebase patterns — 1-2 sentences>
-   ```
+**In both branches:**
 
 5. Update `state.yaml`:
    ```yaml
    phase: "1"
    status: gate_pending
    intake_confirmed: true
+   module: <name or null>
    last_updated: <timestamp>
    ```
 
@@ -241,30 +247,25 @@ Output: "Review plan.md. Run `/w-task` to approve and proceed."
 
 1. Read `context.md` + `plan.md`.
 
-2. Write `impact.md`:
+2. **Invoke skill** `w-impact-analyzer <task-slug>` — produces structured
+   `impact.md` with layer-aware sections:
+   - § Affected Files (always)
+   - § Dependencies, § Risks, § Sequence Diagram (always)
+   - § Database Changes (if `schema_paths.prisma` set and plan touches DB)
+   - § GraphQL Schema Changes (if `schema_paths.graphql` set and plan touches API)
+   - § Async / Queue Impact (heuristic — BullMQ/Kafka/etc. detected)
+   - § Cache / State Impact (heuristic — Redis/Cache detected)
+   - § Cross-cutting (config, auth, logging)
+   - Auto-generates extra Mermaid diagrams when triggers met (>3 services,
+     state machine logic, new data models).
 
-   ```markdown
-   # Impact — <title>
+   The analyzer may auto-invoke `w-adr` if it detects a non-trivial architectural
+   decision (e.g. DB schema change touching >2 tables, new cross-module async
+   contract).
 
-   ## Affected Files
-   | File | Change type | Notes |
-   |------|-------------|-------|
-   | `<path>` | add / modify / delete | <reason> |
-
-   ## Dependencies
-   <new packages, services, or modules required>
-
-   ## Risks
-   <potential breakage, edge cases, performance concerns>
-
-   ## Sequence Diagram
-   <Mermaid sequence diagram for the main happy path>
-   ```
-
-3. **Auto-generate additional diagrams** when task has:
-   - >3 services interacting non-obviously → extra Mermaid sequence per sub-flow
-   - State machine logic → Mermaid stateDiagram-v2
-   - New data models → Mermaid erDiagram stub
+3. **Manual ADR opportunity** — if a decision surfaced during the impact analysis
+   that wasn't auto-captured, invoke `w-adr <task-slug> "<decision-title>"`
+   to append it to `adr_docs_path`.
 
 4. Update `state.yaml`: `phase: "2"`, `status: gate_pending`.
 
@@ -324,13 +325,21 @@ Update `state.yaml`: `gates.3: ui_verified`, `phase: "4"`, `status: gate_pending
 
 *Triggers when `phase: "4"` + `status: gate_pending`.*
 
-1. **Spawn `tdd-guide` agent** — pass:
+1. **Invoke skill** `w-test-stubs <task-slug>` — classifies each affected file
+   by layer (unit / graphql / bullmq / nestjs / nextjs / integration) and writes
+   layer-appropriate test boilerplate with correct imports, mocking setup, and
+   intentionally failing assertions (RED).
+
+   The skill respects `project.test_layers` from workflow.yaml and skips layers
+   not enabled. If a test file already exists, it is preserved (never overwritten).
+
+2. **Spawn `tdd-guide` agent** — pass:
+   - The skeletons just written by `w-test-stubs`
    - `impact.md § Affected Files`
    - `plan.md`
-   - Instruction: suggest test structure, edge cases, and mocking strategies for the affected files.
-
-2. Write test file skeletons based on `tdd-guide` advice + `impact.md` scope.
-   Fill in failing test assertions (RED state).
+   - Instruction: enrich the assertions with missing edge cases, stack-specific
+     mocking strategies, and integration scenarios. Do NOT rewrite the import
+     boilerplate — w-test-stubs already chose the right layer per file.
 
 3. **Resolve test command** from config (`project.test_command`, expand `auto`).
    
@@ -416,39 +425,55 @@ Output: "Implementation committed. Run `/w-task` to proceed to doc persistence."
 
 *Triggers when `phase: "5"` + `status: gate_pending`.*
 
-Read `workflow.docs_root` from config.
+Read doc-related fields from `workflow.yaml`.
 
-**`docs_root: null`:** skip this phase entirely.
+**If `docs_root` is null AND `module_docs_root` is null:** skip entirely.
 Update `state.yaml`: `gates.5: skipped`, `phase: "6"`, `status: gate_pending`.
-Output: "Docs root not configured — skipping. Run `/w-task` to create the PR."
+Output: "Doc roots not configured — skipping. Run `/w-task` to create the PR."
 
-**`docs_root` set:**
+**Otherwise — invoke per-target helper skills (each skill is a no-op if its
+own config field is null):**
 
-Ask:
-```
-Is there a feature doc to update?
-  Docs root: <docs_root>
+1. **Feature record** — if `module_docs_root` + `feature_records_subdir` set:
+   - Derive `<feature-name>` from intake.md (kebab-case, capability not ticket
+     ID). Pause once to let developer confirm if ambiguous.
+   - Invoke `w-feature-record <task-slug> <feature-name>` → creates or appends
+     `<module_docs_root>/<NN>-<module>/features/<feature-name>.md`.
 
-Provide a file path within <docs_root> to append an implementation note,
-or press Enter to skip.
+2. **Module README update** — if `module_docs_root` set:
+   - Update Implementation Status: move items completed in this task from
+     ⏳ Deferred → ✅ Complete; add new ⏳ Deferred items introduced.
+   - Update Depends on / Blocks if cross-module deps changed.
+   - (No dedicated helper skill — this is an inline edit of the existing README.)
 
-Path (or Enter to skip): ___
-```
+3. **API doc** — if `module_docs_root` + `api_docs_filename` set AND impact.md
+   has § GraphQL Schema Changes / § REST API Changes:
+   - Invoke `w-api-doc <task-slug>` → appends/replaces operation sections in
+     `<module_docs_root>/<NN>-<module>/<api_docs_filename>`.
 
-If path provided: append dated implementation note:
-```markdown
+4. **DB docs + sub-ERD + master ERD** — if `db_docs_root` set AND impact.md
+   has § Database Changes:
+   - Invoke `w-db-doc <task-slug>` → writes module schema doc, sub-ERD, and
+     **mandatorily** syncs the master ERD. If `master_erd_path` is null while
+     `diagrams_root` is set, the skill aborts with an error — fix workflow.yaml.
 
-## <date> — <task-slug>
-
-<one-paragraph summary of what was built and key decisions>
-See: <state_root>/<task-slug>/plan.md
-```
+5. **Stage doc changes** — add all written files to the staging area in a
+   separate commit:
+   ```bash
+   git add <module_docs_root>/<NN>-<module>/ <db_docs_root>/<NN>-<module>.md \
+           <diagrams_root>/<NN>-<module>-erd.puml <master_erd_path> \
+           <adr_docs_path> <oq_docs_path>
+   git commit -m "docs(<module>): persist <feature-name> design from <task-slug>"
+   ```
+   Doc commit is separate from code commit (Phase 4b) so reviewers can read
+   them independently, but both ship in the same PR.
 
 Update `state.yaml`: `gates.5: docs_written`, `status: gate_pending`.
 
-Output: "Docs updated. Run `/w-task` to create the PR."
+Output: "Docs persisted and committed. Review changes, then run `/w-task` to
+create the PR (which will trigger w-doc-gate)."
 
-**GATE 5:** developer confirms → runs `/w-task`.
+**GATE 5:** developer reviews + runs `/w-task`.
 
 Update `state.yaml`: `phase: "6"`, `status: gate_pending`.
 
@@ -458,13 +483,23 @@ Update `state.yaml`: `phase: "6"`, `status: gate_pending`.
 
 *Triggers when `phase: "6"` + `status: gate_pending`.*
 
-Output: "Run `/w-pr <task-slug>` to create the PR."
+`/w-pr` (Phase 6) will internally invoke `w-doc-gate <task-slug>` before
+opening the PR. The doc gate verifies:
+- Every module touched (code changes under `module_glob`) has a corresponding
+  doc update in the branch diff
+- If `master_erd_path` is configured, any sub-ERD change is accompanied by
+  a master ERD update in the same branch
+
+If the gate fails, `/w-pr` blocks PR creation and prints the missing doc paths
+— developer must return to Phase 5 (`/w-task`) to fill the gap.
+
+Output: "Run `/w-pr <task-slug>` to create the PR (w-doc-gate runs first)."
 
 **GATE 6:** developer runs `/w-pr <task-slug>`.
 
 Update `state.yaml`: `phase: "6"`, `status: complete`, `last_updated: <timestamp>`.
 
-Output: "Task complete."
+Output: "Task complete. Docs ship with code in this PR — no post-merge sync needed."
 
 ---
 

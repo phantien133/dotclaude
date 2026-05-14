@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+#
+# SOURCE.yaml is INSIDE the skill folder.
+# Installer MUST exclude this file when copying the skill folder to a target.
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: d7f9ffeee8a34f15f4b55cddfe6b0fd1655067a7
+  path: workflow/skills/w-context-load
+  ref: components
+imported_at: "2026-05-14"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Phase 0b helper for w-task. Generic version of dev-task's streaming-docs context
+  load: reads module README + features/*.md + workflow-links instead of raw git-grep.
+  Falls back to git-grep when structured docs absent. Drives parity with dev-task.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills:
+      - w-oq-check
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - workflow
+  - context-load
+  - phase-0b
+categories:
+  purpose:
+    - dev-workflow
+    - context-loading
+  mechanism:
+    - file-read
+    - doc-aware
