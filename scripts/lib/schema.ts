@@ -41,6 +41,42 @@ export const ExternalSetupEntrySchema = z
   );
 export type ExternalSetupEntry = z.infer<typeof ExternalSetupEntrySchema>;
 
+// Valid source aliases for components in claudekit/. Each alias corresponds to
+// a top-level folder. `private` covers the gitignored claudekit/private/ bucket.
+export const CLAUDEKIT_SOURCES = [
+  'everything-claude-code',
+  'anthropic-skills',
+  'self',
+  'private',
+] as const;
+export const ClaudekitSourceSchema = z.enum(CLAUDEKIT_SOURCES);
+export type ClaudekitSource = z.infer<typeof ClaudekitSourceSchema>;
+
+// Component reference in a preset.yaml — { name, source }. Source is mandatory
+// to disambiguate names across vendored repos. See docs/PRESETS.md.
+export const ComponentRefSchema = z
+  .object({
+    name: z.string().min(1),
+    source: ClaudekitSourceSchema,
+  })
+  .strict();
+export type ComponentRef = z.infer<typeof ComponentRefSchema>;
+
+// Used by Preset.components — strict object-form references only.
+const PresetComponentRefListSchema = z
+  .object({
+    agents: z.array(ComponentRefSchema).default([]),
+    skills: z.array(ComponentRefSchema).default([]),
+    commands: z.array(ComponentRefSchema).default([]),
+    hooks: z.array(ComponentRefSchema).default([]),
+    rules: z.array(ComponentRefSchema).default([]),
+  })
+  .strict();
+export type PresetComponentRefList = z.infer<typeof PresetComponentRefListSchema>;
+
+// Used by sidecar dependencies — names only. The resolver looks up the source
+// by scanning, since dependency names are unique today. If a future collision
+// appears, the dep entry can be promoted to a full ComponentRef here.
 const ComponentRefListSchema = z
   .object({
     agents: z.array(z.string()).default([]),
@@ -126,7 +162,7 @@ export const PresetSchema = z
       .string()
       .regex(/^\d+\.\d+\.\d+$/, 'version must be SemVer X.Y.Z'),
     extends: z.array(z.string().min(1)).default([]),
-    components: ComponentRefListSchema.default({
+    components: PresetComponentRefListSchema.default({
       agents: [],
       skills: [],
       commands: [],

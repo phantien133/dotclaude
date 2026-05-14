@@ -1,6 +1,15 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import type { Preset, ComponentType, PresetKind, Sidecar, ExternalDep, ExternalDepProbe } from './schema.ts';
+import type {
+  Preset,
+  ComponentType,
+  PresetKind,
+  Sidecar,
+  ExternalDep,
+  ExternalDepProbe,
+  ClaudekitSource,
+  ComponentRef as PresetComponentRef,
+} from './schema.ts';
 import type { ComponentLayout } from './sidecar.ts';
 import { locatePreset } from './preset.ts';
 import { locateComponent, loadSidecar } from './sidecar.ts';
@@ -10,7 +19,7 @@ const execFileAsync = promisify(execFile);
 export interface PlannedComponent {
   type: ComponentType;
   id: string;
-  scope: 'public' | 'private';
+  source: ClaudekitSource;
   layout: ComponentLayout;
   sidecar: Sidecar | null;
   source_commit: string | null;
@@ -93,6 +102,7 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 async function addComponentToMap(
   type: ComponentType,
   id: string,
+  source: ClaudekitSource | undefined,
   plan: Map<string, PlannedComponent>,
   opts: ResolveOptions,
   depProcessed: Set<string>,
@@ -110,19 +120,22 @@ async function addComponentToMap(
     return;
   }
 
-  const loc = await locateComponent({ type, id });
+  const locateInput: { type: ComponentType; id: string; source?: ClaudekitSource } = { type, id };
+  if (source !== undefined) locateInput.source = source;
+  const loc = await locateComponent(locateInput);
   if (loc === null) {
     if (!throwIfMissing) {
       depLog.push(`[skip] "${key}" not found`);
       return;
     }
-    throw new Error(`Component "${key}" not found in claudekit/ (public or private)`);
+    const where = source !== undefined ? `claudekit/${source}/` : 'any source dir';
+    throw new Error(`Component "${key}" not found in ${where}`);
   }
 
   const component: PlannedComponent = {
     type,
     id,
-    scope: loc.scope,
+    source: loc.source,
     layout: loc.layout,
     sidecar: null,
     source_commit: null,
@@ -170,9 +183,12 @@ async function expandDeps(
           const verb = throwIfMissing ? 'required' : 'optional';
           depLog.push(`[dep] auto-include "${depKey}" (${verb} by "${key}")`);
         }
+        // Sidecar dep refs are bare strings — let the resolver search all sources
+        // and error on ambiguity. Pass undefined for source.
         await addComponentToMap(
           depType,
           depId,
+          undefined,
           plan,
           opts,
           depProcessed,
@@ -302,9 +318,23 @@ export async function buildInstallPlan(
   const depLog: string[] = [];
 
   for (const p of allPresets) {
-    for (const [type, ids] of Object.entries(p.components) as [ComponentType, string[]][]) {
-      for (const id of ids) {
-        await addComponentToMap(type, id, plan, opts, depProcessed, depLog, false, [], true);
+    for (const [type, refs] of Object.entries(p.components) as [
+      ComponentType,
+      PresetComponentRef[],
+    ][]) {
+      for (const ref of refs) {
+        await addComponentToMap(
+          type,
+          ref.name,
+          ref.source,
+          plan,
+          opts,
+          depProcessed,
+          depLog,
+          false,
+          [],
+          true,
+        );
       }
     }
   }
