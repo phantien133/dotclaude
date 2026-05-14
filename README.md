@@ -32,8 +32,7 @@ All bundles live under `plugins/` and are registered in [`marketplace.json`](./m
 
 | Plugin | Version | Description |
 |---|---|---|
-| [`cistreaming-v2`](./plugins/cistreaming-v2/) | 0.1.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). 8-phase workflow: Plane intake → context → plan → impact → UI → TDD → verify → PR. |
-| [`cistreaming-v3`](./plugins/cistreaming-v3/) | 0.1.0 | Successor to `v2` — same 8-phase workflow plus the `f-*` Figma suite (`f-setup` / `f-import` / `f-ui-kit` / `f-page` / `f-review`) replacing legacy UI integration skills. |
+| [`cistreaming`](./plugins/cistreaming/) | 1.0.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Public `w-*` suite + `f-*` Figma flow + streaming rules + doc governance. Replaces deprecated `cistreaming-v2/v3/v4`. |
 
 ### Dotclaude self-tooling
 
@@ -87,7 +86,7 @@ For example:
 
 ```
 /plugin install developer@hilab-dotclaude          # at user level
-/plugin install cistreaming-v3@hilab-dotclaude     # for the streaming team
+/plugin install cistreaming@hilab-dotclaude     # for the streaming team
 /plugin install core@hilab-dotclaude
 ```
 
@@ -114,7 +113,7 @@ Start small and stack:
 2. **Most engineers**: add `ai-native` (self-learning) and `developer` (GitHub /
    quality gates).
 3. **Backend / frontend**: add `nestjs` and/or `nextjs` as needed.
-4. **Streaming team**: install `cistreaming-v3` (it extends `nestjs` + `nextjs`
+4. **Streaming team**: install `cistreaming` (it extends `nestjs` + `nextjs`
    so you get those transitively — don't double install).
 5. **Working inside this repo**: add `dotclaude-self` for the preset-authoring
    tooling.
