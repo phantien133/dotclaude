@@ -62,11 +62,33 @@ Use its findings to pre-fill all suggestions in Steps 2–7.
 >    Extract the exact test, lint, and typecheck commands used in CI —
 >    these are the most reliable source of truth.
 >
-> 7. **Docs structure**: check if `docs/`, `documentation/`, or `wiki/` exists
->    and what format it uses.
+> 7. **Docs structure**: check if `docs/`, `documentation/`, `wiki/`,
+>    `streaming-docs/`, or `*-docs/` exists. For each candidate, probe for the
+>    **streaming-docs convention** — does it have a `documents/` AND `workflow/`
+>    subdir side-by-side? If yes, classify as `streaming-docs-convention` and
+>    return the parent (the `<docs_root>`). If only `documents/` exists, still
+>    classify as `streaming-docs-convention` (workflow/ will be created). If
+>    neither, classify as `flat-layout`. Also probe for these sub-paths and
+>    report which exist:
+>    - `<docs_root>/documents/modules/`
+>    - `<docs_root>/documents/database/`
+>    - `<docs_root>/documents/database/diagrams/`
+>    - `<docs_root>/documents/database/diagrams/00-database-overview-erd.puml`
+>    - `<docs_root>/documents/overview/open-questions.md`
+>    - `<docs_root>/documents/overview/architecture-overview.md`
+>    - `<docs_root>/workflow/`
 >
 > 8. **Git**: run `git remote get-url origin` and `git branch -r | head -5`
 >    to identify the remote host and default branch.
+>
+> 9. **Schema files**: probe for `prisma/schema.prisma`,
+>    `<api-dir>/prisma/schema.prisma`, `*.graphql` files under source dirs.
+>    Report exact path(s) found.
+>
+> 10. **Module convention**: probe for `<api-dir>/src/modules/*/`,
+>     `src/modules/*/`, `apps/*/`, `packages/*/`, `services/*/`,
+>     `src/features/*/`. Report the pattern with the most matching subdirs
+>     that each contain at least one `.ts`/`.js`/`.py`/`.go` source file.
 >
 > Output a structured report with these exact sections:
 > - **Monorepo**: yes/no + workspace dirs if yes
@@ -77,8 +99,12 @@ Use its findings to pre-fill all suggestions in Steps 2–7.
 > - **Lint command**: exact string, or "none detected"
 > - **CI commands**: test / typecheck / lint extracted from CI, or "not found"
 > - **Docs root**: path, or "none"
+> - **Docs convention**: `streaming-docs-convention` | `flat-layout` | `none`
+> - **Docs sub-paths present**: list of which sub-paths from item 7 exist
 > - **Git remote host**: github / gitlab / bitbucket / other
 > - **Default branch**: main / master / other
+> - **Schema paths**: prisma / graphql paths found, or "none"
+> - **Module glob**: pattern with the most subdirs containing source files
 > - **Notes**: anything unusual
 
 Store the agent's full report as `survey` for use in all subsequent steps.
@@ -140,88 +166,155 @@ API token env var name [LINEAR_TOKEN]: ___
 
 ---
 
-## Step 4 — Workflow state root
+## Step 4 — Derive docs + state paths (AI auto-fill, user confirms)
+
+Use `survey.docs_root` + `survey.docs_convention` + `survey.docs_sub_paths_present`
+to compute all paths automatically. Present one bulk confirmation card — user
+approves the whole set, or selects which fields to override.
+
+**Derivation rules:**
 
 ```
-Where should workflow state files (<state_root>/<task-slug>/state.yaml) be stored?
-  Default: .workflow
+docs_root = survey.docs_root  (or null if user wants to skip Phase 5)
 
-Press Enter to accept, or type a path: ___
+if survey.docs_convention == "streaming-docs-convention":
+  DOCS_PREFIX  = "<docs_root>/documents"
+  state_root   = "<docs_root>/workflow"
+  state_in_vcs = true                           # commit state files (project history)
+else:
+  DOCS_PREFIX  = "<docs_root>"
+  state_root   = ".workflow"
+  state_in_vcs = false                          # add to .gitignore
+
+module_docs_root        = "<DOCS_PREFIX>/modules"
+feature_records_subdir  = "features"
+api_docs_filename       = "api.md"
+workflow_links_filename = "workflow-links.md"
+db_docs_root            = "<DOCS_PREFIX>/database"
+diagrams_root           = "<db_docs_root>/diagrams"
+master_erd_path         = "<diagrams_root>/00-database-overview-erd.puml"
+oq_docs_path            = "<DOCS_PREFIX>/overview/open-questions.md"
+adr_docs_path           = "<DOCS_PREFIX>/overview/architecture-overview.md"
 ```
+
+If a sub-path from `survey.docs_sub_paths_present` is missing from the derived
+defaults (e.g. project uses non-standard naming), surface that as a hint —
+do not silently drop it.
+
+**Confirmation card — present ALL derived paths in one card:**
+
+```
+Detected docs convention: <streaming-docs-convention | flat-layout | none>
+
+Proposed configuration (derived from project survey — review and confirm):
+
+  Workflow state
+    state_root:               <state_root>          [will be <gitignored | committed>]
+
+  Docs (Phase 5 persistence)
+    docs_root:                <docs_root>
+    module_docs_root:         <module_docs_root>
+    feature_records_subdir:   <feature_records_subdir>
+    api_docs_filename:        <api_docs_filename>
+    workflow_links_filename:  <workflow_links_filename>
+
+  Database (Phase 5 — only if project has relational DB)
+    db_docs_root:             <db_docs_root>
+    diagrams_root:            <diagrams_root>
+    master_erd_path:          <master_erd_path>
+
+  Overview (cross-cutting)
+    oq_docs_path:             <oq_docs_path>
+    adr_docs_path:            <adr_docs_path>
+
+Accept all? [Y]es / [e]dit specific fields / [s]kip Phase 5 entirely: ___
+```
+
+- **Y / Enter** → accept all, proceed to Step 5 (project conventions)
+- **e** → ask which field(s) to edit (multi-pick or comma-separated). For each
+  picked field, ask the value (with current default in `[...]`)
+- **s** → set all doc fields to `null`, skip Phase 5 in w-task
+
+**Concrete example for streaming-workspace** (the wizard would present this card
+verbatim with values pre-filled):
+
+```
+Detected docs convention: streaming-docs-convention (found documents/ + workflow/)
+
+Proposed configuration:
+
+  state_root:               streaming-docs/workflow              [committed]
+
+  docs_root:                streaming-docs
+  module_docs_root:         streaming-docs/documents/modules
+  feature_records_subdir:   features
+  api_docs_filename:        api.md
+  workflow_links_filename:  workflow-links.md
+
+  db_docs_root:             streaming-docs/documents/database
+  diagrams_root:            streaming-docs/documents/database/diagrams
+  master_erd_path:          streaming-docs/documents/database/diagrams/00-database-overview-erd.puml
+
+  oq_docs_path:             streaming-docs/documents/overview/open-questions.md
+  adr_docs_path:            streaming-docs/documents/overview/architecture-overview.md
+
+Accept all? [Y]es / [e]dit specific fields / [s]kip Phase 5 entirely: ___
+```
+
+State path under streaming-docs convention is **part of the project's documented
+history** — task intake, plan, impact, verify files are valuable artefacts.
+They are committed alongside docs, not gitignored.
 
 ---
 
-## Step 5 — Docs root
+## Step 5 — Project conventions (AI auto-fill, user confirms)
 
-Use `survey.docs_root` as the suggestion:
+Same pattern as Step 4: AI derives everything from `survey`, presents one
+confirmation card.
 
-- If survey found a docs dir:
-  ```
-  Detected: <path>/ — use this as docs root for feature records? (Enter to accept, or type path, or blank to skip): ___
-  ```
-- If not found:
-  ```
-  Docs folder for persistent feature records? (blank to skip Phase 5 in w-task): ___
-  ```
-
-If `docs_root` provided, ask the follow-up questions below. Each is optional — blank
-leaves the field unset and w-task silently skips the corresponding write. Together these
-fields let w-task hit dev-task parity: module-aware Phase 0b context, structured Phase 5
-doc persistence, ADR + OQ tracking.
+**Derivation rules:**
 
 ```
-Module docs subdirectory (NN-name folders, one per feature module)
-  Default: <docs_root>/modules     [Enter / path / blank]: ___
-
-Feature record subfolder inside each module
-  Default: features                [Enter / blank]: ___
-
-API doc filename inside each module
-  Default: api.md                  [Enter / blank]: ___
-
-Workflow-links filename inside each module
-  Default: workflow-links.md       [Enter / blank]: ___
-
-Database docs root (only if project has relational DB)
-  Default: <docs_root>/database               [Enter / path / blank]: ___
-
-Diagrams root (PlantUML .puml files for sub-ERDs)
-  Default: <db_docs_root>/diagrams            [Enter / path / blank]: ___
-
-Master ERD path (auto-synced on any sub-ERD change)
-  Default: <diagrams_root>/00-database-overview-erd.puml   [Enter / path / blank]: ___
-
-Open Questions doc (Phase 0b surfaces relevant OQs)
-  Default: <docs_root>/overview/open-questions.md           [Enter / path / blank]: ___
-
-ADR doc (Phase 2 appends new architecture decisions)
-  Default: <docs_root>/overview/architecture-overview.md    [Enter / path / blank]: ___
+module_glob       = survey.module_glob              # e.g. "streaming-api/src/modules/*"
+schema_paths:
+  prisma          = survey.schema_paths.prisma      # e.g. "streaming-api/prisma/schema.prisma"
+  graphql         = survey.schema_paths.graphql     # e.g. "streaming-api/src/**/*.graphql"
+test_layers       = derived from survey.language(s) + framework markers:
+                      - has @nestjs/* in deps      → include "nestjs"
+                      - has @apollo/* or *.graphql → include "graphql"
+                      - has bullmq in deps         → include "bullmq"
+                      - has next in deps           → include "nextjs"
+                      - jest/vitest config         → include "unit"
+                      - any docker-compose.test.*  → include "integration"
+                    fallback: ["unit"]
 ```
 
----
-
-## Step 5b — Project conventions
-
-Survey detected (if any):
-- Module glob pattern (auto-detect modules during Phase 0b + w-document-build-up):
-  - Suggestion: scan for `src/modules/*`, `apps/*`, `packages/*`, `services/*`,
-    `src/features/*` — pick the one with most subdirs that contain at least one
-    source file. Show what was found.
+**Confirmation card:**
 
 ```
-Module glob (folders that define feature module boundaries)
-  Suggested: <detected pattern or blank>
-  Press Enter / type a glob / blank to skip: ___
+Project conventions (detected from survey):
 
-Prisma schema path (enables w-impact-analyzer to diff DB changes)
-  Detected: <prisma/schema.prisma or "none">      [Enter / path / blank]: ___
+  module_glob:       <pattern>
+  schema_paths:
+    prisma:          <path or "—">
+    graphql:         <pattern or "—">
+  test_layers:       <list>
 
-GraphQL schema glob (enables w-impact-analyzer + w-api-doc)
-  Detected: <pattern or "none">                   [Enter / glob / blank]: ___
+Accept all? [Y]es / [e]dit specific fields: ___
+```
 
-Test layers (comma-separated — drives w-test-stubs imports)
-  Common values: unit, integration, e2e, graphql, bullmq, nestjs
-  Default: unit                                   [Enter / list / blank]: ___
+**Concrete example for streaming-workspace:**
+
+```
+Project conventions:
+
+  module_glob:       streaming-api/src/modules/*
+  schema_paths:
+    prisma:          streaming-api/prisma/schema.prisma
+    graphql:         streaming-api/src/**/*.graphql
+  test_layers:       [unit, integration, graphql, bullmq, nestjs, nextjs]
+
+Accept all? [Y]es / [e]dit specific fields: ___
 ```
 
 ---
@@ -309,11 +402,21 @@ pr:
   template: <path or null>
 ```
 
-Add `.workflow/` to `.gitignore` automatically if not already present:
+**Gitignore handling (state_root-dependent):**
 
-```bash
-grep -q "^\.workflow" .gitignore 2>/dev/null || echo ".workflow/" >> .gitignore
-```
+- If `state_root == ".workflow"` (default flat layout): the folder is ephemeral
+  scratch state. Add to `.gitignore` if not present:
+  ```bash
+  grep -q "^\.workflow" .gitignore 2>/dev/null || echo ".workflow/" >> .gitignore
+  ```
+
+- If `state_root` is under `docs_root` (streaming-docs convention, e.g.
+  `streaming-docs/workflow`): state files are **part of the project's documented
+  history** — task intake, plan, impact, verification are valuable artefacts.
+  Do NOT gitignore. Commit normally alongside docs. Skip this step.
+
+Detection: if the path begins with `<docs_root>/` AND `<docs_root>` is tracked
+in git → treat as docs-companion state, no gitignore.
 
 ---
 

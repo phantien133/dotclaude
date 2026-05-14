@@ -47,7 +47,9 @@ If file missing: say "Run `/w-setup` first to configure this project." Stop.
 
 Extract and store for this session:
 - `issue_tracker.*` — how to fetch ticket data
-- `workflow.state_root` → default `.workflow`
+- `workflow.state_root` → where `state.yaml` + per-task md files live.
+  Default `.workflow` (gitignored) for flat layout. Under the **streaming-docs
+  convention** this is `<docs_root>/workflow` (committed alongside docs).
 - `workflow.docs_root` → null means skip Phase 5
 - `workflow.module_docs_root`, `feature_records_subdir`, `api_docs_filename`,
   `workflow_links_filename` — drive Phase 0b context load + Phase 5 doc persistence
@@ -57,6 +59,30 @@ Extract and store for this session:
 - `project.module_glob`, `schema_paths.{prisma,graphql}`, `test_layers` — drive
   Phase 0b module detection, Phase 2 impact analysis, Phase 4 test stubs
 - `pr.default_branch`, `.draft`, `.template`
+
+**Path convention — streaming-docs vs flat layout**
+
+State and docs are two **separate** concerns. They MAY share a parent (the
+streaming-docs convention puts them as siblings under `<docs_root>/`) but they
+are configured independently — w-task always uses the explicit config fields,
+never inference.
+
+| Concern | Config field | Streaming-docs example | Flat-layout example |
+|---|---|---|---|
+| State (this task's working files) | `state_root` | `streaming-docs/workflow` | `.workflow` |
+| Module docs | `module_docs_root` | `streaming-docs/documents/modules` | `docs/modules` |
+| DB docs | `db_docs_root` | `streaming-docs/documents/database` | `docs/database` |
+| OQ doc | `oq_docs_path` | `streaming-docs/documents/overview/open-questions.md` | `docs/open-questions.md` |
+| ADR doc | `adr_docs_path` | `streaming-docs/documents/overview/architecture-overview.md` | `docs/adr.md` |
+
+For task `CISTREAMIN-11-sign-up-api` on a streaming-docs-convention project, w-task
+creates these paths:
+- State: `streaming-docs/workflow/CISTREAMIN-11-sign-up-api/{intake,context,plan,impact,tests,verify,pr}.md` + `state.yaml`
+- Module docs touched (Phase 5):
+  - `streaming-docs/documents/modules/01-auth/README.md` (update Implementation Status)
+  - `streaming-docs/documents/modules/01-auth/features/sign-up.md` (create or append)
+  - `streaming-docs/documents/modules/01-auth/api.md` (append SignUp mutation)
+  - `streaming-docs/documents/modules/01-auth/workflow-links.md` (append task row)
 
 **Per-phase helper skills** (invoked when the relevant config fields are set;
 silently skipped otherwise):
