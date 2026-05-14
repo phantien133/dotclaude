@@ -47,7 +47,9 @@
                 "enum": [
                   "everything-claude-code",
                   "anthropic-skills",
-                  "self",
+                  "dotclaude-self",
+                  "workflow",
+                  "figma",
                   "private"
                 ]
               }
@@ -74,7 +76,9 @@
                 "enum": [
                   "everything-claude-code",
                   "anthropic-skills",
-                  "self",
+                  "dotclaude-self",
+                  "workflow",
+                  "figma",
                   "private"
                 ]
               }
@@ -101,7 +105,9 @@
                 "enum": [
                   "everything-claude-code",
                   "anthropic-skills",
-                  "self",
+                  "dotclaude-self",
+                  "workflow",
+                  "figma",
                   "private"
                 ]
               }
@@ -128,7 +134,9 @@
                 "enum": [
                   "everything-claude-code",
                   "anthropic-skills",
-                  "self",
+                  "dotclaude-self",
+                  "workflow",
+                  "figma",
                   "private"
                 ]
               }
@@ -155,7 +163,9 @@
                 "enum": [
                   "everything-claude-code",
                   "anthropic-skills",
-                  "self",
+                  "dotclaude-self",
+                  "workflow",
+                  "figma",
                   "private"
                 ]
               }

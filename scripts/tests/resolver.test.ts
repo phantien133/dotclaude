@@ -1,9 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Preset, Sidecar, ClaudekitSource } from '../lib/schema.ts';
 
-// Tests use the 'self' alias by default — components have to live somewhere, and
-// the on-disk path is faked through mocks anyway.
-const TEST_SOURCE: ClaudekitSource = 'self';
+// Tests use a fixed source alias — paths are faked through mocks anyway.
+const TEST_SOURCE: ClaudekitSource = 'dotclaude-self';
 const ref = (name: string) => ({ name, source: TEST_SOURCE });
 
 vi.mock('../lib/preset.ts');

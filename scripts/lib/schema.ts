@@ -41,12 +41,21 @@ export const ExternalSetupEntrySchema = z
   );
 export type ExternalSetupEntry = z.infer<typeof ExternalSetupEntrySchema>;
 
-// Valid source aliases for components in claudekit/. Each alias corresponds to
-// a top-level folder. `private` covers the gitignored claudekit/private/ bucket.
+// Valid source aliases for components in claudekit/. Each alias is mapped to
+// an on-disk folder via `claudekitSourceDir` in paths.ts.
+//
+//   everything-claude-code → claudekit/everything-claude-code/
+//   anthropic-skills       → claudekit/anthropic-skills/
+//   dotclaude-self         → claudekit/dotclaude/dotclaude-self/
+//   workflow               → claudekit/dotclaude/workflow/
+//   figma                  → claudekit/dotclaude/figma/
+//   private                → claudekit/private/   (gitignored)
 export const CLAUDEKIT_SOURCES = [
   'everything-claude-code',
   'anthropic-skills',
-  'self',
+  'dotclaude-self',
+  'workflow',
+  'figma',
   'private',
 ] as const;
 export const ClaudekitSourceSchema = z.enum(CLAUDEKIT_SOURCES);

@@ -14,9 +14,20 @@ export const UPSTREAM_DIR = join(REPO_ROOT, 'upstream');
 
 export const DEPENDENCIES_YAML = join(REPO_ROOT, 'dependencies.yaml');
 
-// Per-source root: claudekit/<alias>/
+// Map each source alias to its on-disk root under claudekit/.
+// The three dotclaude-* aliases live under a shared claudekit/dotclaude/ parent
+// so the filesystem reflects that they are all from phantien133/dotclaude.
+const SOURCE_TO_RELATIVE_PATH: Record<ClaudekitSource, string> = {
+  'everything-claude-code': 'everything-claude-code',
+  'anthropic-skills': 'anthropic-skills',
+  'dotclaude-self': 'dotclaude/dotclaude-self',
+  'workflow': 'dotclaude/workflow',
+  'figma': 'dotclaude/figma',
+  'private': 'private',
+};
+
 export function claudekitSourceDir(source: ClaudekitSource): string {
-  return join(CLAUDEKIT_DIR, source);
+  return join(CLAUDEKIT_DIR, SOURCE_TO_RELATIVE_PATH[source]);
 }
 
 // All known source dirs (including private/), in resolver scan order.

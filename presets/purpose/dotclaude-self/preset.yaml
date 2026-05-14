@@ -8,16 +8,16 @@ extends:
 components:
   skills:
     - name: dotclaude-component-picker
-      source: self
+      source: dotclaude-self
     - name: preset-debugger
-      source: self
+      source: dotclaude-self
     - name: plugin-discovery
-      source: self
+      source: dotclaude-self
   commands:
     - name: preset-wizard
-      source: self
+      source: dotclaude-self
     - name: dotclaude-setup
-      source: self
+      source: dotclaude-self
 settings_patch: {}
 external_setup: []
 use_case_tags:

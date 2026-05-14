@@ -9,14 +9,14 @@ components:
   agents: []
   skills:
     - name: preset-debugger
-      source: self
+      source: dotclaude-self
     - name: plugin-discovery
-      source: self
+      source: dotclaude-self
   commands:
     - name: dotclaude-setup
-      source: self
+      source: dotclaude-self
     - name: preset-wizard
-      source: self
+      source: dotclaude-self
   hooks: []
   rules: []
 settings_patch: {}
