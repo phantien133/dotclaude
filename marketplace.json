@@ -1,11 +1,11 @@
 {
   "name": "claudekit-marketplace",
   "owner": {
-    "name": "phantien133",
+    "name": "hilabaikit",
     "email": "tienpq@hilab.asia"
   },
   "metadata": {
-    "description": "Personal Claude Code plugin marketplace for claudekit presets."
+    "description": "Hilab Claude Code plugin marketplace for claudekit presets."
   },
   "plugins": [
     {
@@ -14,7 +14,7 @@
       "description": "Cross-stack developer tooling — GitHub ops, quality gates, and architecture planning.",
       "version": "0.1.0",
       "author": {
-        "name": "phantien133",
+        "name": "hilabaikit",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -30,7 +30,7 @@
         "quality"
       ],
       "strict": false,
-      "repository": "https://github.com/phantien133/claudekit-marketplace"
+      "repository": "https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace"
     }
   ]
 }

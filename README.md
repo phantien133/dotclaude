@@ -50,7 +50,7 @@ Full control: all scripts, skills, and preset authoring tools available inside C
 #### Setup
 
 ```bash
-git clone --recursive git@github.com:phantien133/dotclaude.git
+git clone --recursive ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
 cd dotclaude
 pnpm install
 pnpm typecheck
@@ -97,7 +97,7 @@ See `docs/INSTALL.md` for detailed usage.
 ### Option B — Install `dotclaude-bootstrap` plugin *(not recommended)*
 
 No clone needed. Installs the bootstrap wizard and preset-creation tools at user level via
-the [claudekit-marketplace](https://github.com/phantien133/claudekit-marketplace) plugin.
+the [claudekit-marketplace](https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace) plugin.
 
 > **Limitations**: no local scripts, no preset authoring, no sync workflow, no private
 > overlays. Use this only for a quick taste or when you can't clone the repo.
@@ -111,7 +111,7 @@ Once installed, run `/dotclaude-setup` inside Claude Code — the setup wizard w
 through finding and installing a preset that fits your workflow.
 
 > `dotclaude-bootstrap` is published to the marketplace at
-> [phantien133/claudekit-marketplace](https://github.com/phantien133/claudekit-marketplace).
+> [hilabaikit/claudekit-marketplace](https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace).
 
 ## Structure
 

@@ -70,7 +70,7 @@ The dotclaude repo does **not manage distribution** of `private/`. The owner han
 
 ```bash
 # 1. Clone dotclaude
-git clone --recursive git@github.com:phantien133/dotclaude.git
+git clone --recursive ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
 cd dotclaude
 
 # 2. Init private skeleton from private.example/

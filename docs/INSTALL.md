@@ -11,7 +11,7 @@
 ## First-time setup
 
 ```bash
-git clone --recursive git@github.com:phantien133/dotclaude.git
+git clone --recursive ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
 cd dotclaude
 pnpm install
 pnpm typecheck         # verify clean TypeScript

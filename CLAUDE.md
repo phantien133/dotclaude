@@ -1,11 +1,11 @@
-# CLAUDE.md — dotclaude
+# CLAUDE.md — dotclaude (Hilab)
 
-Personal repo for managing Claude Code config (claudekit core + preset manifests + TS
+Hilab company repo for managing Claude Code config (claudekit core + preset manifests + TS
 installer). When opening Claude Code in this folder, the information below is the primary context.
 
 ## Owner & Communication
 
-- Owner: phantien133 (phanqtien@gmail.com) — senior full-stack engineer.
+- Owner: Hilab AI Kit team (tienpq@hilab.asia).
 - Communication: **English** for all responses, code, file names, identifiers, and commit messages.
 - Keep answers concise and actionable — no need to explain basics.
 
@@ -49,7 +49,7 @@ See `docs/architecture.md` for design decisions (CQs), resolver flow, and plugin
 ### New machine setup
 
 ```bash
-git clone --recursive git@github.com:phantien133/dotclaude.git
+git clone --recursive ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
 cd dotclaude
 pnpm install
 pnpm typecheck && pnpm test
@@ -111,7 +111,7 @@ After editing `scripts/lib/schema.ts`, run this to keep JSON Schema in sync.
 ```bash
 pnpm build-plugin personal-baseline --clean
 pnpm publish-plugin personal-baseline --clean
-# Then copy plugins/<name>/ to phantien133/claudekit-marketplace repo and push
+# Then copy plugins/<name>/ to hilabaikit/claudekit-marketplace repo and push
 ```
 
 Plugin output: `plugins/<preset-name>/` with `.claude-plugin/plugin.json` + component files.
