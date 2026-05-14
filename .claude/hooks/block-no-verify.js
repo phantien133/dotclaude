@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/hooks/block-no-verify.js
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/hooks/block-no-verify.js

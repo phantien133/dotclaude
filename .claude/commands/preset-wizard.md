@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/commands/preset-wizard.md
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/dotclaude/dotclaude-self/commands/preset-wizard.md

@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/agents/code-explorer.md
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/agents/code-explorer.md
