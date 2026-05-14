@@ -7,21 +7,33 @@ extends:
   - ai-native
 components:
   skills:
-    - tdd-workflow
-    - github-ops
+    - name: tdd-workflow
+      source: everything-claude-code
+    - name: github-ops
+      source: everything-claude-code
   commands:
-    - prp-plan
-    - feature-dev
+    - name: prp-plan
+      source: everything-claude-code
+    - name: feature-dev
+      source: everything-claude-code
   agents:
-    - planner
-    - code-architect
-    - code-explorer
-    - code-reviewer
-    - code-simplifier
+    - name: planner
+      source: everything-claude-code
+    - name: code-architect
+      source: everything-claude-code
+    - name: code-explorer
+      source: everything-claude-code
+    - name: code-reviewer
+      source: everything-claude-code
+    - name: code-simplifier
+      source: everything-claude-code
   hooks:
-    - post-edit-typecheck
-    - pre-bash-commit-quality
-    - block-no-verify
+    - name: post-edit-typecheck
+      source: everything-claude-code
+    - name: pre-bash-commit-quality
+      source: everything-claude-code
+    - name: block-no-verify
+      source: everything-claude-code
 settings_patch:
   hooks:
     PostToolUse:

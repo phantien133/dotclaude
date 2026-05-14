@@ -6,13 +6,19 @@ version: 0.1.0
 extends: []
 components:
   skills:
-    - doc-coauthoring
+    - name: doc-coauthoring
+      source: anthropic-skills
   hooks:
-    - suggest-compact
-    - pre-compact
-    - desktop-notify
-    - cost-tracker
-    - doc-file-warning
+    - name: suggest-compact
+      source: everything-claude-code
+    - name: pre-compact
+      source: everything-claude-code
+    - name: desktop-notify
+      source: everything-claude-code
+    - name: cost-tracker
+      source: everything-claude-code
+    - name: doc-file-warning
+      source: everything-claude-code
 settings_patch:
   extraKnownMarketplaces:
     Mixedbread-Grep:
