@@ -13,7 +13,7 @@ installer). When opening Claude Code in this folder, the information below is th
 
 ```
 dotclaude/
-├── CLAUDE.md / README.md / dependencies.yaml
+├── CLAUDE.md / README.md / ABOUT.md / dependencies.yaml
 ├── package.json + tsconfig.json + vitest.config.ts + pnpm-lock.yaml
 │
 ├── claudekit/                      # Core kit, type-first
@@ -163,6 +163,7 @@ Claude Code — never declared in plugin.json.
 
 | Doc | Contents |
 |---|---|
+| `ABOUT.md` | What dotclaude is + kit development setup |
 | `docs/architecture.md` | Design decisions (CQs), resolver + plugin flows |
 | `docs/PROVENANCE.md` | Sidecar schema + sync workflow |
 | `docs/PRESETS.md` | Preset schema + authoring guide |

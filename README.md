@@ -1,150 +1,129 @@
-# dotclaude
+# dotclaude — Hilab Claude Code plugin marketplace
 
-Personal Claude Code configuration kit — owner-controlled core (`claudekit/`),
-preset manifests (`presets/`), TypeScript installer, and plugin packaging.
+Curated Claude Code plugins for the Hilab team, built from `dotclaude` presets.
+Add the marketplace once, then install only the plugins you need per machine or
+project.
 
-## Motivation
-
-Managing Claude Code tools and plugins for daily work is harder than it looks: too many
-options, no clear way to pick what's right for a specific project, and no way to evaluate
-whether a plugin is actually helping or just adding noise.
-
-This repo solves that problem — personal, curated, measurable:
-
-- **Right-sized**: pick only what's needed per project, nothing more
-- **Traceable**: every vendored component has a sidecar YAML recording its origin, license,
-  and modifications
-- **Evaluable**: skills are benchmarked with and without — so quality is measurable, not
-  assumed
-
-## Roadmap
-
-**P1 — Bootstrap** *(done)*: vibe-code the skeleton (installer, preset schema, sidecar
-format), vendor the plugins already in active use, get to a working daily-driver state fast.
-
-**P2 — Helpers** *(in progress)*: complete the tooling so updates, preset authoring, and building
-personal plugins are fast and simple — the `dotclaude-component-picker` skill, eval loop,
-sync workflow, and plugin packaging.
-
-**P3 — Operate & refine** *(ongoing)*: fix bugs that surface during real use, self-improve
-tools after using them, track upstream open-source changes. License compliance becomes a
-first-class concern at this phase.
-
-## Getting Started
-
-There are two ways to use dotclaude. **Option A is recommended** — it gives you the full
-toolchain, preset authoring, and the ability to customize everything. Option B is a lighter
-path for quick onboarding without a local clone.
+> For details on what `dotclaude` is, how it's organized, and how to author your
+> own preset / build new plugin bundles, see [ABOUT.md](./ABOUT.md).
 
 ---
 
-### Option A — Clone & use locally *(recommended)*
+## Available plugins
 
-Full control: all scripts, skills, and preset authoring tools available inside Claude Code.
+All bundles live under `plugins/` and are registered in [`marketplace.json`](./marketplace.json).
 
-#### Prerequisites
+### Cross-stack baselines
 
-- Node ≥ 20
-- pnpm ≥ 9 (`corepack enable` or `brew install pnpm`)
+| Plugin | Version | Description |
+|---|---|---|
+| [`core`](./plugins/core/) | 0.1.0 | Universal baseline for any Claude Code user — context management, productivity, and semantic search. |
+| [`ai-native`](./plugins/ai-native/) | 0.1.0 | Extends `core` with AI self-learning and skill creation. For users who want Claude to improve with their personal workflow over time. |
+| [`developer`](./plugins/developer/) | 0.1.0 | Extends `ai-native` with cross-stack developer tooling — GitHub ops, quality gates, architecture planning. |
+| [`personal-baseline`](./plugins/personal-baseline/) | 0.1.0 | Lightweight cross-stack baseline — code review + coding standards only. |
 
-#### Setup
+### Framework presets
 
-```bash
-git clone --recursive ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
-cd dotclaude
-pnpm install
-pnpm typecheck
-pnpm test
-# pnpm init-private   # then restore private content from cloud sync
-```
+| Plugin | Version | Description |
+|---|---|---|
+| [`nestjs`](./plugins/nestjs/) | 0.1.0 | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design patterns. |
+| [`nextjs`](./plugins/nextjs/) | 0.1.0 | Next.js React app structure — Turbopack dev server, frontend patterns for production apps. |
 
-Open the cloned folder in Claude Code. The `dotclaude-self` preset (installed at project
-level) activates the full working environment: `/preset-wizard`, `/dotclaude-setup`,
-`dotclaude-component-picker`, `skill-creator`, and the self-learning hooks.
+### Hilab streaming workflow
 
-```bash
-# Install a preset to your global Claude config
-pnpm install:user developer
+| Plugin | Version | Description |
+|---|---|---|
+| [`cistreaming-v2`](./plugins/cistreaming-v2/) | 0.1.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). 8-phase workflow: Plane intake → context → plan → impact → UI → TDD → verify → PR. |
+| [`cistreaming-v3`](./plugins/cistreaming-v3/) | 0.1.0 | Successor to `v2` — same 8-phase workflow plus the `f-*` Figma suite (`f-setup` / `f-import` / `f-ui-kit` / `f-page` / `f-review`) replacing legacy UI integration skills. |
 
-# Or to the current project
-pnpm install:project developer
-```
+### Dotclaude self-tooling
 
-#### Subcommands
-
-```bash
-pnpm run list                                  # List presets (public + private)
-pnpm validate developer --kind core            # Schema + reference + sidecar check
-pnpm sync agents/code-reviewer                 # Diff sidecar.commit ↔ upstream HEAD
-pnpm schema:generate                           # Regen JSON Schema from zod
-
-pnpm install:user <preset>                     # → ~/.claude/ (default symlink)
-pnpm install:project <preset>                  # → <cwd>/.claude/ (default copy)
-pnpm uninstall:user <preset>                   # Remove installed preset
-pnpm upgrade:user <preset>                     # Re-install updated preset
-pnpm audit:user                                # Check installed vs current kit
-
-pnpm build-plugin <preset>                     # Preset → plugin bundle
-pnpm publish-plugin <preset>                   # Build + update marketplace.json
-```
-
-> `pnpm list` (without `run`) calls the pnpm built-in → use `pnpm run list` for preset listing.
-
-See `docs/INSTALL.md` for detailed usage.
+| Plugin | Version | Description |
+|---|---|---|
+| [`dotclaude-bootstrap`](./plugins/dotclaude-bootstrap/) | 0.1.0 | First-time setup wizard, preset-creation wizard, debugger, and external plugin discovery. Install at user level when onboarding new dotclaude users. |
+| [`dotclaude-self`](./plugins/dotclaude-self/) | 0.2.0 | Full dotclaude working environment — preset authoring wizards, self-learning, component picker, skill creator. Install only when working inside a cloned `dotclaude` repo. |
 
 ---
 
-### Option B — Install `dotclaude-bootstrap` plugin *(not recommended)*
+## Install via Claude Code marketplace
 
-No clone needed. Installs the bootstrap wizard and preset-creation tools at user level via
-the [claudekit-marketplace](https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace) plugin.
+### 1. Make sure you can reach Hilab GitLab
 
-> **Limitations**: no local scripts, no preset authoring, no sync workflow, no private
-> overlays. Use this only for a quick taste or when you can't clone the repo.
+The marketplace lives at `gitlab.hilab.cloud/hilabaikit/dotclaude`. SSH access is
+required (port `2424`):
 
 ```bash
-# Add the marketplace to your Claude Code user settings, then install the plugin:
-# Settings → Marketplace → claudekit-marketplace → dotclaude-bootstrap → Install (user level)
+# Add an SSH key in GitLab → User settings → SSH Keys, then verify:
+ssh -T git@gitlab.hilab.cloud -p 2424
+# Expected: "Welcome to GitLab, @<your-username>!"
 ```
 
-Once installed, run `/dotclaude-setup` inside Claude Code — the setup wizard will guide you
-through finding and installing a preset that fits your workflow.
+If you've never cloned a Hilab repo before, the [GitLab SSH setup
+docs](https://gitlab.hilab.cloud/-/user_settings/ssh_keys) walk through key
+creation.
 
-> `dotclaude-bootstrap` is published to the marketplace at
-> [hilabaikit/claudekit-marketplace](https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace).
+### 2. Add the marketplace to Claude Code
 
-## Structure
+Inside any Claude Code session:
 
 ```
-dotclaude/
-├── claudekit/<type>/              # Core kit — type-first, copy with sidecar
-│   └── private/                   # GITIGNORED overlays
-├── presets/<kind>/                # Pure manifest
-│   ├── core/                      # cross-stack baseline
-│   ├── framework/                 # framework-specific
-│   ├── purpose/                   # task-specific
-│   ├── private/                   # GITIGNORED
-│   └── schema/                    # JSON Schema generated from zod
-├── plugins/                       # Build artifacts for marketplace
-├── marketplace.json               # Local marketplace index
-├── upstream/<repo>/               # Submodules (sync source + docs)
-├── scripts/                       # TS installer + lifecycle + plugin packaging
-└── docs/                          # Architecture + guides
+/plugin marketplace add ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
 ```
 
-See `docs/architecture.md` for design decisions and full layout.
+Claude Code will clone the repo into its local marketplace cache and read
+`marketplace.json` — the marketplace is registered under the name
+`claudekit-marketplace`. To refresh later:
 
-## Documentation
+```
+/plugin marketplace update claudekit-marketplace
+```
 
-| Doc | Contents |
-|---|---|
-| `docs/architecture.md` | Design decisions + layout |
-| `docs/PROVENANCE.md` | Sidecar schema + sync workflow |
-| `docs/PRESETS.md` | Preset schema + authoring guide |
-| `docs/PRIVATE.md` | private/ convention + multi-machine bootstrap |
-| `docs/INSTALL.md` | Installer usage |
+### 3. Install a plugin
+
+```
+/plugin install <plugin-name>@claudekit-marketplace
+```
+
+For example:
+
+```
+/plugin install developer@claudekit-marketplace          # at user level
+/plugin install cistreaming-v3@claudekit-marketplace     # for the streaming team
+/plugin install core@claudekit-marketplace
+```
+
+Browse what's available without installing:
+
+```
+/plugin marketplace list claudekit-marketplace
+```
+
+### 4. Update or remove
+
+```
+/plugin update <plugin-name>      # pull latest bundle from the marketplace
+/plugin uninstall <plugin-name>   # remove from this Claude install
+```
+
+---
+
+## Recommended install order
+
+Start small and stack:
+
+1. **Everyone**: `core` — context management + productivity baseline.
+2. **Most engineers**: add `ai-native` (self-learning) and `developer` (GitHub /
+   quality gates).
+3. **Backend / frontend**: add `nestjs` and/or `nextjs` as needed.
+4. **Streaming team**: install `cistreaming-v3` (it extends `nestjs` + `nextjs`
+   so you get those transitively — don't double install).
+5. **Working inside this repo**: add `dotclaude-self` for the preset-authoring
+   tooling.
+
+---
 
 ## License
 
-MIT (for dotclaude scripts + schema + docs). Vendored components retain the original
-upstream license — see `<component>.source.yaml` or `<skill>/SOURCE.yaml`.
+MIT (for `dotclaude` scripts, schema, and docs). Vendored components retain
+their original upstream licenses — see each `<component>.source.yaml` or
+`<skill>/SOURCE.yaml` inside `claudekit/`.
