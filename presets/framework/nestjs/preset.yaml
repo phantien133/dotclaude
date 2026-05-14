@@ -7,13 +7,20 @@ extends:
   - developer
 components:
   skills:
-    - nestjs-patterns
-    - backend-patterns
-    - api-design
-    - database-migrations
-    - postgres-patterns
-    - security-review
-    - verification-loop
+    - name: nestjs-patterns
+      source: everything-claude-code
+    - name: backend-patterns
+      source: everything-claude-code
+    - name: api-design
+      source: everything-claude-code
+    - name: database-migrations
+      source: everything-claude-code
+    - name: postgres-patterns
+      source: everything-claude-code
+    - name: security-review
+      source: everything-claude-code
+    - name: verification-loop
+      source: everything-claude-code
 recommended_install_level: project
 tags:
   - nestjs

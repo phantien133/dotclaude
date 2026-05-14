@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../presets/schema/sidecar.schema.json
+#
+# Vendored from upstream/dotclaude (components branch) — self-authored component library.
+# Source of truth: upstream/dotclaude/workflow/commands/w-pr.md
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  path: workflow/commands/w-pr.md
+  ref: components
+imported_at: "2026-05-13"
+license: MIT
+modified: true
+modifications: >-
+  Switched the create step from GitHub (`gh pr create`) to GitLab (`glab mr create`) because
+  the consumer repo (Hilab streaming) lives on a private GitLab instance. Command name kept as
+  `w-pr` for command-suite consistency, but body, prompts, and pr.md output use MR terminology
+  and GitLab semantics (--remove-source-branch, --squash-before-merge, project resolution via
+  `glab repo view`).
+notes: >-
+  MR creation command for workflow tasks. Args: <task-slug>. Reads pr.* settings
+  from .claude/workflow.yaml and plan.md from state folder to build MR body.
+  Runs `glab mr create --draft` (configurable). Called explicitly by developer at end
+  of w-task Phase 6 or w-fix Phase 3.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: glab
+      type: system_binary
+      reason: GitLab CLI is the underlying tool used to open the MR (`glab mr create`).
+tags:
+  - workflow
+  - mr
+  - gitlab
+categories:
+  purpose:
+    - dev-workflow
+    - pr-workflow
+  mechanism:
+    - git
+    - interactive

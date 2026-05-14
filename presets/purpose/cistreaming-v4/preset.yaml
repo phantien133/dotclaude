@@ -1,0 +1,105 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: cistreaming-v4
+kind: purpose
+description: >-
+  Dev workflow preset for the cistreaming platform v4 (NestJS + Next.js + SRS + GraphQL).
+  Replaces v3's private dev-task / quick-fix orchestration with the public w-* command suite
+  (w-task / w-fix / w-setup / w-status / w-reset / w-pr) backed by .claude/workflow.yaml.
+  Keeps the v3 Figma f-* suite for the UI phase and the streaming-specific rules + utilities.
+version: 0.1.0
+extends:
+  - nestjs
+  - nextjs
+components:
+  agents:
+    # w-task invokes tdd-guide explicitly in the TDD phase; not in developer chain.
+    - name: tdd-guide
+      source: everything-claude-code
+  skills:
+    # w-* workflow core (public, generic) — orchestrates the same 8-phase flow that v2/v3's
+    # private dev-task / quick-fix did, but reads project config from .claude/workflow.yaml.
+    - name: w-task
+      source: workflow
+    - name: w-fix
+      source: workflow
+    - name: workflow-setup
+      source: workflow
+    - name: create-pr
+      source: private
+    # Figma f-* suite — same as v3, replaces v2's build-ui-kit + build-static-page + streaming-figma
+    - name: f-import
+      source: figma
+    - name: f-ui-kit
+      source: figma
+    - name: f-page
+      source: figma
+    - name: f-review
+      source: figma
+    # Streaming utility skills (private) — opt-in helpers callable inside any w-task phase
+    - name: streaming-oq-check
+      source: private
+    - name: streaming-adr
+      source: private
+    - name: streaming-checkpoint
+      source: private
+    - name: streaming-test-stubs
+      source: private
+  commands:
+    # w-* command surface — entry points that the w-task / w-fix skills hand off to
+    - name: w-setup
+      source: workflow
+    - name: w-status
+      source: workflow
+    - name: w-reset
+      source: workflow
+    - name: w-pr
+      source: workflow
+    # Figma config wizard (same as v3)
+    - name: f-setup
+      source: figma
+    # Streaming doc-governance commands (carried from v2/v3)
+    - name: hsd-story-lint
+      source: private
+    - name: hsd-post-merge
+      source: private
+  rules:
+    - name: streaming-context
+      source: private
+    - name: hilab-streaming-rules
+      source: private
+    - name: streaming-docs-governance
+      source: private
+recommended_install_level: project
+tags:
+  - hilab
+  - private
+  - streaming
+  - nestjs
+  - nextjs
+  - graphql
+  - figma
+  - w-workflow
+use_case_tags:
+  roles:
+    - fullstack-developer
+    - backend-developer
+    - developer
+  project_types:
+    - monorepo
+    - streaming-service
+    - web-app
+  stacks:
+    - typescript
+    - nestjs
+    - nextjs
+    - graphql
+    - prisma
+    - redis
+  use_cases:
+    - dev-workflow
+    - tdd
+    - ui-integration
+    - figma
+    - pr-workflow
+    - api-development
+    - doc-governance

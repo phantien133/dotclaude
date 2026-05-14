@@ -8,11 +8,15 @@ extends:
 components:
   agents: []
   skills:
-    - preset-debugger
-    - plugin-discovery
+    - name: preset-debugger
+      source: dotclaude-self
+    - name: plugin-discovery
+      source: dotclaude-self
   commands:
-    - dotclaude-setup
-    - preset-wizard
+    - name: dotclaude-setup
+      source: dotclaude-self
+    - name: preset-wizard
+      source: dotclaude-self
   hooks: []
   rules: []
 settings_patch: {}

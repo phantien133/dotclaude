@@ -7,12 +7,17 @@ extends:
   - developer
 components:
   skills:
-    - dotclaude-component-picker
-    - preset-debugger
-    - plugin-discovery
+    - name: dotclaude-component-picker
+      source: dotclaude-self
+    - name: preset-debugger
+      source: dotclaude-self
+    - name: plugin-discovery
+      source: dotclaude-self
   commands:
-    - preset-wizard
-    - dotclaude-setup
+    - name: preset-wizard
+      source: dotclaude-self
+    - name: dotclaude-setup
+      source: dotclaude-self
 settings_patch: {}
 external_setup: []
 use_case_tags:

@@ -7,9 +7,12 @@ extends:
   - core
 components:
   skills:
-    - continuous-learning-v2
-    - skill-creator
-    - ai-regression-testing
+    - name: continuous-learning-v2
+      source: everything-claude-code
+    - name: skill-creator
+      source: anthropic-skills
+    - name: ai-regression-testing
+      source: everything-claude-code
 settings_patch: {}
 recommended_install_level: user
 tags:

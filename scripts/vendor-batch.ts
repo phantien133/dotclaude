@@ -23,11 +23,13 @@ import { copyFile, mkdir, readFile, readdir, stat, writeFile } from 'node:fs/pro
 import { basename, dirname, extname, join, relative } from 'node:path';
 import { Command } from 'commander';
 import { dumpYaml } from './lib/yaml.ts';
-import { CLAUDEKIT_DIR, REPO_ROOT, UPSTREAM_DIR } from './lib/paths.ts';
+import { REPO_ROOT, UPSTREAM_DIR, claudekitSourceDir } from './lib/paths.ts';
 import { loadUpstreamSources } from './lib/upstream.ts';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
+// vendor-batch writes ECC components into claudekit/everything-claude-code/.
+const ECC_DEST_ROOT = claudekitSourceDir('everything-claude-code');
 const ECC_UPSTREAM = join(UPSTREAM_DIR, 'everything-claude-code');
 const ECC_REPO = 'https://github.com/affaan-m/everything-claude-code';
 const ECC_REF = 'main';
@@ -137,8 +139,8 @@ async function expandAgents(): Promise<ComponentSpec[]> {
       type: 'agents',
       id: name,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'agents', `${name}.md`),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'agents', `${name}.source.yaml`),
+      destAbs: join(ECC_DEST_ROOT, 'agents', `${name}.md`),
+      sidecarAbs: join(ECC_DEST_ROOT, 'agents', `${name}.source.yaml`),
       rewriteImports: false,
     };
   });
@@ -155,8 +157,8 @@ async function expandCommands(): Promise<ComponentSpec[]> {
       type: 'commands',
       id: name,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'commands', `${name}.md`),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'commands', `${name}.source.yaml`),
+      destAbs: join(ECC_DEST_ROOT, 'commands', `${name}.md`),
+      sidecarAbs: join(ECC_DEST_ROOT, 'commands', `${name}.source.yaml`),
       rewriteImports: false,
     };
   });
@@ -174,8 +176,8 @@ async function expandRules(): Promise<ComponentSpec[]> {
       type: 'rules',
       id,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'rules', rel),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'rules', rel.replace(/\.md$/, '.source.yaml')),
+      destAbs: join(ECC_DEST_ROOT, 'rules', rel),
+      sidecarAbs: join(ECC_DEST_ROOT, 'rules', rel.replace(/\.md$/, '.source.yaml')),
       rewriteImports: false,
     };
   });
@@ -198,8 +200,8 @@ async function expandHooks(): Promise<ComponentSpec[]> {
         type: 'hooks' as const,
         id,
         layout: 'file' as const,
-        destAbs: join(CLAUDEKIT_DIR, 'hooks', filename),
-        sidecarAbs: join(CLAUDEKIT_DIR, 'hooks', `${id}.source.yaml`),
+        destAbs: join(ECC_DEST_ROOT, 'hooks', filename),
+        sidecarAbs: join(ECC_DEST_ROOT, 'hooks', `${id}.source.yaml`),
         rewriteImports: await hasLibImport(abs),
       };
     }),
@@ -222,8 +224,8 @@ async function expandHooks(): Promise<ComponentSpec[]> {
       type: 'hooks',
       id,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'hooks', 'lib', libFile),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'hooks', 'lib', `${basename(libFile, '.js')}.source.yaml`),
+      destAbs: join(ECC_DEST_ROOT, 'hooks', 'lib', libFile),
+      sidecarAbs: join(ECC_DEST_ROOT, 'hooks', 'lib', `${basename(libFile, '.js')}.source.yaml`),
       rewriteImports: false, // lib files use ./X (already correct)
     });
   }
@@ -247,7 +249,7 @@ async function buildSpec(rawPath: string): Promise<ComponentSpec | null> {
 
   if (rawPath.startsWith('skills/') && isDir) {
     const id = rawPath.slice('skills/'.length);
-    const destAbs = join(CLAUDEKIT_DIR, 'skills', id);
+    const destAbs = join(ECC_DEST_ROOT, 'skills', id);
     return {
       upstreamPath: rawPath,
       upstreamAbs,
@@ -268,8 +270,8 @@ async function buildSpec(rawPath: string): Promise<ComponentSpec | null> {
       type: 'agents',
       id,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'agents', `${id}.md`),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'agents', `${id}.source.yaml`),
+      destAbs: join(ECC_DEST_ROOT, 'agents', `${id}.md`),
+      sidecarAbs: join(ECC_DEST_ROOT, 'agents', `${id}.source.yaml`),
       rewriteImports: false,
     };
   }
@@ -282,8 +284,8 @@ async function buildSpec(rawPath: string): Promise<ComponentSpec | null> {
       type: 'commands',
       id,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'commands', `${id}.md`),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'commands', `${id}.source.yaml`),
+      destAbs: join(ECC_DEST_ROOT, 'commands', `${id}.md`),
+      sidecarAbs: join(ECC_DEST_ROOT, 'commands', `${id}.source.yaml`),
       rewriteImports: false,
     };
   }
@@ -297,8 +299,8 @@ async function buildSpec(rawPath: string): Promise<ComponentSpec | null> {
       type: 'rules',
       id,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'rules', rel),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'rules', rel.replace(/\.md$/, '.source.yaml')),
+      destAbs: join(ECC_DEST_ROOT, 'rules', rel),
+      sidecarAbs: join(ECC_DEST_ROOT, 'rules', rel.replace(/\.md$/, '.source.yaml')),
       rewriteImports: false,
     };
   }
@@ -314,8 +316,8 @@ async function buildSpec(rawPath: string): Promise<ComponentSpec | null> {
       type: 'hooks',
       id,
       layout: 'file',
-      destAbs: join(CLAUDEKIT_DIR, 'hooks', filename),
-      sidecarAbs: join(CLAUDEKIT_DIR, 'hooks', `${id}.source.yaml`),
+      destAbs: join(ECC_DEST_ROOT, 'hooks', filename),
+      sidecarAbs: join(ECC_DEST_ROOT, 'hooks', `${id}.source.yaml`),
       rewriteImports: await hasLibImport(abs),
     };
   }
