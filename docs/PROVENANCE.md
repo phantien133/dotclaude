@@ -19,11 +19,16 @@ is generated at `presets/schema/sidecar.schema.json` for IDE validation.
 
 ## Layout (CQ-2)
 
+Components are grouped by upstream source. The full path is
+`claudekit/<source>/<type>/<name>` where `<source>` is one of the aliases listed
+in [CLAUDE.md § Source layout](../CLAUDE.md). Sidecar location rules below are
+relative to the component's folder, regardless of source.
+
 ### File-component (agent / command / hook / rule — single file)
 
 ```
-claudekit/agents/code-reviewer.md          ← component
-claudekit/agents/code-reviewer.source.yaml ← sidecar
+claudekit/everything-claude-code/agents/code-reviewer.md          ← component
+claudekit/everything-claude-code/agents/code-reviewer.source.yaml ← sidecar
 ```
 
 The sidecar uses a `.source.yaml` suffix; its base name matches the component file (extension stripped).
@@ -31,7 +36,7 @@ The sidecar uses a `.source.yaml` suffix; its base name matches the component fi
 ### Folder-component (skill — folder with SKILL.md + assets)
 
 ```
-claudekit/skills/coding-standards/
+claudekit/everything-claude-code/skills/coding-standards/
 ├── SKILL.md          ← component entry
 ├── SOURCE.yaml       ← sidecar (INSIDE the folder)
 └── ...               ← other skill assets
@@ -108,18 +113,18 @@ Both fields default to empty — not required when first vendoring. Fill in when
 ls upstream/everything-claude-code/agents/
 
 # 2. Copy the content (file-component)
-cp upstream/everything-claude-code/agents/<name>.md claudekit/agents/<name>.md
+cp upstream/everything-claude-code/agents/<name>.md claudekit/everything-claude-code/agents/<name>.md
 
 # Or for a folder-component
-mkdir -p claudekit/skills/<name>
-cp -r upstream/everything-claude-code/skills/<name>/* claudekit/skills/<name>/
+mkdir -p claudekit/everything-claude-code/skills/<name>
+cp -r upstream/everything-claude-code/skills/<name>/* claudekit/everything-claude-code/skills/<name>/
 
 # 3. Get the commit pin
 git -C upstream/everything-claude-code rev-parse HEAD
 
 # 4. Create the sidecar (copy another component's sidecar as a starter template)
-$EDITOR claudekit/agents/<name>.source.yaml
-# or claudekit/skills/<name>/SOURCE.yaml
+$EDITOR claudekit/everything-claude-code/agents/<name>.source.yaml
+# or claudekit/everything-claude-code/skills/<name>/SOURCE.yaml
 
 # 5. Verify schema
 pnpm typecheck
@@ -130,7 +135,7 @@ pnpm validate <preset-referencing-this-component> --kind core   # if a preset ex
 ## Workflow: modify a vendored component
 
 ```yaml
-# After editing claudekit/agents/code-reviewer.md
+# After editing claudekit/everything-claude-code/agents/code-reviewer.md
 modified: true
 modifications: |
   - Removed "ECC originated" line in intro.
@@ -178,7 +183,7 @@ Edge cases:
 
 ## File reference
 
-- `claudekit/agents/code-reviewer.source.yaml` — first vendored agent (Phase 1).
+- `claudekit/everything-claude-code/agents/code-reviewer.source.yaml` — first vendored agent (Phase 1).
 - `claudekit/skills/coding-standards/SOURCE.yaml` — first vendored skill (Phase 1).
 - `claudekit/skills/continuous-learning-v2/SOURCE.yaml` — folder-component sidecar with external dep + tags/categories example.
 - `scripts/lib/schema.ts → SidecarSchema` — runtime + compile-time validation.

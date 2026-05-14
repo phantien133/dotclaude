@@ -32,6 +32,13 @@ upstream/everything-claude-code/node_modules/
 .claude/settings.local.json
 .claude/skills/
 
+# Private streaming preset artifacts that must not land in a public repo —
+# any future `pnpm install:project cistreaming-*` will recreate these, so
+# guard with explicit patterns.
+.claude/rules/hilab-*
+.claude/rules/streaming-*
+.claude/commands/hsd-*
+
 # TypeScript / Bun
 node_modules/
 dist/

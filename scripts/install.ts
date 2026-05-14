@@ -77,22 +77,22 @@ program
     let componentCount = 0;
     let componentErrors = 0;
     for (const type of COMPONENT_TYPES) {
-      const ids = located.preset.components[type];
-      for (const id of ids) {
+      const refs = located.preset.components[type];
+      for (const ref of refs) {
         componentCount++;
-        const lookup = await locateComponent({ type, id });
+        const lookup = await locateComponent({ type, id: ref.name, source: ref.source });
         if (!lookup) {
-          log.error(`  ✗ ${type}/${id} not found in claudekit/ (public or private)`);
+          log.error(`  ✗ ${type}/${ref.name} not found in claudekit/${ref.source}/`);
           componentErrors++;
           exitCode = 2;
           continue;
         }
         try {
           await loadSidecar(lookup.layout.sidecarPath);
-          log.info(`  ✓ ${type}/${id} (scope=${lookup.scope}, ${lookup.layout.kind})`);
+          log.info(`  ✓ ${type}/${ref.name} (source=${lookup.source}, ${lookup.layout.kind})`);
         } catch (err) {
           log.error(
-            `  ✗ ${type}/${id} sidecar invalid: ${err instanceof Error ? err.message : String(err)}`,
+            `  ✗ ${type}/${ref.name} sidecar invalid: ${err instanceof Error ? err.message : String(err)}`,
           );
           componentErrors++;
           exitCode = 2;

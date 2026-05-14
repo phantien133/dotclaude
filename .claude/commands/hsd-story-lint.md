@@ -1,1 +1,0 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/private/commands/hsd-story-lint.md

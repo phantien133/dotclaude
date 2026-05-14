@@ -1,1 +1,0 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/private/rules/streaming-docs-governance.md

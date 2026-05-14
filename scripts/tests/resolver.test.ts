@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { Preset, Sidecar } from '../lib/schema.ts';
+import type { Preset, Sidecar, ClaudekitSource } from '../lib/schema.ts';
+
+// Tests use a fixed source alias — paths are faked through mocks anyway.
+const TEST_SOURCE: ClaudekitSource = 'dotclaude-self';
+const ref = (name: string) => ({ name, source: TEST_SOURCE });
 
 vi.mock('../lib/preset.ts');
 vi.mock('../lib/sidecar.ts');
@@ -80,13 +84,13 @@ function mockLocateComponent(
   map: Record<string, { kind: 'file'; path: string } | { kind: 'folder'; path: string }>,
 ): void {
   vi.mocked<LocateComponentFn>(sidecarMod.locateComponent).mockImplementation(
-    async (ref: { type: string; id: string }) => {
-      const key = `${ref.type}:${ref.id}`;
+    async (input: { type: string; id: string; source?: ClaudekitSource }) => {
+      const key = `${input.type}:${input.id}`;
       const entry = map[key];
       if (!entry) return null;
       if (entry.kind === 'folder') {
         return {
-          scope: 'public',
+          source: input.source ?? TEST_SOURCE,
           layout: {
             kind: 'folder',
             componentPath: entry.path,
@@ -95,7 +99,7 @@ function mockLocateComponent(
         };
       }
       return {
-        scope: 'public',
+        source: input.source ?? TEST_SOURCE,
         layout: {
           kind: 'file',
           componentPath: `${entry.path}.md`,
@@ -224,7 +228,7 @@ describe('buildInstallPlan (mocked)', () => {
   });
 
   it('required dep auto-included with auto_included=true', async () => {
-    const pA = makePreset('a', { components: { agents: ['agent-a'] } });
+    const pA = makePreset('a', { components: { agents: [ref('agent-a')] } });
     mockLocatePreset({ a: pA });
     mockLocateComponent({
       'agents:agent-a': { kind: 'file', path: '/fake/claudekit/agents/agent-a' },
@@ -253,7 +257,7 @@ describe('buildInstallPlan (mocked)', () => {
         external: [],
       },
     };
-    const pA = makePreset('a', { components: { agents: ['agent-a'] } });
+    const pA = makePreset('a', { components: { agents: [ref('agent-a')] } });
     mockLocatePreset({ a: pA });
     mockLocateComponent({
       'agents:agent-a': { kind: 'file', path: '/fake/claudekit/agents/agent-a' },
@@ -277,7 +281,7 @@ describe('buildInstallPlan (mocked)', () => {
         external: [],
       },
     };
-    const pA = makePreset('a', { components: { agents: ['agent-a'] } });
+    const pA = makePreset('a', { components: { agents: [ref('agent-a')] } });
     mockLocatePreset({ a: pA });
     mockLocateComponent({
       'agents:agent-a': { kind: 'file', path: '/fake/claudekit/agents/agent-a' },
@@ -293,7 +297,7 @@ describe('buildInstallPlan (mocked)', () => {
   });
 
   it('missing required component throws', async () => {
-    const pA = makePreset('a', { components: { agents: ['missing-agent'] } });
+    const pA = makePreset('a', { components: { agents: [ref('missing-agent')] } });
     mockLocatePreset({ a: pA });
     mockLocateComponent({});
     mockLoadSidecar({});
@@ -302,7 +306,7 @@ describe('buildInstallPlan (mocked)', () => {
   });
 
   it('required dep not found throws', async () => {
-    const pA = makePreset('a', { components: { agents: ['agent-a'] } });
+    const pA = makePreset('a', { components: { agents: [ref('agent-a')] } });
     mockLocatePreset({ a: pA });
     mockLocateComponent({
       'agents:agent-a': { kind: 'file', path: '/fake/claudekit/agents/agent-a' },
@@ -318,7 +322,7 @@ describe('buildInstallPlan (mocked)', () => {
   it('circular component deps do not loop infinitely', async () => {
     const sidecarA = makeSidecar({ required: { skills: ['skill-b'] } });
     const sidecarB = makeSidecar({ required: { agents: ['agent-a'] } });
-    const pA = makePreset('a', { components: { agents: ['agent-a'] } });
+    const pA = makePreset('a', { components: { agents: [ref('agent-a')] } });
     mockLocatePreset({ a: pA });
     mockLocateComponent({
       'agents:agent-a': { kind: 'file', path: '/fake/claudekit/agents/agent-a' },
@@ -336,7 +340,7 @@ describe('buildInstallPlan (mocked)', () => {
 
   it('diamond deps: same dep from two components appears once', async () => {
     const sharedSidecar = makeSidecar();
-    const pA = makePreset('a', { components: { agents: ['agent-1', 'agent-2'] } });
+    const pA = makePreset('a', { components: { agents: [ref('agent-1'), ref('agent-2')] } });
     mockLocatePreset({ a: pA });
     mockLocateComponent({
       'agents:agent-1': { kind: 'file', path: '/fake/claudekit/agents/agent-1' },
