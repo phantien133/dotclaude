@@ -13,10 +13,6 @@
 [submodule "upstream/claude-code"]
 	path = upstream/claude-code
 	url = https://github.com/anthropics/claude-code
-[submodule "upstream/dotclaude"]
-	path = upstream/dotclaude
-	url = git@github.com:phantien133/dotclaude.git
-	branch = components
 [submodule "upstream/claude-plugins-official"]
 	path = upstream/claude-plugins-official
 	url = git@github.com:anthropics/claude-plugins-official.git

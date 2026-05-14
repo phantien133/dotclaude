@@ -64,15 +64,13 @@ sources:
     role: sync_source
     license: MIT
 
-  dotclaude:
-    name: dotclaude
-    description: Self-authored component library — domain-grouped skills/commands/agents/hooks created by this repo. Source of truth for components vendored into claudekit/.
-    repo: git@github.com:phantien133/dotclaude.git
-    local_path: upstream/dotclaude
-    pinned_commit: f2f3be0233f15845decc89b79be8128a8ea25d84
-    ref: components
-    role: sync_source
-    license: MIT
+  # Removed 2026-05-14: claudekit/dotclaude/ is now self-authored directly in
+  # this repo's main tree (no separate `components` branch, no upstream/dotclaude
+  # submodule). The folders claudekit/dotclaude/{dotclaude-self,workflow,figma}/
+  # are the source of truth — edit them in-place and commit. SOURCE.yaml
+  # sidecars under those folders are retained for schema compliance but their
+  # `source.repo` / `source.commit` fields are informational only (no live
+  # upstream).
 
   claude_plugins_official:
     name: claude-plugins-official
