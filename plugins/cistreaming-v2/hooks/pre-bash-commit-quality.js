@@ -53,6 +53,12 @@ function getStagedFileContent(filePath) {
  * @returns {boolean}
  */
 function shouldCheckFile(filePath) {
+  // Skip vendored / built / hook-source paths.
+  // - plugins/ + upstream/ + node_modules/: third-party content we don't own.
+  // - claudekit/hooks/: hook scripts contain literal detection strings
+  //   ('console.log', 'debugger') that would self-flag against their own rules.
+  const skipPrefixes = ['plugins/', 'upstream/', 'node_modules/', 'claudekit/hooks/'];
+  if (skipPrefixes.some(p => filePath.startsWith(p))) return false;
   const checkableExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.go', '.rs'];
   return checkableExtensions.some(ext => filePath.endsWith(ext));
 }

@@ -1,5 +1,5 @@
 {
-  "name": "claudekit-marketplace",
+  "name": "hilab-dotclaude",
   "owner": {
     "name": "hilabaikit",
     "email": "tienpq@hilab.asia"
@@ -30,7 +30,7 @@
         "quality"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace"
+      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
     }
   ]
 }

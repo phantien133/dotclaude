@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Extends ai-native with cross-stack developer tooling — GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
   "author": {
-    "name": "phantien133",
+    "name": "hilabaikit",
     "email": "tienpq@hilab.asia"
   },
   "license": "MIT",
@@ -13,7 +13,7 @@
     "quality"
   ],
   "mcpServers": {},
-  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude",
   "skills": [
     "./skills/"
   ],

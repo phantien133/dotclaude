@@ -44,9 +44,9 @@ async function readMarketplace(): Promise<MarketplaceIndex> {
     return JSON.parse(raw) as MarketplaceIndex;
   } catch {
     return {
-      name: 'claudekit-marketplace',
-      owner: { name: 'phantien133', email: 'tienpq@hilab.asia' },
-      metadata: { description: 'Personal Claude Code plugin marketplace for claudekit presets.' },
+      name: 'hilab-dotclaude',
+      owner: { name: 'hilabaikit', email: 'tienpq@hilab.asia' },
+      metadata: { description: 'Hilab Claude Code plugin marketplace for claudekit presets.' },
       plugins: [],
     };
   }

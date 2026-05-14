@@ -16,7 +16,7 @@
     "graphql"
   ],
   "mcpServers": {},
-  "repository": "https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace",
+  "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude",
   "skills": [
     "./skills/"
   ],

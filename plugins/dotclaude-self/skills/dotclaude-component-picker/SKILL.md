@@ -155,6 +155,42 @@ When a dependency is already in `claudekit/` and you're about to declare it in `
 3. **If aligned** → add to `dependencies.required`, no further work
 4. **If diverged** → note divergence in both sidecars' `notes:` fields, confirm the interface still works, then proceed
 
+### 2.5e — Source script import/require scan (hooks and JS/TS scripts)
+
+Run this scan whenever the component includes `.js` or `.ts` source files:
+
+```bash
+COMP=upstream/<alias>/<type>/<name>   # or claudekit/<type>/<name> after vendoring
+
+# CommonJS — relative local requires
+grep -rn "require('\." "$COMP/" 2>/dev/null | grep -v "node_modules"
+
+# ESM — relative local imports
+grep -rn "^import .* from '\." "$COMP/" 2>/dev/null
+
+# Relative imports going UP the tree (cross-dir dependencies)
+grep -rn "require('\.\." "$COMP/" 2>/dev/null
+grep -rn "^import .* from '\.\." "$COMP/" 2>/dev/null
+
+# External npm packages (non-relative, non-builtin)
+grep -rn "require('[^./]" "$COMP/" 2>/dev/null | grep -v "require('node:"
+grep -rn "^import .* from '[^./]" "$COMP/" 2>/dev/null | grep -v "from 'node:"
+```
+
+Decision matrix for each import/require found:
+
+| Pattern | Meaning | Action |
+|---|---|---|
+| `require('./lib/...')` or `import from './lib/...'` | Shared lib subdir inside same component-type dir (e.g. `hooks/lib/`) | Verify `claudekit/hooks/lib/` exists. The installer **auto-copies `hooks/lib/`** in copy mode — no manual step needed at install time. Still vendor the lib files into claudekit if not present. Note in sidecar: `"Requires hooks/lib/utils — co-installed automatically"`. |
+| `require('./other-file')` within same dir | Intra-type sibling dependency | Vendor the referenced file too. Add to `dependencies.required.<type>`. |
+| `require('../...')` going up the tree | Cross-dir dependency — won't resolve after copy/install | **Flag immediately.** The installed file won't have this relative path structure. Either the component must be self-contained or the path must be rewritten. Note under `modifications:` in the sidecar. |
+| `require('some-npm-pkg')` (non-relative, non-`node:`) | External npm package | Add to `dependencies.external` with `type: npm` and `reason`. |
+| `require('node:fs')`, `require('fs')`, `require('path')` etc. | Node.js built-in | No action needed. |
+| `require('child_process')`, `require('os')` etc. | Node.js built-in (old-style) | No action needed. |
+
+**`hooks/lib/` pattern — known shared runtime:**  
+`claudekit/hooks/lib/` contains shared utilities (`utils.js`, `hook-flags.js`, etc.) used by nearly all hooks via `require('./lib/utils')`. When vendoring a hook that references `./lib/`, confirm these files are present in `claudekit/hooks/lib/`. The installer handles co-copying automatically since 2026-05-12 — but vendoring still requires the files to exist in `claudekit/hooks/lib/` as source.
+
 ---
 
 ## Step 3 — Vendor
@@ -288,9 +324,10 @@ components:
 ```bash
 KIND=core   # or: framework, purpose
 NAME=<preset-name>
-cp presets/core/personal-baseline.yaml presets/$KIND/$NAME.yaml
-cp presets/core/personal-baseline.md   presets/$KIND/$NAME.md
-$EDITOR presets/$KIND/$NAME.yaml       # update name/kind/description/components/tags
+mkdir -p presets/$KIND/$NAME
+cp presets/core/developer/preset.yaml presets/$KIND/$NAME/preset.yaml
+cp presets/core/developer/README.md   presets/$KIND/$NAME/README.md
+$EDITOR presets/$KIND/$NAME/preset.yaml  # update name/kind/description/components/tags
 ```
 
 Validate the preset:

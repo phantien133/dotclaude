@@ -20,7 +20,6 @@ All bundles live under `plugins/` and are registered in [`marketplace.json`](./m
 | [`core`](./plugins/core/) | 0.1.0 | Universal baseline for any Claude Code user — context management, productivity, and semantic search. |
 | [`ai-native`](./plugins/ai-native/) | 0.1.0 | Extends `core` with AI self-learning and skill creation. For users who want Claude to improve with their personal workflow over time. |
 | [`developer`](./plugins/developer/) | 0.1.0 | Extends `ai-native` with cross-stack developer tooling — GitHub ops, quality gates, architecture planning. |
-| [`personal-baseline`](./plugins/personal-baseline/) | 0.1.0 | Lightweight cross-stack baseline — code review + coding standards only. |
 
 ### Framework presets
 
@@ -72,30 +71,30 @@ Inside any Claude Code session:
 
 Claude Code will clone the repo into its local marketplace cache and read
 `marketplace.json` — the marketplace is registered under the name
-`claudekit-marketplace`. To refresh later:
+`hilab-dotclaude`. To refresh later:
 
 ```
-/plugin marketplace update claudekit-marketplace
+/plugin marketplace update hilab-dotclaude
 ```
 
 ### 3. Install a plugin
 
 ```
-/plugin install <plugin-name>@claudekit-marketplace
+/plugin install <plugin-name>@hilab-dotclaude
 ```
 
 For example:
 
 ```
-/plugin install developer@claudekit-marketplace          # at user level
-/plugin install cistreaming-v3@claudekit-marketplace     # for the streaming team
-/plugin install core@claudekit-marketplace
+/plugin install developer@hilab-dotclaude          # at user level
+/plugin install cistreaming-v3@hilab-dotclaude     # for the streaming team
+/plugin install core@hilab-dotclaude
 ```
 
 Browse what's available without installing:
 
 ```
-/plugin marketplace list claudekit-marketplace
+/plugin marketplace list hilab-dotclaude
 ```
 
 ### 4. Update or remove

@@ -29,7 +29,7 @@ program
           include_optional: opts.includeOptional,
           clean: opts.clean,
           author: { name: 'hilabaikit', email: 'tienpq@hilab.asia' },
-          repository: 'https://gitlab.hilab.cloud/hilabaikit/claudekit-marketplace',
+          repository: 'https://gitlab.hilab.cloud/hilabaikit/dotclaude',
           license: 'MIT',
         });
 

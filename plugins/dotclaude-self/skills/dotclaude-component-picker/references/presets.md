@@ -40,8 +40,8 @@ tags: []                      # filterable via `pnpm run list --tag <t>`
 ```bash
 KIND=core   # or: framework, purpose
 NAME=my-preset
-cp presets/core/personal-baseline.yaml presets/$KIND/$NAME.yaml
-cp presets/core/personal-baseline.md   presets/$KIND/$NAME.md
+cp presets/core/developer/preset.yaml presets/$KIND/$NAME/preset.yaml
+cp presets/core/developer/README.md   presets/$KIND/$NAME/README.md
 $EDITOR presets/$KIND/$NAME.yaml       # update name/kind/description/components/tags
 
 pnpm validate $NAME --kind $KIND       # validates schema + all component IDs exist
@@ -88,7 +88,7 @@ Arrays are concatenated (not replaced) by default. The installer deduplicates on
 
 ```yaml
 extends:
-  - personal-baseline   # pulls all its components in automatically
+  - developer   # pulls all its components in automatically
 ```
 
 - Multiple inheritance OK: `extends: [base-typescript, base-postgres]`

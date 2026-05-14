@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
   "author": {
-    "name": "phantien133",
+    "name": "hilabaikit",
     "email": "tienpq@hilab.asia"
   },
   "license": "MIT",
@@ -15,7 +15,7 @@
     "preset-authoring"
   ],
   "mcpServers": {},
-  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude",
   "skills": [
     "./skills/"
   ],

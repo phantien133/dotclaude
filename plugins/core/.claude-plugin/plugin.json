@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "Universal baseline for any Claude Code user — context management, productivity, and semantic search.",
   "author": {
-    "name": "phantien133",
+    "name": "hilabaikit",
     "email": "tienpq@hilab.asia"
   },
   "license": "MIT",
@@ -14,7 +14,7 @@
     "productivity"
   ],
   "mcpServers": {},
-  "repository": "https://github.com/phantien133/claudekit-marketplace",
+  "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude",
   "skills": [
     "./skills/"
   ],
