@@ -1,0 +1,1 @@
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/private/rules/hilab-streaming-rules.md
