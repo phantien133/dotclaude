@@ -73,3 +73,23 @@ sources:
     ref: components
     role: sync_source
     license: MIT
+
+  claude_plugins_official:
+    name: claude-plugins-official
+    description: Anthropic's official Claude Code plugin directory — internal Anthropic plugins (plugins/) plus vetted third-party plugins (external_plugins/) installable via /plugin install …@claude-plugins-official
+    repo: git@github.com:anthropics/claude-plugins-official.git
+    local_path: upstream/claude-plugins-official
+    pinned_commit: 1a2f18b05cf5652fd25403e8d229fc884fb84103
+    ref: main
+    role: sync_source
+    license: MIT
+
+  figma_mcp_server_guide:
+    name: figma-mcp-server-guide
+    description: Figma's official Claude Code plugin source (figma@claude-plugins-official) — skills like figma-implement-design, figma-code-connect, figma-create-design-system-rules, figma-generate-library plus MCP config pointing to https://mcp.figma.com/mcp. Reference for f-* flow rebuild; not for vendoring (LICENSE absent in upstream repo).
+    repo: https://github.com/figma/mcp-server-guide.git
+    local_path: upstream/figma-mcp-server-guide
+    pinned_commit: fabc1ca81d839602ba7c1ca0f445a64246b3870e
+    ref: main
+    role: docs
+    license: unspecified

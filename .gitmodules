@@ -17,3 +17,10 @@
 	path = upstream/dotclaude
 	url = git@github.com:phantien133/dotclaude.git
 	branch = components
+[submodule "upstream/claude-plugins-official"]
+	path = upstream/claude-plugins-official
+	url = git@github.com:anthropics/claude-plugins-official.git
+	branch = main
+[submodule "upstream/figma-mcp-server-guide"]
+	path = upstream/figma-mcp-server-guide
+	url = https://github.com/figma/mcp-server-guide.git
