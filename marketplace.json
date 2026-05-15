@@ -31,6 +31,42 @@
       ],
       "strict": false,
       "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+    },
+    {
+      "name": "cistreaming",
+      "source": "./plugins/cistreaming/",
+      "description": "Dev workflow preset for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Replaces v2's private dev-task / quick-fix orchestration with the public w-* command suite (driven by .claude/workflow.yaml) and swaps build-ui-kit / build-static-page / streaming-figma for the f-* Figma suite. Keeps v2's streaming-specific rules + private utility skills for opt-in fallbacks.",
+      "version": "1.0.0",
+      "author": {
+        "name": "hilabaikit",
+        "email": "tienpq@hilab.asia"
+      },
+      "license": "MIT",
+      "keywords": [
+        "hilab",
+        "private",
+        "streaming",
+        "nestjs",
+        "nextjs",
+        "graphql",
+        "figma",
+        "w-workflow",
+        "doc-governance"
+      ],
+      "category": "workflow",
+      "tags": [
+        "hilab",
+        "private",
+        "streaming",
+        "nestjs",
+        "nextjs",
+        "graphql",
+        "figma",
+        "w-workflow",
+        "doc-governance"
+      ],
+      "strict": false,
+      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
     }
   ]
 }
