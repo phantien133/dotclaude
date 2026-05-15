@@ -7,8 +7,10 @@ Thumbs.db
 .idea/
 *.swp
 
-# Upstream submodule node_modules (in case ECC pulls deps locally)
-upstream/everything-claude-code/node_modules/
+# Upstream submodules — only present on `develop` branch; master is the lean
+# release branch consumed by the marketplace, so any `upstream/` content here
+# is local-only and must never be committed.
+upstream/
 
 # Private overlays (per CQ-4a — gitignored, each top package has its own private/)
 /claudekit/private/
@@ -50,4 +52,3 @@ docs/plan/
 .cache/
 coverage/
 
-/upstream/private/
