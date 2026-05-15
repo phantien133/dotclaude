@@ -2,8 +2,12 @@ import { Command } from 'commander';
 import { join, relative } from 'node:path';
 import { PRESET_KINDS, type PresetKind } from './lib/schema.ts';
 import { buildPlugin } from './lib/plugin-build.ts';
-import { upsertMarketplaceEntry, MARKETPLACE_JSON } from './lib/marketplace.ts';
-import { REPO_ROOT, PLUGINS_DIR } from './lib/paths.ts';
+import {
+  upsertMarketplaceEntry,
+  MARKETPLACE_JSON,
+  MARKETPLACE_DIR,
+} from './lib/marketplace.ts';
+import { PLUGINS_DIR } from './lib/paths.ts';
 import { log } from './lib/logger.ts';
 
 const program = new Command();
@@ -46,8 +50,9 @@ program
 
         log.info(`Built ${result.componentCount} component(s) → ${result.outDir}`);
 
-        // Relative path from REPO_ROOT so marketplace.json is portable.
-        const sourceRelPath = './' + relative(REPO_ROOT, join(PLUGINS_DIR, presetName)) + '/';
+        // Source paths are relative to .claude-plugin/marketplace.json
+        // (Claude Code resolves them from the marketplace file's location).
+        const sourceRelPath = relative(MARKETPLACE_DIR, join(PLUGINS_DIR, presetName)) + '/';
 
         await upsertMarketplaceEntry(result.manifest, sourceRelPath);
         log.info(`Updated ${MARKETPLACE_JSON}`);

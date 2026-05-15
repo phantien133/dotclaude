@@ -1,5 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import { REPO_ROOT } from './paths.ts';
 import type { PluginManifest } from './plugin-build.ts';
 
@@ -34,7 +34,11 @@ export interface MarketplaceIndex {
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 
-export const MARKETPLACE_JSON = join(REPO_ROOT, 'marketplace.json');
+// Claude Code resolves marketplaces at `.claude-plugin/marketplace.json` from
+// the repo root. Plugin `source` paths inside are relative to THIS file's dir,
+// so a plugin at `plugins/foo/` is referenced as `../plugins/foo/`.
+export const MARKETPLACE_JSON = join(REPO_ROOT, '.claude-plugin', 'marketplace.json');
+export const MARKETPLACE_DIR = dirname(MARKETPLACE_JSON);
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -53,6 +57,7 @@ async function readMarketplace(): Promise<MarketplaceIndex> {
 }
 
 async function writeMarketplace(index: MarketplaceIndex): Promise<void> {
+  await mkdir(MARKETPLACE_DIR, { recursive: true });
   await writeFile(MARKETPLACE_JSON, JSON.stringify(index, null, 2) + '\n', 'utf8');
 }
 
