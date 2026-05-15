@@ -11,7 +11,8 @@ project.
 
 ## Available plugins
 
-All bundles live under `plugins/` and are registered in [`marketplace.json`](./marketplace.json).
+All bundles live under `plugins/` and are registered in
+[`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json).
 
 ### Cross-stack baselines
 
@@ -69,8 +70,8 @@ Inside any Claude Code session:
 ```
 
 Claude Code will clone the repo into its local marketplace cache and read
-`marketplace.json` — the marketplace is registered under the name
-`hilab-dotclaude`. To refresh later:
+`.claude-plugin/marketplace.json` — the marketplace is registered under the
+name `hilab-dotclaude`. To refresh later:
 
 ```
 /plugin marketplace update hilab-dotclaude
@@ -117,6 +118,26 @@ Start small and stack:
    so you get those transitively — don't double install).
 5. **Working inside this repo**: add `dotclaude-self` for the preset-authoring
    tooling.
+
+---
+
+## Branch workflow — `develop` vs `master`
+
+This repo uses two long-lived branches:
+
+| Branch | Contains `upstream/` submodules? | Purpose |
+|---|---|---|
+| [`develop`](https://gitlab.hilab.cloud/hilabaikit/dotclaude/-/tree/develop) | **Yes** (~270 MB) | Active development branch — vendoring from upstream, sync scripts, full dev environment. All PRs / MRs target this branch. |
+| [`master`](https://gitlab.hilab.cloud/hilabaikit/dotclaude/-/tree/master) | **No** | Lean release branch consumed by Claude Code marketplace. `/plugin marketplace add` clones this branch, so it must stay small for fast installs. |
+
+**Rules:**
+
+1. **Never PR directly to `master`.** Open all MRs against `develop`.
+2. **Publishing to the marketplace** = promote `develop` → `master` (cherry-pick
+   feature commits over master's strip commit, or merge develop and re-apply the
+   `chore(master): strip upstream/` commit on top).
+3. **Local dev** = checkout `develop` + `git submodule update --init --recursive`.
+   Cloning `master` skips the 270 MB of submodule content entirely.
 
 ---
 
