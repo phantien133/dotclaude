@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/commands/dotclaude-setup.md
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/dotclaude/dotclaude-self/commands/dotclaude-setup.md

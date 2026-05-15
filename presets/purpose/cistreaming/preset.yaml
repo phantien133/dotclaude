@@ -1,0 +1,151 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: cistreaming
+kind: purpose
+description: >-
+  Dev workflow preset for the cistreaming platform (NestJS + Next.js + SRS + GraphQL).
+  Replaces v2's private dev-task / quick-fix orchestration with the public w-* command
+  suite (driven by .claude/workflow.yaml) and swaps build-ui-kit / build-static-page /
+  streaming-figma for the f-* Figma suite. Keeps v2's streaming-specific rules + private
+  utility skills for opt-in fallbacks.
+version: 1.0.0
+extends:
+  - nestjs
+  - nextjs
+components:
+  agents:
+    # planner, code-explorer, code-architect, code-reviewer, code-simplifier come
+    # from the developer chain (nestjs/nextjs → developer). Declare tdd-guide here
+    # because w-task invokes it explicitly in the TDD phase.
+    - name: tdd-guide
+      source: everything-claude-code
+  skills:
+    # ── workflow core ──────────────────────────────────────────────────────────
+    # Public, generic, config-driven via .claude/workflow.yaml.
+    # Replaces v2/v3's private dev-task / quick-fix / dev-task-status / dev-task-reset.
+    - name: w-task
+      source: workflow
+    - name: w-fix
+      source: workflow
+    - name: w-checkpoint
+      source: workflow
+    - name: workflow-setup           # backing skill for /w-setup wizard
+      source: workflow
+
+    # ── workflow helpers (invoked by w-task at specific phases) ────────────────
+    # Each helper is a no-op when its corresponding field in workflow.yaml is unset,
+    # so projects opt in incrementally.
+    - name: w-context-load           # Phase 0b — module-aware context load
+      source: workflow
+    - name: w-oq-check               # Phase 0b — surface blocking OQs
+      source: workflow
+    - name: w-impact-analyzer        # Phase 2  — DB/GraphQL/Queue/Cache sections
+      source: workflow
+    - name: w-adr                    # Phase 2  — append ADR for new decisions
+      source: workflow
+    - name: w-test-stubs             # Phase 4  — layer-aware test boilerplate
+      source: workflow
+    - name: w-feature-record         # Phase 5  — features/<name>.md
+      source: workflow
+    - name: w-api-doc                # Phase 5  — module api.md
+      source: workflow
+    - name: w-db-doc                 # Phase 5  — DB doc + sub-ERD + master ERD sync
+      source: workflow
+    - name: w-doc-gate               # Phase 6  — pre-PR doc invariant check
+      source: workflow
+
+    # ── one-time bootstrap ─────────────────────────────────────────────────────
+    # Backfills streaming-docs-style documentation from existing source code.
+    # Run BEFORE /w-setup on legacy modules with no docs/.
+    - name: w-document-build-up
+      source: workflow
+
+    # ── Figma f-* suite (replaces v2's build-ui-kit + build-static-page + streaming-figma) ──
+    - name: f-import
+      source: figma
+    - name: f-ui-kit
+      source: figma
+    - name: f-page
+      source: figma
+    - name: f-review
+      source: figma
+
+    # ── private utility skills ─────────────────────────────────────────────────
+    # PR creation backend (called by /w-pr command).
+    - name: create-pr
+      source: private
+    # Streaming-specific helpers. With the generic w-* equivalents above, most of
+    # these are now optional fallbacks for projects that still rely on streaming-
+    # specific behaviour (e.g. hilab-streaming OQ format, ADR table layout).
+    - name: streaming-oq-check
+      source: private
+    - name: streaming-adr
+      source: private
+    - name: streaming-checkpoint
+      source: private
+    - name: streaming-test-stubs
+      source: private
+  commands:
+    # ── w-* command surface ────────────────────────────────────────────────────
+    - name: w-setup
+      source: workflow
+    - name: w-status
+      source: workflow
+    - name: w-reset
+      source: workflow
+    - name: w-pr
+      source: workflow
+
+    # ── Figma config wizard ────────────────────────────────────────────────────
+    - name: f-setup
+      source: figma
+
+    # ── Streaming doc-governance commands ──────────────────────────────────────
+    # hsd-story-lint: pre-workflow story validator. Not replaced by w-*.
+    # hsd-post-merge: kept for migration period — w-doc-gate (pre-PR) replaces it
+    #                 going forward, but legacy in-flight tasks may still need it.
+    - name: hsd-story-lint
+      source: private
+    - name: hsd-post-merge
+      source: private
+  rules:
+    - name: streaming-context
+      source: private
+    - name: hilab-streaming-rules
+      source: private
+    - name: streaming-docs-governance
+      source: private
+recommended_install_level: project
+tags:
+  - hilab
+  - private
+  - streaming
+  - nestjs
+  - nextjs
+  - graphql
+  - figma
+  - w-workflow
+  - doc-governance
+use_case_tags:
+  roles:
+    - fullstack-developer
+    - backend-developer
+    - developer
+  project_types:
+    - monorepo
+    - streaming-service
+    - web-app
+  stacks:
+    - typescript
+    - nestjs
+    - nextjs
+    - graphql
+    - prisma
+    - redis
+  use_cases:
+    - dev-workflow
+    - tdd
+    - ui-integration
+    - figma
+    - pr-workflow
+    - api-development
+    - doc-governance

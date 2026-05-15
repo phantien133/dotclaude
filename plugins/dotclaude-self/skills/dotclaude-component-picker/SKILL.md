@@ -15,13 +15,28 @@ Full pipeline for picking a component from any upstream source and integrating i
 
 ## Upstream Sources
 
-| Alias | Submodule path | Available component types |
+| Upstream alias | Submodule path | `claudekit/<source>/` target | Available types |
+|---|---|---|---|
+| ECC | `upstream/everything-claude-code/` | `claudekit/everything-claude-code/` (source alias: `everything-claude-code`) | agents, skills, commands, hooks, rules |
+| anthropic-skills | `upstream/anthropic-skills/` | `claudekit/anthropic-skills/` (source alias: `anthropic-skills`) | skills |
+| claude-code | `upstream/claude-code/plugins/<name>/` | `claudekit/everything-claude-code/` (until a dedicated alias exists) | agents, skills, commands, hooks |
+| mcp-servers | `upstream/mcp-servers/` | reference only | — |
+| anthropic-cookbook | `upstream/anthropic-cookbook/` | reference only | — |
+
+### Self-authored sources (not vendored from outside)
+
+| Source alias | On-disk folder | Purpose |
 |---|---|---|
-| ECC | `upstream/everything-claude-code/` | agents, skills, commands, hooks, rules |
-| anthropic-skills | `upstream/anthropic-skills/` | skills |
-| claude-code | `upstream/claude-code/plugins/<name>/` | agents, skills, commands, hooks (nested in plugins) |
-| mcp-servers | `upstream/mcp-servers/` | reference only |
-| anthropic-cookbook | `upstream/anthropic-cookbook/` | reference only |
+| `dotclaude-self` | `claudekit/dotclaude/dotclaude-self/` | This picker, preset-wizard, preset-debugger, plugin-discovery, dotclaude-setup |
+| `workflow` | `claudekit/dotclaude/workflow/` | `w-*` dev workflow (w-task, w-fix, w-pr, w-status, w-reset, w-setup, w-checkpoint, workflow-setup) |
+| `figma` | `claudekit/dotclaude/figma/` | `f-*` Figma suite (f-import, f-ui-kit, f-page, f-review, f-setup) |
+| `private` | `claudekit/private/` (gitignored) | per-project / hilab overrides |
+
+**Layout note (source-grouped):** Components live under
+`claudekit/<source>/<type>/<name>` — not the legacy flat `claudekit/<type>/<name>`.
+When vendoring, pick the source folder matching the upstream. When referencing
+in `preset.yaml`, every entry is a `{name, source}` object — the resolver uses
+`source` to locate the file.
 
 **Note for claude-code:** components live inside `plugins/<plugin-name>/.claude-plugin/` (not top-level). Browse with:
 ```bash
@@ -49,14 +64,15 @@ ls upstream/<alias>/skills/
 ls upstream/<alias>/commands/
 ls upstream/<alias>/hooks/
 
-# Already vendored in claudekit
-ls claudekit/agents/
-ls claudekit/skills/
-ls claudekit/commands/
-ls claudekit/hooks/
+# Already vendored in claudekit — scan the matching source folder
+SRC=everything-claude-code   # or anthropic-skills / dotclaude-self / workflow / figma / private
+ls claudekit/$SRC/agents/ 2>/dev/null
+ls claudekit/$SRC/skills/ 2>/dev/null
+ls claudekit/$SRC/commands/ 2>/dev/null
+ls claudekit/$SRC/hooks/ 2>/dev/null
 ```
 
-Note: component name, whether it's a **folder** or **file** component, and whether it already exists in `claudekit/`. If it already exists, compare commits and decide whether to upgrade (see Upgrade workflow in `references/sidecar.md`).
+Note: component name, whether it's a **folder** or **file** component, and whether it already exists in `claudekit/<source>/`. If it already exists, compare commits and decide whether to upgrade (see Upgrade workflow in `references/sidecar.md`).
 
 ---
 
@@ -201,19 +217,32 @@ Get the upstream commit hash first — you need it for the sidecar:
 git -C upstream/<alias> rev-parse HEAD
 ```
 
+Resolve the target source folder:
+
+| Upstream `<alias>` | Target `<source>` (folder = `claudekit/<source>/`) |
+|---|---|
+| everything-claude-code | `everything-claude-code` |
+| anthropic-skills | `anthropic-skills` |
+| claude-code | `everything-claude-code` (until a dedicated alias exists) |
+
+(For brand-new self-authored components, pick a dotclaude sub-source: `dotclaude-self` /
+`workflow` / `figma` — its on-disk folder is `claudekit/dotclaude/<sub>/<type>/`.)
+
 **Folder component** (skill with SKILL.md + assets, multi-file agent):
 ```bash
-cp -r upstream/<alias>/<type>/<name>/ claudekit/<type>/<name>/
+cp -r upstream/<alias>/<type>/<name>/ claudekit/<source>/<type>/<name>/
 ```
 
 **File component** (single `.md` agent, single command, hook script):
 ```bash
-cp upstream/<alias>/<type>/<name>.md claudekit/<type>/<name>.md
+cp upstream/<alias>/<type>/<name>.md claudekit/<source>/<type>/<name>.md
 # or for shell scripts:
-cp upstream/<alias>/<type>/<name>.sh claudekit/<type>/<name>.sh
+cp upstream/<alias>/<type>/<name>.sh claudekit/<source>/<type>/<name>.sh
 ```
 
-If Step 2.5 identified dependencies not yet in `claudekit/`, vendor those first before vendoring the primary component.
+If Step 2.5 identified dependencies not yet in `claudekit/`, vendor those first
+before vendoring the primary component (each into the source folder that
+matches its upstream).
 
 ---
 
@@ -222,8 +251,8 @@ If Step 2.5 identified dependencies not yet in `claudekit/`, vendor those first 
 The sidecar records provenance and drives dependency resolution at install time. Read `references/sidecar.md` for the full schema — here's the quick version.
 
 **Sidecar location:**
-- **Folder component** → `SOURCE.yaml` **inside** the folder: `claudekit/<type>/<name>/SOURCE.yaml`
-- **File component** → `<name>.source.yaml` **next to** the file: `claudekit/<type>/<name>.source.yaml`
+- **Folder component** → `SOURCE.yaml` **inside** the folder: `claudekit/<source>/<type>/<name>/SOURCE.yaml`
+- **File component** → `<name>.source.yaml` **next to** the file: `claudekit/<source>/<type>/<name>.source.yaml`
 
 **Minimal template** (see `references/sidecar.md` for all fields including tags/categories):
 
@@ -313,11 +342,15 @@ Read the sidecar (`SOURCE.yaml` / `<name>.source.yaml`) for the component being 
 | `coverage: [js-example-heavy]` | `core` / cross-stack | ℹ Note: "Examples are JS-focused but concept applies broadly" — no block |
 | No coverage signal | any | ✓ Proceed |
 
-**Add to an existing preset** — edit the `.yaml` in `presets/`:
+**Add to an existing preset** — edit the `.yaml` in `presets/`. Each entry is an
+object with the component's `name` and the `source` alias for the folder it
+lives in:
+
 ```yaml
 components:
   skills:
-    - <name>    # or agents:, commands:, hooks:, rules:
+    - name: <component-name>          # or agents:, commands:, hooks:, rules:
+      source: everything-claude-code  # or anthropic-skills / dotclaude-self / workflow / figma / private
 ```
 
 **Create a new preset** — copy an existing one as a template:
@@ -376,7 +409,7 @@ Confirm the component exists at its expected target location:
 One commit per vendor operation — keep them small and easy to revert:
 
 ```bash
-git add claudekit/<type>/<name>/ presets/<kind>/<preset>.yaml presets/<kind>/<preset>.md
+git add claudekit/<source>/<type>/<name>/ presets/<kind>/<preset>.yaml presets/<kind>/<preset>.md
 git commit -m "feat(<type>): vendor <name> from <upstream-alias>"
 ```
 
@@ -390,7 +423,7 @@ If a component is already in `claudekit/` and you want to pull upstream changes:
 
 ```bash
 pnpm sync <type>/<name>          # shows diff between sidecar.commit and upstream HEAD
-# Review diff, manually merge desired changes into claudekit/<type>/<name>/
+# Review diff, manually merge desired changes into claudekit/<source>/<type>/<name>/
 # Then update sidecar: bump source.commit, set modified: true if diverged
 pnpm typecheck && pnpm test
 ```

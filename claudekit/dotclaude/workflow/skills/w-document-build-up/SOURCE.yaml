@@ -1,0 +1,54 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: d7f9ffeee8a34f15f4b55cddfe6b0fd1655067a7
+  path: workflow/skills/w-document-build-up
+  ref: components
+imported_at: "2026-05-14"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  One-time bootstrap skill that backfills streaming-docs-style documentation
+  from an existing codebase. 4-phase state machine. Composes code-explorer +
+  code-architect agents (everything-claude-code) and doc-coauthoring skill
+  (anthropic-skills). Run BEFORE /w-setup so /w-task has a doc tree to extend.
+dependencies:
+  required:
+    agents:
+      - code-explorer
+      - code-architect
+    skills:
+      - doc-coauthoring
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills:
+      - w-db-doc
+      - w-api-doc
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: git
+      type: system_binary
+      reason: >-
+        git grep used in Phase 3 to surface OQs from TODO/FIXME/XXX/HACK comments
+        across the codebase
+tags:
+  - workflow
+  - bootstrap
+  - documentation
+  - one-time
+  - multi-phase
+categories:
+  purpose:
+    - dev-workflow
+    - doc-governance
+    - bootstrap
+  mechanism:
+    - state-machine
+    - gate-based
+    - agent-composition

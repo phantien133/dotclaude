@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/hooks/pre-bash-commit-quality.js
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/hooks/pre-bash-commit-quality.js

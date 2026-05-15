@@ -1,0 +1,40 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: d7f9ffeee8a34f15f4b55cddfe6b0fd1655067a7
+  path: workflow/skills/w-oq-check
+  ref: components
+imported_at: "2026-05-14"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Phase 0b helper. Scans workflow.oq_docs_path, filters OQs by task keywords,
+  flags blockers. Exits non-zero when a blocker is found so caller can pause.
+  Generic version of streaming-oq-check.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - workflow
+  - phase-0b
+  - open-questions
+  - blocker-detection
+categories:
+  purpose:
+    - dev-workflow
+    - doc-governance
+  mechanism:
+    - file-read
+    - filter

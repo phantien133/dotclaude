@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/agents/planner.md
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/agents/planner.md

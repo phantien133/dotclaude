@@ -293,9 +293,11 @@ extends:
   - <parent-preset-name>   # omit array entirely if no parent
 components:
   skills:
-    - <skill-name>
+    - name: <skill-name>
+      source: <everything-claude-code | anthropic-skills | dotclaude-self | workflow | figma | private>
   hooks:
-    - <hook-name>
+    - name: <hook-name>
+      source: <source>   # same alias list — points at claudekit/<source>/hooks/<name>.{js,sh,py}
 settings_patch:
   hooks:
     <EventName>:
@@ -417,9 +419,9 @@ Generate `presets/<kind>/<name>/AGENTS.md`. This file is auto-copied to the proj
 **Step 3f.1 — Resolve full agent list**
 
 Collect agents from the preset and its entire `extends:` chain:
-1. Read `preset.yaml` → `components.agents`
+1. Read `preset.yaml` → `components.agents` (each entry is `{name, source}`)
 2. For each preset in the extends chain (already resolved in Phase 2): collect their `components.agents`
-3. Deduplicate. For each agent, read `claudekit/agents/<name>.md` → extract the `description:` frontmatter field.
+3. Deduplicate by `name`. For each agent, read `claudekit/<source>/agents/<name>.md` → extract the `description:` frontmatter field.
 
 **Step 3f.2 — Derive Core Principles**
 

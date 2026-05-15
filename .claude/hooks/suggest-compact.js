@@ -1,1 +1,1 @@
-/Users/tienphan/workspace/phantien133/dotclaude/claudekit/hooks/suggest-compact.js
+/Users/tienphan/workspace/phantien133/dotclaude/claudekit/everything-claude-code/hooks/suggest-compact.js
