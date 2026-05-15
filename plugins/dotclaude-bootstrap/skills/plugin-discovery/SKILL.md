@@ -76,18 +76,20 @@ For each candidate repo, assess:
 
 **Claudekit overlap check — run for each candidate:**
 
-Before scoring, check if a similar component already exists in `claudekit/`:
+Before scoring, check if a similar component already exists in `claudekit/`.
+The layout is source-grouped, so scan across every source folder:
 
 ```bash
-ls claudekit/skills/ claudekit/agents/ claudekit/commands/ claudekit/hooks/ | grep -i "<keyword>"
+# `*` expands to claudekit/everything-claude-code, claudekit/anthropic-skills, claudekit/dotclaude/<sub>, claudekit/private
+ls -d claudekit/*/skills/* claudekit/*/agents/*.md claudekit/*/commands/*.md claudekit/*/hooks/*.* 2>/dev/null | grep -i "<keyword>"
 ```
 
 If a similar component is found:
-1. Read its sidecar (`SOURCE.yaml` or `<name>.source.yaml`)
+1. Read its sidecar (`SOURCE.yaml` for folder components, `<name>.source.yaml` for file components)
 2. Check `categories.coverage` and sidecar `notes` — does the existing component already cover the gap? Or is it language-specific (and the candidate is a cross-language upgrade)?
 3. Surface in Phase 3 proposal:
-   - If existing covers the gap: `"Note: similar component already vendored as claudekit/<type>/<name>. Sidecar says: <coverage + notes summary>. Consider this before adding a new upstream source."`
-   - If existing is js-only and candidate is cross-language: `"Note: claudekit already has <name> (js-only). This candidate would be a cross-language upgrade — worth vendoring alongside or as a replacement."`
+   - If existing covers the gap: `"Note: similar component already vendored at claudekit/<source>/<type>/<name>. Sidecar says: <coverage + notes summary>. Consider this before adding a new upstream source."`
+   - If existing is js-only and candidate is cross-language: `"Note: claudekit already has <name> (js-only) under <source>. This candidate would be a cross-language upgrade — worth vendoring alongside or as a replacement."`
 
 **Disqualify** any repo that:
 - Has < 50 stars
