@@ -8,7 +8,7 @@ Backend or full-stack developers building NestJS REST APIs, microservices, or mo
 
 ## Extends
 
-`developer` → `ai-native`
+`developer` + `typescript` → `ai-native` → `core`
 
 ## Components
 
@@ -21,7 +21,9 @@ Backend or full-stack developers building NestJS REST APIs, microservices, or mo
 | skill | `postgres-patterns` | PostgreSQL query patterns and optimization |
 | skill | `verification-loop` | Quality gate — run after implementing a feature or before PR |
 
-Inherited from `developer`: `tdd-workflow`, `github-ops`, `prp-plan`, `feature-dev`, `planner`, `code-architect`, post-edit-typecheck hook, pre-bash-commit-quality hook, block-no-verify hook.
+Inherited from `developer`: `tdd-workflow`, `github-ops`, `prp-plan`, `feature-dev`, `planner`, `code-architect`, `code-explorer`, `code-reviewer` (generic), `code-simplifier`, post-edit-typecheck hook, pre-bash-commit-quality hook, block-no-verify hook.
+
+Inherited from `typescript`: `typescript-reviewer` agent, `typescript/coding-style`, `typescript/patterns`, `typescript/testing`, `typescript/security`, `typescript/hooks` rules.
 
 ## Install
 

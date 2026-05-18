@@ -8,7 +8,7 @@ Frontend or full-stack developers building Next.js apps with React, TypeScript, 
 
 ## Extends
 
-`developer` → `ai-native`
+`developer` + `typescript` → `ai-native` → `core`
 
 ## Components
 
@@ -18,7 +18,9 @@ Frontend or full-stack developers building Next.js apps with React, TypeScript, 
 | skill | `nextjs-turbopack` | Next.js 16+ Turbopack — incremental bundling, FS caching, dev speed |
 | skill | `verification-loop` | Quality gate — run after implementing a feature or before PR |
 
-Inherited from `developer`: `tdd-workflow`, `github-ops`, `prp-plan`, `feature-dev`, `planner`, `code-architect`, post-edit-typecheck hook, pre-bash-commit-quality hook, block-no-verify hook.
+Inherited from `developer`: `tdd-workflow`, `github-ops`, `prp-plan`, `feature-dev`, `planner`, `code-architect`, `code-explorer`, `code-reviewer` (generic), `code-simplifier`, post-edit-typecheck hook, pre-bash-commit-quality hook, block-no-verify hook.
+
+Inherited from `typescript`: `typescript-reviewer` agent, `typescript/coding-style`, `typescript/patterns`, `typescript/testing`, `typescript/security`, `typescript/hooks` rules.
 
 ## Install
 
