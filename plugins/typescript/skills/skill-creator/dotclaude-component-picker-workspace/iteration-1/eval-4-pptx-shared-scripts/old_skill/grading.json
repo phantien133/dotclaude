@@ -1,0 +1,31 @@
+{
+  "eval_id": "eval-4-pptx-shared-scripts",
+  "configuration": "old_skill",
+  "expectations": [
+    {
+      "text": "Runs a diff/comparison command to verify scripts/office/ is identical across pptx/docx/xlsx",
+      "passed": false,
+      "evidence": "No diff command appears anywhere in the response. The output explicitly admits: 'It doesn't confirm via diff whether the files are identical.' Step 2 has no structured scan process."
+    },
+    {
+      "text": "Correctly identifies this as upstream self-contained design (NOT a missing dependency)",
+      "passed": true,
+      "evidence": "Response says 'No, you don't need to pick docx or xlsx as dependencies — pptx doesn't explicitly reference them as skills. The scripts/office/ similarity is incidental.' Gets the right answer, but labels it 'incidental' rather than deliberate upstream design."
+    },
+    {
+      "text": "Does NOT add docx or xlsx as required dependencies in SOURCE.yaml",
+      "passed": true,
+      "evidence": "Existing SOURCE.yaml shown has `skills: []` in required. No docx/xlsx entries added."
+    },
+    {
+      "text": "Notes the shared code pattern in SOURCE.yaml notes field for future sync awareness",
+      "passed": false,
+      "evidence": "The existing SOURCE.yaml notes field in the response has no mention of shared scripts/office/. Response itself acknowledges: 'It doesn't note the shared code in the sidecar for future upgraders.'"
+    },
+    {
+      "text": "Gives a clear direct answer to user's question (no, you don't need to pick docx/xlsx separately)",
+      "passed": true,
+      "evidence": "Line: 'No, you don't need to pick docx or xlsx as dependencies' — direct answer given, though noted as incomplete due to missing confirmatory scan."
+    }
+  ]
+}
