@@ -1,5 +1,5 @@
 import { copyFile, mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { dirname, extname, join } from 'node:path';
 import { buildInstallPlan, type PlannedComponent, type ResolveOptions } from './resolver.ts';
 import { locatePreset } from './preset.ts';
 import { PLUGINS_DIR } from './paths.ts';
@@ -77,10 +77,14 @@ async function copyComponent(component: PlannedComponent, pluginRoot: string): P
   await mkdir(typeDir, { recursive: true });
 
   if (layout.kind === 'folder') {
-    await copyFolderStripping(layout.componentPath, join(typeDir, id));
+    const dst = join(typeDir, id);
+    await mkdir(dirname(dst), { recursive: true });
+    await copyFolderStripping(layout.componentPath, dst);
   } else {
     const ext = extname(layout.componentPath);
-    await copyFile(layout.componentPath, join(typeDir, `${id}${ext}`));
+    const dst = join(typeDir, `${id}${ext}`);
+    await mkdir(dirname(dst), { recursive: true });
+    await copyFile(layout.componentPath, dst);
   }
 }
 
