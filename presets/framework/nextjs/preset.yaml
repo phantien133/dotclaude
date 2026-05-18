@@ -5,6 +5,7 @@ description: Next.js framework preset — React app structure, Turbopack dev ser
 version: 0.1.0
 extends:
   - developer
+  - typescript
 components:
   skills:
     - name: frontend-patterns
