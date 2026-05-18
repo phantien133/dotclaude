@@ -26,8 +26,9 @@ All bundles live under `plugins/` and are registered in
 
 | Plugin | Version | Description |
 |---|---|---|
-| [`nestjs`](./plugins/nestjs/) | 0.1.0 | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design patterns. |
-| [`nextjs`](./plugins/nextjs/) | 0.1.0 | Next.js React app structure — Turbopack dev server, frontend patterns for production apps. |
+| [`typescript`](./plugins/typescript/) | 0.1.0 | TypeScript language preset — coding style, idiomatic patterns, testing, security rules, and a dedicated TS code reviewer. Base for any TS framework. |
+| [`nestjs`](./plugins/nestjs/) | 0.1.0 | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design patterns. Extends `developer` + `typescript`. |
+| [`nextjs`](./plugins/nextjs/) | 0.1.0 | Next.js React app structure — Turbopack dev server, frontend patterns for production apps. Extends `developer` + `typescript`. |
 
 ### Hilab streaming workflow
 

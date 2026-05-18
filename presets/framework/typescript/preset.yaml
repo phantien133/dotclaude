@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: typescript
+kind: framework
+description: TypeScript language preset — type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.
+version: 0.1.0
+extends:
+  - developer
+components:
+  agents:
+    - name: typescript-reviewer
+      source: everything-claude-code
+  rules:
+    - name: typescript/coding-style
+      source: everything-claude-code
+    - name: typescript/patterns
+      source: everything-claude-code
+    - name: typescript/testing
+      source: everything-claude-code
+    - name: typescript/security
+      source: everything-claude-code
+    - name: typescript/hooks
+      source: everything-claude-code
+recommended_install_level: user
+tags:
+  - typescript
+  - language
+  - type-safety
+  - quality
+use_case_tags:
+  roles:
+    - developer
+    - backend-developer
+    - frontend-developer
+    - fullstack-developer
+  project_types:
+    - any
+  stacks:
+    - typescript
+    - javascript
+    - nodejs
+  use_cases:
+    - code-review
+    - type-safety
+    - testing
+    - security
