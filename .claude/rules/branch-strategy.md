@@ -2,9 +2,9 @@
 
 Two long-lived branches with distinct purposes. Never commit directly to master.
 
-## develop / hilab-develop — full development environment
+## develop — full development environment
 
-All PRs and MRs target this branch. Contains the complete source tree:
+All PRs target this branch. Contains the complete source tree:
 
 | Directory | Contents |
 |-----------|----------|
@@ -16,7 +16,7 @@ All PRs and MRs target this branch. Contains the complete source tree:
 
 `claudekit/` exists **only on develop**. It is the source from which `plugins/` is built.
 
-## master / hilab-master — lean release branch
+## master — lean release branch
 
 Consumed by Claude Code marketplace via `/plugin marketplace add`. Contains only distributable content:
 
@@ -30,7 +30,7 @@ Consumed by Claude Code marketplace via `/plugin marketplace add`. Contains only
 ## Promoting develop → master
 
 ```bash
-git checkout hilab-master   # or master for GitHub
+git checkout release/master
 
 # Cherry-pick feature commits (not the strip commit itself)
 git cherry-pick <commit-hash>
@@ -38,8 +38,7 @@ git cherry-pick <commit-hash>
 # Re-apply the strip commit to remove dev-only dirs
 # Result: only plugins/ and .claude-plugin/ remain as content
 
-git push hilab hilab-master           # always
-git push origin master                # only if public (non-hilab-specific) content
+git push origin release/master:master
 ```
 
 The strip commit message is `chore(master): strip dev-only dirs` and removes `claudekit/`, `presets/`, `scripts/`, `upstream/` from the tree.

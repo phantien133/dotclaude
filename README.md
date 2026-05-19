@@ -1,6 +1,6 @@
-# dotclaude — Hilab Claude Code plugin marketplace
+# dotclaude — Claude Code plugin marketplace
 
-Curated Claude Code plugins for the Hilab team, built from `dotclaude` presets.
+Curated Claude Code plugins built from `dotclaude` presets.
 Add the marketplace once, then install only the plugins you need per machine or
 project.
 
@@ -31,12 +31,6 @@ Full preset docs and authoring guide: **[docs/PLUGINS.md](./docs/PLUGINS.md)**
 | [`nestjs`](./plugins/nestjs/) | 0.1.0 | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design patterns. Extends `developer` + `typescript`. | [README](./presets/framework/nestjs/README.md) |
 | [`nextjs`](./plugins/nextjs/) | 0.1.0 | Next.js React app structure — Turbopack dev server, frontend patterns for production apps. Extends `developer` + `typescript`. | [README](./presets/framework/nextjs/README.md) |
 
-### Hilab streaming workflow
-
-| Plugin | Version | Description | Preset docs |
-|---|---|---|---|
-| [`cistreaming`](./plugins/cistreaming/) | 1.0.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Public `w-*` suite + `f-*` Figma flow + streaming rules + doc governance. | [README](./presets/purpose/cistreaming/README.md) · [WORKFLOW_GUIDE](./presets/purpose/cistreaming/WORKFLOW_GUIDE.md) · [AGENTS](./presets/purpose/cistreaming/AGENTS.md) |
-
 ### Dotclaude self-tooling
 
 | Plugin | Version | Description | Preset docs |
@@ -48,55 +42,49 @@ Full preset docs and authoring guide: **[docs/PLUGINS.md](./docs/PLUGINS.md)**
 
 ## Install via Claude Code marketplace
 
-### 1. Make sure you can reach Hilab GitLab
-
-The marketplace lives at `gitlab.hilab.cloud/hilabaikit/dotclaude`. SSH access is
-required (port `2424`):
+### 1. Make sure you have GitHub SSH access
 
 ```bash
-# Add an SSH key in GitLab → User settings → SSH Keys, then verify:
-ssh -T git@gitlab.hilab.cloud -p 2424
-# Expected: "Welcome to GitLab, @<your-username>!"
+ssh -T git@github.com
+# Expected: "Hi <username>! You've successfully authenticated..."
 ```
 
-If you've never cloned a Hilab repo before, the [GitLab SSH setup
-docs](https://gitlab.hilab.cloud/-/user_settings/ssh_keys) walk through key
-creation.
+If you haven't set up GitHub SSH, follow the [GitHub SSH setup guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh).
 
 ### 2. Add the marketplace to Claude Code
 
 Inside any Claude Code session:
 
 ```
-/plugin marketplace add ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
+/plugin marketplace add git@github.com:phantien133/dotclaude.git
 ```
 
 Claude Code will clone the repo into its local marketplace cache and read
 `.claude-plugin/marketplace.json` — the marketplace is registered under the
-name `hilab-dotclaude`. To refresh later:
+name `dotclaude`. To refresh later:
 
 ```
-/plugin marketplace update hilab-dotclaude
+/plugin marketplace update dotclaude
 ```
 
 ### 3. Install a plugin
 
 ```
-/plugin install <plugin-name>@hilab-dotclaude
+/plugin install <plugin-name>@dotclaude
 ```
 
 For example:
 
 ```
-/plugin install developer@hilab-dotclaude          # at user level
-/plugin install cistreaming@hilab-dotclaude     # for the streaming team
-/plugin install core@hilab-dotclaude
+/plugin install developer@dotclaude          # at user level
+/plugin install nestjs@dotclaude             # for NestJS backend projects
+/plugin install core@dotclaude
 ```
 
 Browse what's available without installing:
 
 ```
-/plugin marketplace list hilab-dotclaude
+/plugin marketplace list dotclaude
 ```
 
 ### 4. Update or remove
@@ -115,9 +103,8 @@ Start small and stack:
 1. **Everyone**: `core` — context management + productivity baseline.
 2. **Most engineers**: add `ai-native` (self-learning) and `developer` (GitHub /
    quality gates).
-3. **Backend / frontend**: add `nestjs` and/or `nextjs` as needed.
-4. **Streaming team**: install `cistreaming` (it extends `nestjs` + `nextjs`
-   so you get those transitively — don't double install).
+3. **TypeScript projects**: add `typescript` as the language foundation.
+4. **Backend / frontend**: add `nestjs` and/or `nextjs` as needed.
 5. **Working inside this repo**: add `dotclaude-self` for the preset-authoring
    tooling.
 
@@ -129,14 +116,14 @@ This repo uses two long-lived branches with fundamentally different contents:
 
 | Branch | What it contains | Purpose |
 |---|---|---|
-| `develop` | Full source tree: `claudekit/`, `presets/`, `scripts/`, `upstream/` submodules (~270 MB), `plugins/` | Active development — all PRs / MRs target here |
+| `develop` | Full source tree: `claudekit/`, `presets/`, `scripts/`, `upstream/` submodules (~270 MB), `plugins/` | Active development — all PRs target here |
 | `master` | `plugins/<name>/` + `.claude-plugin/marketplace.json` **only** | Lean release consumed by Claude Code marketplace |
 
 **Key difference:** `claudekit/` exists only on `develop`. It is the source from which `plugins/` is built. Once built, `claudekit/` is not needed by end-users and is stripped from `master` — keeping the marketplace clone small (a few MB vs ~270 MB).
 
 **Rules:**
 
-1. **Never PR directly to `master`.** Open all MRs against `develop`.
+1. **Never PR directly to `master`.** Open all PRs against `develop`.
 2. **Publishing to the marketplace** = promote `develop` → `master` by cherry-picking feature commits then re-applying the strip commit (`chore(master): strip dev-only dirs`) that removes `claudekit/`, `presets/`, `scripts/`, and `upstream/`.
 3. **Local dev** = checkout `develop` + `git submodule update --init --recursive`. Cloning `master` skips all source and submodule content.
 

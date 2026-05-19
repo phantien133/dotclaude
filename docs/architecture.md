@@ -8,7 +8,7 @@
 2. **`presets/`** — pure manifests (YAML) pointing to component IDs in `claudekit/`. Contains no component code.
 3. **`scripts/`** — TypeScript installer (run via tsx) reads a preset → installs into the user/project target, with manifest tracking and dependency resolution. Also handles lifecycle (uninstall, upgrade, audit) and plugin packaging.
 4. **`upstream/`** — submodules (ECC + 3 docs sources) acting as sync source and docs reference; not a runtime dependency.
-5. **`plugins/`** — preset → plugin bundle build artifacts, published to self-hosted marketplace (`hilabaikit/claudekit-marketplace`).
+5. **`plugins/`** — preset → plugin bundle build artifacts, published to the Claude Code marketplace (`phantien133/dotclaude`).
 
 ## Layout
 
@@ -101,7 +101,7 @@ dotclaude/
 | CQ-3a/b/c/d | Preset: YAML + companion MD, schema validation via `# yaml-language-server: $schema=...` header, folder per kind, `extends:` supported | docs/PRESETS.md |
 | CQ-4a/b/c/d | `private/` per top package, mirrors public, `private.example/` skeleton tracked, manual cloud-sync bootstrap | docs/PRIVATE.md |
 | CQ-5a/b/c/d/e | User+Project install; neither scope has a hardcoded default mode — installer always prompts `symlink/copy` when no flag is passed. Pass `--symlink` or `--copy` to skip prompt. Folder components respect the chosen mode (copy uses `copyFolderExcluding`, excludes `SOURCE.yaml`). Backup-then-overwrite; idempotent; manifest YAML tracking | docs/INSTALL.md |
-| CQ-6 | Self-hosted marketplace (`hilab-dotclaude`, served from `hilabaikit/dotclaude`), 1-1 preset↔plugin | |
+| CQ-6 | Claude Code marketplace (`dotclaude`, served from `phantien133/dotclaude`), 1-1 preset↔plugin | |
 | CQ-7 | `vendor/` → `upstream/`, ECC role: sync_source | |
 | CQ-10 | 100% TS + pnpm + tsx | |
 | CQ-11 | YAML for owner-controlled files; JSON for external conventions (settings.json, package.json, JSON Schema, plugin manifest) | |
@@ -138,7 +138,7 @@ pnpm build-plugin <preset-name>
 pnpm publish-plugin <preset-name>
   ↓ build-plugin steps
   ↓ update marketplace.json with new entry
-  ↓ (manual) copy plugins/<name>/ to hilabaikit/claudekit-marketplace + push
+  ↓ (manual) commit plugins/<name>/ + push to marketplace remote
 ```
 
 ## Non-goals

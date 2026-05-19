@@ -1,9 +1,9 @@
 {
   "name": "dotclaude-bootstrap",
   "version": "0.1.0",
-  "description": "Bootstrap preset for new dotclaude users — includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
+  "description": "Bootstrap preset for new dotclaude users \u2014 includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
   "author": {
-    "name": "hilabaikit",
+    "name": "phantien133",
     "email": "tienpq@hilab.asia"
   },
   "license": "MIT",
@@ -14,7 +14,7 @@
     "wizard"
   ],
   "mcpServers": {},
-  "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude",
+  "repository": "https://github.com/phantien133/dotclaude",
   "skills": [
     "./skills/"
   ],

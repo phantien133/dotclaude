@@ -1,15 +1,9 @@
 # About dotclaude
 
-`dotclaude` is the Hilab Claude Code configuration kit — owner-controlled core
+`dotclaude` is a personal Claude Code configuration kit — owner-controlled core
 (`claudekit/`), preset manifests (`presets/`), TypeScript installer, and plugin
 packaging. This document describes what `dotclaude` is and how to develop with
 it. For day-to-day plugin install instructions, see [README.md](./README.md).
-
-> **Origin**: this repository is a fork of and continues development from
-> [phantien133/dotclaude](https://github.com/phantien133/dotclaude) (the
-> upstream personal kit). The Hilab branch adds company-specific presets
-> (e.g. `cistreaming-*`), repoints the marketplace to the Hilab GitLab, and
-> ships prebuilt plugin bundles for team install.
 
 ## Motivation
 
@@ -51,7 +45,7 @@ the repo and use the TypeScript installer.
 ### Setup
 
 ```bash
-git clone --recursive ssh://git@gitlab.hilab.cloud:2424/hilabaikit/dotclaude.git
+git clone --recursive git@github.com:phantien133/dotclaude.git
 cd dotclaude
 pnpm install
 pnpm typecheck

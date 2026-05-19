@@ -37,6 +37,5 @@ Workflow or role-specific presets.
 
 | Plugin | Preset docs | Description |
 |--------|-------------|-------------|
-| [`cistreaming`](../plugins/cistreaming/) | [presets/purpose/cistreaming/README.md](../presets/purpose/cistreaming/README.md) | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). |
 | [`dotclaude-bootstrap`](../plugins/dotclaude-bootstrap/) | [presets/purpose/dotclaude-bootstrap/README.md](../presets/purpose/dotclaude-bootstrap/README.md) | First-time dotclaude setup — setup wizard, preset-creation wizard, debugger, plugin discovery. |
 | [`dotclaude-self`](../plugins/dotclaude-self/) | [presets/purpose/dotclaude-self/README.md](../presets/purpose/dotclaude-self/README.md) | Full dotclaude working environment — preset authoring, self-learning, component picker, skill creator. |
