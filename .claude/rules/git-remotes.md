@@ -50,6 +50,59 @@ This repo has two remotes with distinct visibility and purpose.
 - `dotclaude-bootstrap`, `dotclaude-self` plugins
 - Root `README.md`, `ABOUT.md`, `docs/` (non-private)
 
+## Required local branches
+
+Always maintain exactly these 4 local branches:
+
+| Local branch | Tracks | Purpose |
+|---|---|---|
+| `hilab-develop` | `hilab/develop` | Primary dev branch — all work starts here |
+| `hilab-master` | `hilab/master` | Release branch for GitLab marketplace |
+| `develop` | `origin/develop` | Public mirror of hilab-develop (no private content) |
+| `master` | `origin/master` | Release branch for GitHub marketplace |
+
+Bootstrap after a fresh clone:
+
+```bash
+git fetch --all
+git checkout -B hilab-develop hilab/develop
+git checkout -B hilab-master  hilab/master
+git checkout -B develop       origin/develop
+git checkout -B master        origin/master
+git checkout hilab-develop
+```
+
+## PR / MR checklist
+
+Every feature must land in **all 4 targets** before it is considered done:
+
+| # | Target | Repo | Contains |
+|---|--------|------|----------|
+| 1 | `develop` on `hilab` | GitLab | Full source + private content |
+| 2 | `master` on `hilab` | GitLab | Plugin bundles only (`plugins/`) |
+| 3 | `develop` on `origin` | GitHub | Full source, **no private content** |
+| 4 | `master` on `origin` | GitHub | Plugin bundles only, **no private content** |
+
+Rules:
+- All source changes (scripts, claudekit, presets, schema) → develop on both repos
+- Final build artifacts (`plugins/*/`) → master on both repos
+- `develop` must be merged **before** creating master PRs (master takes plugin output from develop build)
+- Never open a PR/MR directly against master from a feature branch that has source-only changes — build first
+
+## Privacy fence — origin must never contain
+
+- Any file referencing Hilab, hilab.cloud, or hilab internal infrastructure
+- `plugins/cistreaming/` or any `presets/private/` content
+- `claudekit/private/` content
+- Credentials, internal URLs, team-member names tied to Hilab
+
+When publicizing a branch for `origin`, always run:
+```bash
+# Verify no private content before pushing to origin
+git diff origin/develop...HEAD -- presets/private/ claudekit/private/ plugins/cistreaming/
+# Output must be empty
+```
+
 ## Workflow
 
 ```bash
@@ -61,9 +114,11 @@ git push hilab <local-branch>:hilab-develop   # MR on GitLab
 git push origin <local-branch>:develop        # PR on GitHub
 
 # Release (promote develop → master):
-# Cherry-pick feature commits over master's strip commit on each remote
-git push hilab hilab-master
-git push origin master
+# 1. Build plugins on develop: pnpm build-plugin <name> --clean
+# 2. Commit built plugins to a release branch based on master
+# 3. Open MR/PR against master on each repo
+git push hilab <release-branch>:hilab-master   # MR → master on GitLab
+git push origin <release-branch>:master        # PR → master on GitHub
 ```
 
 Never push private/hilab-specific content to `origin`.
