@@ -204,6 +204,25 @@ export async function buildPlugin(
     }
   }
 
+  // Copy hooks/lib/ — shared modules required by hook scripts (e.g. lib/utils.js).
+  // Collect unique source directories from all file-based hook components.
+  const hookSourceDirs = new Set<string>();
+  for (const component of plan.components) {
+    if (component.type === 'hooks' && component.layout.kind === 'file') {
+      hookSourceDirs.add(dirname(component.layout.componentPath));
+    }
+  }
+  for (const srcDir of hookSourceDirs) {
+    const libSrc = join(srcDir, 'lib');
+    try {
+      await stat(libSrc);
+      await copyFolderStripping(libSrc, join(pluginRoot, 'hooks', 'lib'));
+      log.debug(`Copied hooks/lib/ from ${srcDir}`);
+    } catch {
+      // No lib/ in this source dir — skip.
+    }
+  }
+
   const manifest = buildManifest(plan.preset, plan.components, opts);
   const claudePluginDir = join(pluginRoot, '.claude-plugin');
   await mkdir(claudePluginDir, { recursive: true });

@@ -2,7 +2,7 @@
 name: ai-native
 kind: core
 description: Extends core with AI self-learning and skill creation — for users who want Claude to improve with their personal workflow over time.
-version: 0.1.0
+version: 0.2.0
 extends:
   - core
 components:

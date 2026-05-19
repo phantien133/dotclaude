@@ -2,7 +2,7 @@
 name: core
 kind: core
 description: Universal baseline for any Claude Code user — context management, productivity, and semantic search.
-version: 0.1.0
+version: 0.2.0
 extends: []
 components:
   skills:

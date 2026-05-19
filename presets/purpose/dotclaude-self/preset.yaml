@@ -2,7 +2,7 @@
 name: dotclaude-self
 kind: purpose
 description: Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.
-version: 0.2.0
+version: 0.3.0
 extends:
   - developer
 components:
