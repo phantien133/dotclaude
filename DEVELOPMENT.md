@@ -2,7 +2,7 @@
 
 How to work inside this repo: vendor components, author presets, add upstream sources, and publish plugins.
 
-For design decisions see [architecture.md](architecture.md). For sidecar schema see [PROVENANCE.md](PROVENANCE.md). For preset schema see [PRESETS.md](PRESETS.md).
+For design decisions see [docs/architecture.md](docs/architecture.md). For sidecar schema see [docs/PROVENANCE.md](docs/PROVENANCE.md). For preset schema see [docs/PRESETS.md](docs/PRESETS.md).
 
 > **Branch note:** all development work happens on `develop`. The `master` branch contains only built plugin bundles and docs — see [Branch Strategy](#branch-strategy) at the bottom.
 
@@ -62,7 +62,7 @@ git -C upstream/everything-claude-code rev-parse HEAD   # → pinned_commit for 
 pnpm typecheck && pnpm test
 ```
 
-See [PROVENANCE.md](PROVENANCE.md) for the sidecar schema.
+See [docs/PROVENANCE.md](docs/PROVENANCE.md) for the sidecar schema.
 
 ---
 
@@ -88,7 +88,7 @@ $EDITOR presets/$KIND/$NAME/preset.yaml
 pnpm validate $NAME --kind $KIND
 ```
 
-Every component reference in `preset.yaml` is `{name, source}` — bare strings do not parse. Valid `source` aliases are in [CLAUDE.md § Source layout](../CLAUDE.md).
+Every component reference in `preset.yaml` is `{name, source}` — bare strings do not parse. Valid `source` aliases are in [CLAUDE.md § Source layout](CLAUDE.md).
 
 If the preset fails to build or validate, invoke the `preset-debugger` skill.
 
