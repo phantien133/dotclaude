@@ -32,8 +32,8 @@ program
           ...(kind !== undefined && { kind }),
           include_optional: opts.includeOptional,
           clean: opts.clean,
-          author: { name: 'hilabaikit', email: 'tienpq@hilab.asia' },
-          repository: 'https://gitlab.hilab.cloud/hilabaikit/dotclaude',
+          author: { name: 'phantien133', email: 'tienpq@hilab.asia' },
+          repository: 'https://github.com/phantien133/dotclaude',
           license: 'MIT',
         });
 

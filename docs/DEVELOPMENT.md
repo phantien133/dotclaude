@@ -4,7 +4,7 @@ How to work inside this repo: vendor components, author presets, add upstream so
 
 For design decisions see [architecture.md](architecture.md). For sidecar schema see [PROVENANCE.md](PROVENANCE.md). For preset schema see [PRESETS.md](PRESETS.md).
 
-> **Branch note:** all development work happens on `develop` / `hilab-develop`. The `master` / `hilab-master` branches contain only built plugin bundles and docs — see [Branch Strategy](#branch-strategy) at the bottom.
+> **Branch note:** all development work happens on `develop`. The `master` branch contains only built plugin bundles and docs — see [Branch Strategy](#branch-strategy) at the bottom.
 
 > **Claude Code first:** most workflows below have a dedicated skill or slash command. Use those instead of running shell commands manually — they handle the full pipeline, prompt for decisions, and validate the result.
 
@@ -150,7 +150,7 @@ If the build fails, use the `preset-debugger` skill: *"the cistreaming plugin fa
 `master` holds only `plugins/`, `docs/`, and a few root files. Source dirs (`claudekit/`, `presets/`, `scripts/`) are stripped.
 
 ```bash
-git checkout release/master   # or create a topic branch from hilab/master
+git checkout release/master
 
 # Cherry-pick the feature commit(s)
 git cherry-pick <commit-hash>
@@ -158,9 +158,8 @@ git cherry-pick <commit-hash>
 # Apply the strip commit (removes claudekit/ presets/ scripts/ tsconfig.json etc.)
 # Strip commit message: "chore(master): strip dev-only dirs"
 
-# Push — both remotes if public content, hilab only if private
-git push hilab release/master
-git push origin release/master   # only for public (non-Hilab-specific) content
+# Push
+git push origin release/master:master
 ```
 
 ---
@@ -169,7 +168,7 @@ git push origin release/master   # only for public (non-Hilab-specific) content
 
 | Branch | Contains | Purpose |
 |--------|----------|---------|
-| `develop` / `hilab-develop` | Full source tree + submodules (~270 MB) | All development work; all PRs/MRs target here |
-| `master` / `hilab-master` | `plugins/` + `docs/` + root files | Lean release consumed by Claude Code marketplace |
+| `develop` | Full source tree + submodules (~270 MB) | All development work; all PRs target here |
+| `master` | `plugins/` + `docs/` + root files | Lean release consumed by Claude Code marketplace |
 
 `claudekit/` exists **only on develop** — it is the source for building `plugins/`. Once built, `claudekit/` is stripped from master.

@@ -1,20 +1,20 @@
 {
-  "name": "hilab-dotclaude",
+  "name": "dotclaude",
   "owner": {
-    "name": "hilabaikit",
+    "name": "phantien133",
     "email": "tienpq@hilab.asia"
   },
   "metadata": {
-    "description": "Hilab Claude Code plugin marketplace for claudekit presets."
+    "description": "Claude Code plugin marketplace for dotclaude presets."
   },
   "plugins": [
     {
       "name": "developer",
       "source": "./plugins/developer",
-      "description": "Extends ai-native with cross-stack developer tooling — GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
+      "description": "Extends ai-native with cross-stack developer tooling \u2014 GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
       "version": "0.1.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -30,51 +30,15 @@
         "quality"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
-    },
-    {
-      "name": "cistreaming",
-      "source": "./plugins/cistreaming",
-      "description": "Dev workflow preset for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Replaces v2's private dev-task / quick-fix orchestration with the public w-* command suite (driven by .claude/workflow.yaml) and swaps build-ui-kit / build-static-page / streaming-figma for the f-* Figma suite. Keeps v2's streaming-specific rules + private utility skills for opt-in fallbacks.",
-      "version": "1.0.0",
-      "author": {
-        "name": "hilabaikit",
-        "email": "tienpq@hilab.asia"
-      },
-      "license": "MIT",
-      "keywords": [
-        "hilab",
-        "private",
-        "streaming",
-        "nestjs",
-        "nextjs",
-        "graphql",
-        "figma",
-        "w-workflow",
-        "doc-governance"
-      ],
-      "category": "workflow",
-      "tags": [
-        "hilab",
-        "private",
-        "streaming",
-        "nestjs",
-        "nextjs",
-        "graphql",
-        "figma",
-        "w-workflow",
-        "doc-governance"
-      ],
-      "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     },
     {
       "name": "ai-native",
       "source": "./plugins/ai-native",
-      "description": "Extends core with AI self-learning and skill creation — for users who want Claude to improve with their personal workflow over time.",
+      "description": "Extends core with AI self-learning and skill creation \u2014 for users who want Claude to improve with their personal workflow over time.",
       "version": "0.1.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -94,15 +58,15 @@
         "personal"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     },
     {
       "name": "core",
       "source": "./plugins/core",
-      "description": "Universal baseline for any Claude Code user — context management, productivity, and semantic search.",
+      "description": "Universal baseline for any Claude Code user \u2014 context management, productivity, and semantic search.",
       "version": "0.1.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -120,15 +84,15 @@
         "productivity"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     },
     {
       "name": "typescript",
       "source": "./plugins/typescript",
-      "description": "TypeScript language preset — type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
+      "description": "TypeScript language preset \u2014 type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
       "version": "0.1.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -146,15 +110,15 @@
         "quality"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     },
     {
       "name": "nestjs",
       "source": "./plugins/nestjs",
-      "description": "NestJS framework preset — modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.",
+      "description": "NestJS framework preset \u2014 modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.",
       "version": "0.1.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -172,15 +136,15 @@
         "rest-api"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     },
     {
       "name": "nextjs",
       "source": "./plugins/nextjs",
-      "description": "Next.js framework preset — React app structure, Turbopack dev server, and frontend patterns for production apps.",
+      "description": "Next.js framework preset \u2014 React app structure, Turbopack dev server, and frontend patterns for production apps.",
       "version": "0.1.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -198,15 +162,15 @@
         "frontend"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     },
     {
       "name": "dotclaude-bootstrap",
       "source": "./plugins/dotclaude-bootstrap",
-      "description": "Bootstrap preset for new dotclaude users — includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
+      "description": "Bootstrap preset for new dotclaude users \u2014 includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
       "version": "0.1.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -224,15 +188,15 @@
         "wizard"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     },
     {
       "name": "dotclaude-self",
       "source": "./plugins/dotclaude-self",
-      "description": "Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
+      "description": "Full dotclaude working environment \u2014 preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
       "version": "0.2.0",
       "author": {
-        "name": "hilabaikit",
+        "name": "phantien133",
         "email": "tienpq@hilab.asia"
       },
       "license": "MIT",
@@ -252,7 +216,7 @@
         "preset-authoring"
       ],
       "strict": false,
-      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+      "repository": "https://github.com/phantien133/dotclaude"
     }
   ]
 }

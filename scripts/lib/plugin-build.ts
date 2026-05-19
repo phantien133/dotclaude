@@ -102,7 +102,7 @@ function buildManifest(
     name: preset.name,
     version: preset.version,
     description: preset.description,
-    author: opts.author ?? { name: 'hilabaikit' },
+    author: opts.author ?? { name: 'phantien133' },
     license: opts.license ?? 'MIT',
     keywords: preset.tags,
     // Explicit empty opt-out prevents auto-loading root .mcp.json on plugin install.

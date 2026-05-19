@@ -49,7 +49,7 @@ async function readMarketplace(): Promise<MarketplaceIndex> {
   } catch {
     return {
       name: 'hilab-dotclaude',
-      owner: { name: 'hilabaikit', email: 'tienpq@hilab.asia' },
+      owner: { name: 'phantien133', email: 'tienpq@hilab.asia' },
       metadata: { description: 'Hilab Claude Code plugin marketplace for claudekit presets.' },
       plugins: [],
     };
