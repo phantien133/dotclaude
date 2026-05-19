@@ -1,21 +1,19 @@
-# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+# yaml-language-server: $schema=../../presets/schema/sidecar.schema.json
 #
-# SOURCE.yaml is INSIDE the skill folder.
-# Installer MUST exclude this file when copying the skill folder to a target.
-#
+# Vendored from upstream/dotclaude (components branch) — the self-authored component library.
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: ""
-  path: dotclaude-self/skills/setup-hooks
+  commit: "667ee19fe0ee7213477fcd48e13ba419197d1938"
+  path: dotclaude-self/commands/setup-dotclaude-preset-hooks.md
   ref: components
 imported_at: "2026-05-19"
 license: MIT
 modified: false
 modifications: null
 notes: >-
-  Self-authored skill. Interactive hook wiring for any installed dotclaude preset.
-  Reads hooks/hooks-manifest.js (written by installer + marketplace) and applies
-  changes to settings.json. Inherited by all presets via core extends chain.
+  Self-authored command. Interactive hook wiring for any installed dotclaude preset.
+  Reads hooks/hooks-manifest.js (written by installer) and applies changes to
+  settings.json. Converted from skill to command — only invoked on demand.
 dependencies:
   required:
     agents: []
