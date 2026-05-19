@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "Next.js framework preset — React app structure, Turbopack dev server, and frontend patterns for production apps.",
   "author": {
-    "name": "hilabaikit",
+    "name": "phantien133",
     "email": "tienpq@hilab.asia"
   },
   "license": "MIT",
@@ -14,7 +14,7 @@
     "frontend"
   ],
   "mcpServers": {},
-  "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude",
+  "repository": "https://github.com/phantien133/dotclaude",
   "skills": [
     "./skills/"
   ],
