@@ -68,7 +68,7 @@ Record `issue_tracker.type`:
 **plane:**
 ```
 Plane workspace URL (e.g. https://pm.example.com): ___
-Workspace slug (e.g. hilab): ___
+Workspace slug (e.g. my-workspace): ___
 Project identifier prefix (e.g. MYPROJ): ___
 Are Plane MCP tools configured in this Claude Code session? (y/n) [n]: ___
 ```

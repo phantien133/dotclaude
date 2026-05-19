@@ -8,7 +8,7 @@ allowed-tools: Bash, Read, Write, Edit, Agent
 
 Enrich `impact.md` with structured per-layer sections (DB / GraphQL / queue /
 cache) based on `plan.md` + schema files referenced in `workflow.yaml`. Generic
-version of dev-task's hilab-specific impact analysis.
+version of an internal impact analysis pattern.
 
 Reads `.claude/workflow.yaml`:
 - `project.schema_paths.prisma`

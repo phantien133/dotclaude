@@ -5,7 +5,7 @@ installer). When opening Claude Code in this folder, the information below is th
 
 ## Owner & Communication
 
-- Owner: phantien133 (tienpq@hilab.asia).
+- Owner: phantien133 (phanqtien@gmail.com).
 - Communication: **English** for all responses, code, file names, identifiers, and commit messages.
 - Keep answers concise and actionable — no need to explain basics.
 

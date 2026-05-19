@@ -28,7 +28,7 @@ program
           ...(opts.out !== undefined && { outDir: opts.out }),
           include_optional: opts.includeOptional,
           clean: opts.clean,
-          author: { name: 'phantien133', email: 'tienpq@hilab.asia' },
+          author: { name: 'phantien133', email: 'phanqtien@gmail.com' },
           repository: 'https://github.com/phantien133/dotclaude',
           license: 'MIT',
         });

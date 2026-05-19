@@ -12,7 +12,7 @@ license: MIT
 modified: true
 modifications: >-
   Switched the create step from GitHub (`gh pr create`) to GitLab (`glab mr create`) because
-  the consumer repo (Hilab streaming) lives on a private GitLab instance. Command name kept as
+  the consumer repo lives on a private GitLab instance. Command name kept as
   `w-pr` for command-suite consistency, but body, prompts, and pr.md output use MR terminology
   and GitLab semantics (--remove-source-branch, --squash-before-merge, project resolution via
   `glab repo view`).

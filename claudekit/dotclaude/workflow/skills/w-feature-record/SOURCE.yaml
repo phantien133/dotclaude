@@ -10,7 +10,7 @@ modified: false
 modifications: null
 notes: >-
   Phase 5 helper. Creates or appends features/<feature-name>.md — the per-feature
-  permanent record. Generic version of dev-task's hilab-streaming feature template.
+  permanent record. Generic version of an internal feature template.
   One file per feature/capability (not per ticket); CREATE on first task, APPEND on
   subsequent tasks. Append mode rewrites current-state sections (Schema/API,
   Diagrams) but never deletes history rows.

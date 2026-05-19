@@ -11,7 +11,7 @@ modifications: null
 notes: >-
   Phase 5 helper. Parses impact.md § GraphQL/REST changes and updates the module's
   api.md, replacing existing operation sections with current state. Generic version
-  of dev-task's hilab-streaming api.md logic.
+  of an internal api.md pattern.
 dependencies:
   required:
     agents: []

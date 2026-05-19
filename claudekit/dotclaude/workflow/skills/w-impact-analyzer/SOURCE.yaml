@@ -11,8 +11,8 @@ modifications: null
 notes: >-
   Phase 2 helper. Enriches impact.md with DB/GraphQL/queue/cache sections by
   reading schema_paths.* + scanning module_glob for async/cache patterns. Auto-
-  triggers w-adr when DB change is non-trivial. Generic version of dev-task's
-  hilab-specific impact analysis.
+  triggers w-adr when DB change is non-trivial. Generic version of an internal
+  impact analysis pattern.
 dependencies:
   required:
     agents: []

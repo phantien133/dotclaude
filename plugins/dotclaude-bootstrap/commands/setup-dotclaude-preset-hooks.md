@@ -57,7 +57,7 @@ Display a table grouped by source plugin/installer:
 
 | # | Hook | Description | Event | Matcher | Source | Wired? |
 |---|------|-------------|-------|---------|--------|--------|
-| 1 | suggest-compact.js | Suggest /compact to preserve context | PreToolUse | Edit\|Write | cistreaming@hilab-dotclaude | ✓ / ✗ |
+| 1 | suggest-compact.js | Suggest /compact to preserve context | PreToolUse | Edit\|Write | cistreaming@dotclaude | ✓ / ✗ |
 
 ### 6. Ask what to change
 
