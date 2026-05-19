@@ -26,6 +26,7 @@ Stack or language-specific presets. Inherit from the `developer` chain.
 
 | Plugin | Preset docs | Description |
 |--------|-------------|-------------|
+| [`typescript`](../plugins/typescript/) | [presets/framework/typescript/README.md](../presets/framework/typescript/README.md) | TypeScript language preset — coding style, idiomatic patterns, testing, security rules, TS code reviewer. Base for any TS framework. |
 | [`nestjs`](../plugins/nestjs/) | [presets/framework/nestjs/README.md](../presets/framework/nestjs/README.md) | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design. |
 | [`nextjs`](../plugins/nextjs/) | [presets/framework/nextjs/README.md](../presets/framework/nextjs/README.md) | Next.js React app — Turbopack dev server, frontend patterns for production apps. |
 

@@ -35,6 +35,37 @@ pnpm install:project nestjs --force --symlink
 pnpm install:user nestjs --force --symlink
 ```
 
+## Hook wiring
+
+After installing, add these entries to `~/.claude/settings.json` (user-level install):
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [{ "type": "command", "command": "node ~/.claude/hooks/post-edit-typecheck.js" }]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          { "type": "command", "command": "node ~/.claude/hooks/pre-bash-commit-quality.js" },
+          { "type": "command", "command": "node ~/.claude/hooks/block-no-verify.js" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+For **project-level** install, replace `~/.claude/hooks/` with `.claude/hooks/`.
+
+> **Note:** Also wire hooks from `core` (inherited) — merge, do not replace the existing `hooks` block.
+> See [core hook wiring](../core/README.md#hook-event-wiring).
+
 ## Enable / Disable after install
 
 ### Skills
