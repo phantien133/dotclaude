@@ -1,0 +1,24 @@
+# Dev-only source dirs — present on develop, absent on master
+claudekit/
+presets/
+scripts/
+upstream/
+
+# Build tooling
+node_modules/
+tsconfig.json
+vitest.config.ts
+pnpm-lock.yaml
+
+# Dev docs and metadata
+CLAUDE.md
+AGENTS.md
+dependencies.yaml
+.claude/
+
+# CI config (not needed on distribution branch)
+.github/
+.ci/
+
+# rsync internals
+.git/
