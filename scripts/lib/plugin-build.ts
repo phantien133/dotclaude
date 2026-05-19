@@ -5,6 +5,8 @@ import { locatePreset } from './preset.ts';
 import { PLUGINS_DIR } from './paths.ts';
 import { log } from './logger.ts';
 import type { Preset, ExternalSetupEntry } from './schema.ts';
+import { buildHooksManifestEntries } from './hooks-manifest.ts';
+import { dumpYaml } from './yaml.ts';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -234,6 +236,17 @@ export async function buildPlugin(
     }
   } catch {
     // Preset dir not found — skip doc copy.
+  }
+
+  // Generate hooks.yaml manifest from the merged settings_patch.hooks chain.
+  const hookEntries = buildHooksManifestEntries(plan.all_presets);
+  if (hookEntries.length > 0) {
+    await writeFile(
+      join(pluginRoot, 'hooks.yaml'),
+      dumpYaml({ hooks: hookEntries }),
+      'utf8',
+    );
+    log.debug(`Wrote hooks.yaml (${hookEntries.length} entries)`);
   }
 
   return { outDir: pluginRoot, manifest, componentCount, skipped };

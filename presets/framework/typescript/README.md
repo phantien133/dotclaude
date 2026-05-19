@@ -23,6 +23,19 @@ Any developer working in TypeScript / Node.js / JavaScript projects. Composes un
 
 Inherited from `developer`: `tdd-workflow`, `github-ops`, `prp-plan`, `feature-dev`, `planner`, `code-architect`, `code-explorer`, `code-reviewer` (generic), `code-simplifier`, post-edit-typecheck hook, pre-bash-commit-quality hook, block-no-verify hook.
 
+## Hook wiring (inherited)
+
+`typescript` adds no new hooks — all hooks come from the `developer` → `ai-native` → `core` chain.
+After installing, wire all three layers in your `~/.claude/settings.json`:
+
+1. **[core](../core/README.md#hook-event-wiring)** — `suggest-compact`, `pre-compact`, `desktop-notify`, `cost-tracker`, `doc-file-warning`
+2. **[ai-native](../ai-native/README.md#hook-wiring-opt-in)** — `continuous-learning-v2` observer (opt-in)
+3. **[developer](../developer/README.md#hook-wiring)** — `post-edit-typecheck`, `pre-bash-commit-quality`, `block-no-verify`
+
+For **project-level** install, replace `~/.claude/hooks/` with `.claude/hooks/` in each snippet.
+
+> Framework presets that build on `typescript` (`nextjs`, `nestjs`) include their own combined wiring guide.
+
 ## Install
 
 ```bash
