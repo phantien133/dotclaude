@@ -338,6 +338,12 @@ Only include component types that have entries — omit empty lists.
 Omit `external_setup` entirely if no external tools were declared.
 Omit `extends` array if no parent preset.
 
+### Step 3a.5 — Note: hooks-manifest.js is auto-generated
+
+`hooks/hooks-manifest.js` is generated automatically by `pnpm build-plugin` and `pnpm install:project` from `settings_patch.hooks` — do **not** create it manually as part of preset authoring.
+
+The `/setup-hooks` skill (inherited from core) reads this file at runtime to provide interactive hook wiring.
+
 ### Step 3b — Create preset README
 
 Create `presets/<kind>/<name>/README.md` with the following sections:

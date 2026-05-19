@@ -1,10 +1,10 @@
 {
   "name": "nestjs",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "NestJS framework preset — modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.",
   "author": {
     "name": "phantien133",
-    "email": "tienpq@hilab.asia"
+    "email": "phanqtien@gmail.com"
   },
   "license": "MIT",
   "keywords": [

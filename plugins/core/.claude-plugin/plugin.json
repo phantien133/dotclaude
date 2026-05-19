@@ -1,10 +1,10 @@
 {
   "name": "core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Universal baseline for any Claude Code user — context management, productivity, and semantic search.",
   "author": {
     "name": "phantien133",
-    "email": "tienpq@hilab.asia"
+    "email": "phanqtien@gmail.com"
   },
   "license": "MIT",
   "keywords": [

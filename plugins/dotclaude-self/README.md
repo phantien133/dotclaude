@@ -33,11 +33,38 @@ repo itself, not meant for user-wide use.
    ```bash
    mkdir -p ~/.claude/homunculus/{instincts/{personal,inherited},evolved/{agents,skills,commands},projects}
    ```
-2. Enable the background observer in `.claude/skills/continuous-learning-v2/config.json`:
+2. Wire the observer hooks (see [§ Hook wiring](#hook-wiring) below).
+3. Enable the background observer in `.claude/skills/continuous-learning-v2/config.json`:
    ```json
    { "observer": { "enabled": true } }
    ```
-3. Verify hooks fire: trigger any tool use, then check `~/.claude/homunculus/projects/*/observations.jsonl`
+4. Verify hooks fire: trigger any tool use, then check `~/.claude/homunculus/projects/*/observations.jsonl`
+
+## Hook wiring
+
+Add to `.claude/settings.json` (this preset is always project-level):
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [{ "type": "command", "command": ".claude/skills/continuous-learning-v2/hooks/observe.sh pre" }]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [{ "type": "command", "command": ".claude/skills/continuous-learning-v2/hooks/observe.sh" }]
+      }
+    ]
+  }
+}
+```
+
+> The observer script is **disabled by default** via `config.json` — wiring the hooks is safe before enabling.
+> Enable observation only after step 3 of the post-install checklist above.
 
 ## Wizard commands (after install)
 

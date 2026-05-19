@@ -1,10 +1,10 @@
 {
   "name": "developer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Extends ai-native with cross-stack developer tooling — GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
   "author": {
     "name": "phantien133",
-    "email": "tienpq@hilab.asia"
+    "email": "phanqtien@gmail.com"
   },
   "license": "MIT",
   "keywords": [

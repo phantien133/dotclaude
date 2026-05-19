@@ -1,10 +1,10 @@
 {
   "name": "dotclaude-bootstrap",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Bootstrap preset for new dotclaude users — includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
   "author": {
     "name": "phantien133",
-    "email": "tienpq@hilab.asia"
+    "email": "phanqtien@gmail.com"
   },
   "license": "MIT",
   "keywords": [
