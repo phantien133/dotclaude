@@ -88,6 +88,14 @@ To **disable all hooks** from this preset temporarily, remove the `hooks` key fr
 pnpm uninstall core
 ```
 
+## Wiring hooks
+
+After installing any preset, run `/setup-hooks` in Claude Code to see all available hooks and toggle them interactively.
+
+The skill reads `.claude/hooks/hooks-manifest.js` (project install) or `~/.claude/hooks/hooks-manifest.js` (user install), shows a wiring status table, and applies your choices to `settings.json`.
+
+`hooks-manifest.js` is written automatically by both the installer (`pnpm install:project`) and the Claude Code marketplace installer, so it works for both setup paths.
+
 ## Install
 
 ```bash
