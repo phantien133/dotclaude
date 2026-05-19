@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "TypeScript language preset — type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
   "author": {
-    "name": "hilabaikit",
+    "name": "phantien133",
     "email": "tienpq@hilab.asia"
   },
   "license": "MIT",
@@ -14,7 +14,7 @@
     "quality"
   ],
   "mcpServers": {},
-  "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude",
+  "repository": "https://github.com/phantien133/dotclaude",
   "skills": [
     "./skills/"
   ],
