@@ -132,21 +132,22 @@ Start small and stack:
 
 ## Branch workflow — `develop` vs `master`
 
-This repo uses two long-lived branches:
+This repo uses two long-lived branches with fundamentally different contents:
 
-| Branch | Contains `upstream/` submodules? | Purpose |
+| Branch | What it contains | Purpose |
 |---|---|---|
-| [`develop`](https://gitlab.hilab.cloud/hilabaikit/dotclaude/-/tree/develop) | **Yes** (~270 MB) | Active development branch — vendoring from upstream, sync scripts, full dev environment. All PRs / MRs target this branch. |
-| [`master`](https://gitlab.hilab.cloud/hilabaikit/dotclaude/-/tree/master) | **No** | Lean release branch consumed by Claude Code marketplace. `/plugin marketplace add` clones this branch, so it must stay small for fast installs. |
+| `develop` | Full source tree: `claudekit/`, `presets/`, `scripts/`, `upstream/` submodules (~270 MB), `plugins/` | Active development — all PRs / MRs target here |
+| `master` | `plugins/<name>/` + `.claude-plugin/marketplace.json` **only** | Lean release consumed by Claude Code marketplace |
+
+**Key difference:** `claudekit/` exists only on `develop`. It is the source from which `plugins/` is built. Once built, `claudekit/` is not needed by end-users and is stripped from `master` — keeping the marketplace clone small (a few MB vs ~270 MB).
 
 **Rules:**
 
 1. **Never PR directly to `master`.** Open all MRs against `develop`.
-2. **Publishing to the marketplace** = promote `develop` → `master` (cherry-pick
-   feature commits over master's strip commit, or merge develop and re-apply the
-   `chore(master): strip upstream/` commit on top).
-3. **Local dev** = checkout `develop` + `git submodule update --init --recursive`.
-   Cloning `master` skips the 270 MB of submodule content entirely.
+2. **Publishing to the marketplace** = promote `develop` → `master` by cherry-picking feature commits then re-applying the strip commit (`chore(master): strip dev-only dirs`) that removes `claudekit/`, `presets/`, `scripts/`, and `upstream/`.
+3. **Local dev** = checkout `develop` + `git submodule update --init --recursive`. Cloning `master` skips all source and submodule content.
+
+→ **[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)** — full guide: vendoring components, creating presets, adding upstream sources, building plugins, and promoting to master.
 
 ---
 
