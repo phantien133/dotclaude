@@ -33,7 +33,15 @@ All bundles live under `plugins/` and are registered in
 
 | Plugin | Version | Description |
 |---|---|---|
-| [`cistreaming`](./plugins/cistreaming/) | 1.0.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Public `w-*` suite + `f-*` Figma flow + streaming rules + doc governance. Replaces deprecated `cistreaming-v2/v3/v4`. |
+| [`cistreaming`](./plugins/cistreaming/) | 1.0.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Public `w-*` suite + `f-*` Figma flow + streaming rules + doc governance. |
+
+**cistreaming docs** (in [`presets/purpose/cistreaming/`](./presets/purpose/cistreaming/)):
+
+| Doc | Contents |
+|-----|----------|
+| [README.md](./presets/purpose/cistreaming/README.md) | What the preset bundles, dependencies (Figma MCP, Plane MCP, mgrep, glab), setup steps |
+| [WORKFLOW_GUIDE.md](./presets/purpose/cistreaming/WORKFLOW_GUIDE.md) | Full `/w-task` and `/w-fix` phase flows, free-prompt guide, `workflow.yaml` field reference |
+| [AGENTS.md](./presets/purpose/cistreaming/AGENTS.md) | Agent orchestration rules, security guidelines, NestJS/streaming coding conventions |
 
 ### Dotclaude self-tooling
 

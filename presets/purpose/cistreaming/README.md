@@ -1,103 +1,138 @@
 # cistreaming
 
 Dev workflow preset for the cistreaming platform (NestJS + Next.js + SRS + GraphQL).
-Successor to `cistreaming-v2`/`v3`/`v4`: consolidates the v2 streaming foundation, the
-v3 Figma `f-*` UI flow, and the v4 public `w-*` workflow suite into a single canonical
-preset.
+Bundles the `w-*` feature workflow suite, the `f-*` Figma pipeline, streaming-specific
+rules, and doc governance into a single canonical preset.
+
+→ **[WORKFLOW_GUIDE.md](WORKFLOW_GUIDE.md)** — full command reference, phase flows, free-prompt guide, setup config  
+→ **[AGENTS.md](AGENTS.md)** — agent orchestration rules, security guidelines, coding conventions
+
+---
 
 ## What this preset provides
 
-- **`w-*` workflow** — feature workflow (`/w-task`), quick fix (`/w-fix`), config wizard
-  (`/w-setup`), status (`/w-status`), reset (`/w-reset`), PR (`/w-pr`). Config-driven via
-  `.claude/workflow.yaml`. Replaces v2/v3's private `dev-task` / `quick-fix` /
-  `dev-task-status` / `dev-task-reset`.
-- **`w-document-build-up`** — one-time skill to backfill streaming-docs-style docs from an
-  existing codebase. Run BEFORE `/w-setup` on legacy modules.
-- **`w-*` helpers** — Phase-aware skills invoked by `w-task`:
-  `w-context-load`, `w-oq-check`, `w-impact-analyzer`, `w-adr`, `w-test-stubs`,
-  `w-feature-record`, `w-api-doc`, `w-db-doc`, `w-doc-gate`. Each is a no-op when its
-  field in `workflow.yaml` is unset — opt in incrementally.
-- **Figma `f-*` suite** — `/f-setup`, `f-import`, `f-ui-kit`, `f-page`, `f-review`.
-  Replaces v2's `build-ui-kit` + `build-static-page` + `streaming-figma`.
-- **Streaming-specific rules** — NestJS module conventions, Prisma patterns, error
-  handling, BullMQ + Redis guardrails, GraphQL code-first conventions.
-- **Doc governance** — `streaming-docs-governance` rule + `hsd-story-lint` (pre-workflow
-  story validator) + `hsd-post-merge` (kept for in-flight legacy tasks; new tasks rely on
-  `w-doc-gate` pre-PR invariant).
-- **Curated agents** — `tdd-guide` (Phase 4 of `w-task`). `code-explorer`, `code-architect`,
-  `code-reviewer`, `planner`, `code-simplifier` come transitively from the developer chain
-  via `nestjs` / `nextjs`.
-- **Opt-in private fallbacks** — `streaming-oq-check`, `streaming-adr`,
-  `streaming-checkpoint`, `streaming-test-stubs`, `create-pr` (PR backend for `/w-pr`).
+**Workflow (`w-*`)** — config-driven via `.claude/workflow.yaml`.
 
-## First-time setup
+| Component | Description |
+|-----------|-------------|
+| `/w-task` | Full 8-phase feature workflow (intake → context → plan → impact → UI → TDD → docs → PR) |
+| `/w-fix` | Lightweight fix workflow — ≤3 files, <2h, no schema change |
+| `/w-setup` `/w-status` `/w-reset` `/w-pr` | Config wizard, state inspection, reset, PR creation |
+| `w-document-build-up` | One-time backfill of streaming-docs from existing codebase (run before `/w-setup` on legacy modules) |
+| Phase helpers | `w-context-load`, `w-oq-check`, `w-impact-analyzer`, `w-adr`, `w-test-stubs`, `w-feature-record`, `w-api-doc`, `w-db-doc`, `w-doc-gate` — each is a no-op when its field in `workflow.yaml` is unset |
+
+**Figma (`f-*`)** — design-to-code pipeline.
+
+| Component | Description |
+|-----------|-------------|
+| `/f-setup` | One-time Figma MCP / export path configuration |
+| `/f-import` `/f-ui-kit` `/f-page` `/f-review` | Import designs, generate components, review against Figma |
+
+**Rules & governance**
+
+| Component | Description |
+|-----------|-------------|
+| `streaming-context` | Platform module map, tech stack, active OQs |
+| `hilab-streaming-rules` | NestJS conventions, Prisma patterns, BullMQ/Redis guardrails, GraphQL code-first |
+| `streaming-docs-governance` | Doc update triggers, companion document requirements, master ERD invariant |
+| `hsd-story-lint` | Pre-workflow story file validator |
+| `hsd-post-merge` | Legacy doc sync command — kept for in-flight tasks; new tasks use `w-doc-gate` |
+
+**Agents** — `tdd-guide` (explicit, Phase 4). `planner`, `code-explorer`, `code-architect`, `code-reviewer`, `code-simplifier` via the `nestjs` / `nextjs` → `developer` chain. See [AGENTS.md](AGENTS.md).
+
+**Opt-in private fallbacks** — `streaming-oq-check`, `streaming-adr`, `streaming-checkpoint`, `streaming-test-stubs`, `create-pr`.
+
+---
+
+## Dependencies
+
+External tools and MCP servers consumed by this preset. Install before running `/w-setup` or `/f-setup`.
+
+### Required
+
+| Tool | Used by | Install |
+|------|---------|---------|
+| `glab` CLI | `/w-pr` — creates GitLab MR | `brew install glab` then `glab auth login` |
+| Node.js ≥ 18 | All `w-*` skills (tsx scripts) | via `nvm` or system package manager |
+
+### Optional — enhances specific features
+
+| Tool | Used by | Without it | Install |
+|------|---------|------------|---------|
+| **Figma MCP** (`@figma/mcp`) | `/f-import`, `/f-review` — MCP mode | Falls back to Figma export folder mode | `claude mcp add figma -- npx -y @figma/mcp` |
+| **Plane MCP** | `/w-task` — auto-fetch ticket details | Must paste ticket description manually | See [Plane MCP docs](https://developers.plane.so/mcp); set `mcp_available: true` in `workflow.yaml` |
+| **mgrep** | Search within Claude Code sessions (replaces built-in `Grep`/`WebSearch`) | Built-in grep is used instead | Install via dotclaude: `pnpm install:project mgrep` |
+| `gh` CLI | `/w-task` with `issue_tracker.type: github` | Must paste GitHub issue description manually | `brew install gh` then `gh auth login` |
+
+### Figma MCP — setup detail
 
 ```bash
-# 1) (Legacy projects only — skip if docs already exist) backfill docs from source
-/w-document-build-up streaming-docs/documents
+# Add to Claude Code (once per machine)
+claude mcp add figma -- npx -y @figma/mcp
 
-# 2) Configure paths consumed by w-* skills (issue tracker, doc roots, schema paths)
-/w-setup
+# Verify it appears
+claude mcp list
+# → figma   npx -y @figma/mcp
 
-# 3) (Optional) Configure Figma MCP / export paths
+# Then run the f-* wizard to store the result in .claude/figma.yaml
 /f-setup
 ```
 
-## Daily usage
+`/f-import <figma-url>` will use MCP automatically when `mcp_available: true` is set in `.claude/figma.yaml`. Without MCP, use `/f-import --export <folder>` with a Figma export directory instead.
+
+### Plane MCP — setup detail
 
 ```bash
-# Feature workflow — full 8-phase (intake → context → plan → impact → UI → TDD → docs → PR)
-/w-task https://pm.hilab.cloud/hilab/browse/CISTREAMIN-11/
-/w-task "add chat read receipts"
-/w-task                                # advance to next phase after each gate
+# Follow Plane's MCP installation guide, then add to Claude Code:
+claude mcp add plane -- <plane-mcp-command>
 
-# Quick fix (≤3 files, <2h, no schema change)
-/w-fix "fix typo in stream-key error message"
-
-# Status / state
-/w-status
-/w-reset <task-slug>                   # reset task back to phase 0
-
-# Pre-workflow story file validator
-/hsd-story-lint stories/chat-mvp.md
-
-# PR creation (runs w-doc-gate first to enforce docs-with-code invariant)
-/w-pr <task-slug>
-
-# Figma → code
-/f-import <figma-url>
-/f-ui-kit <module>
-/f-page <module>
-/f-review <module>
+# In .claude/workflow.yaml, set:
+issue_tracker:
+  type: plane
+  mcp_available: true   # ← enables auto-fetch in /w-task and /w-fix
 ```
 
-## Doc invariant
+When `mcp_available: false`, `/w-task <CISTREAMIN-42>` will ask you to paste the ticket description instead of fetching it automatically.
 
-Docs ship with code in the same PR — `w-task` Phase 5 commits doc updates in the same
-branch as code; `w-doc-gate` runs at `/w-pr` time and BLOCKS creation if a module touched
-in CODE lacks corresponding DOC changes. The master ERD invariant (any sub-ERD change
-MUST be accompanied by a master ERD update in the same branch) is enforced as the
-strictest check. Replaces the post-merge `hsd-post-merge` drift-recovery flow.
+### mgrep — setup detail
+
+`mgrep` is a Claude Code skill that replaces the built-in `Grep` and `WebSearch` tools with a unified, context-aware search interface. The `mgrep:mgrep` skill is listed in this session's available skills and is invoked automatically by Claude Code when searching.
+
+```bash
+# Install into the current project (adds to .claude/skills/)
+pnpm install:project mgrep
+
+# Or install for all projects (user-level)
+pnpm install:user mgrep
+```
+
+---
+
+## Setup
+
+```bash
+# 1. Legacy projects only — skip if streaming-docs already exist
+/w-document-build-up streaming-docs/documents
+
+# 2. Configure workflow paths and issue tracker
+/w-setup
+
+# 3. Configure Figma (optional)
+/f-setup
+```
+
+See [WORKFLOW_GUIDE.md § Setup Reference](WORKFLOW_GUIDE.md#setup-reference) for the full `.claude/workflow.yaml` field reference.
+
+---
 
 ## Extends
 
-- `nestjs` — NestJS patterns, Prisma, API design, security review, verification
+- `nestjs` — NestJS patterns, Prisma, API design, security review
 - `nextjs` — Next.js patterns, frontend architecture
 
-Both extend the `developer` chain, which provides `code-explorer`, `code-architect`,
-`code-reviewer`, `code-simplifier`, `planner` agents transitively.
+Both extend the `developer` chain, providing `planner`, `code-explorer`, `code-architect`, `code-reviewer`, `code-simplifier` transitively.
 
-## Migration from v2 / v3 / v4
-
-| v2 / v3 / v4 component | Replacement |
-|---|---|
-| `dev-task` / `quick-fix` / `dev-task-status` / `dev-task-reset` | `w-task` / `w-fix` / `w-status` / `w-reset` (+ `/w-setup` wizard) |
-| `build-ui-kit` / `build-static-page` / `streaming-figma` | `f-ui-kit` / `f-page` / `f-import` / `f-review` (+ `/f-setup`) |
-| `hsd-post-merge` | `w-doc-gate` (pre-PR invariant — kept as legacy command) |
-| (none) | `w-document-build-up` for legacy doc backfill |
-
-Run `/w-setup` after upgrading to define the doc paths (`module_docs_root`,
-`db_docs_root`, `master_erd_path`, etc.) that the new helpers consume.
+---
 
 ## Source
 
