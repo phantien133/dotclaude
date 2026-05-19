@@ -2,7 +2,7 @@
 name: nextjs
 kind: framework
 description: Next.js framework preset — React app structure, Turbopack dev server, and frontend patterns for production apps.
-version: 0.1.0
+version: 0.2.0
 extends:
   - developer
   - typescript

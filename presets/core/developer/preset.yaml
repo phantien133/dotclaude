@@ -2,7 +2,7 @@
 name: developer
 kind: core
 description: Extends ai-native with cross-stack developer tooling — GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.
-version: 0.1.0
+version: 0.2.0
 extends:
   - ai-native
 components:

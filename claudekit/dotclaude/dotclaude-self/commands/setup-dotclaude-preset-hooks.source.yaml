@@ -8,12 +8,17 @@ source:
   ref: components
 imported_at: "2026-05-19"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Extended to support plugin-based installs (enabledPlugins). Step 1 now also
+  checks settings.json.enabledPlugins and reads hooks-manifest.js from the plugin
+  cache (~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/hooks/).
+  Step 3 computes correct hook paths per flow (installer vs. plugin cache).
+  Step 5 table adds Source column to show which plugin each hook comes from.
 notes: >-
   Self-authored command. Interactive hook wiring for any installed dotclaude preset.
-  Reads hooks/hooks-manifest.js (written by installer) and applies changes to
-  settings.json. Converted from skill to command — only invoked on demand.
+  Reads hooks/hooks-manifest.js from installer location OR plugin cache, and applies
+  changes to settings.json. Converted from skill to command — only invoked on demand.
 dependencies:
   required:
     agents: []
