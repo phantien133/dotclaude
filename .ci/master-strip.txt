@@ -20,5 +20,5 @@ dependencies.yaml
 .github/
 .ci/
 
-# rsync internals
-.git/
+# rsync internals — no trailing slash: matches both .git/ dir (source) and .git file (worktree)
+.git
