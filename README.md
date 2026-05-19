@@ -13,42 +13,35 @@ project.
 
 All bundles live under `plugins/` and are registered in
 [`.claude-plugin/marketplace.json`](./.claude-plugin/marketplace.json).
+Full preset docs and authoring guide: **[docs/PLUGINS.md](./docs/PLUGINS.md)**
 
 ### Cross-stack baselines
 
-| Plugin | Version | Description |
-|---|---|---|
-| [`core`](./plugins/core/) | 0.1.0 | Universal baseline for any Claude Code user — context management, productivity, and semantic search. |
-| [`ai-native`](./plugins/ai-native/) | 0.1.0 | Extends `core` with AI self-learning and skill creation. For users who want Claude to improve with their personal workflow over time. |
-| [`developer`](./plugins/developer/) | 0.1.0 | Extends `ai-native` with cross-stack developer tooling — GitHub ops, quality gates, architecture planning. |
+| Plugin | Version | Description | Preset docs |
+|---|---|---|---|
+| [`core`](./plugins/core/) | 0.1.0 | Universal baseline for any Claude Code user — context management, productivity, and semantic search. | [README](./presets/core/core/README.md) |
+| [`ai-native`](./plugins/ai-native/) | 0.1.0 | Extends `core` with AI self-learning and skill creation. For users who want Claude to improve with their personal workflow over time. | [README](./presets/core/ai-native/README.md) |
+| [`developer`](./plugins/developer/) | 0.1.0 | Extends `ai-native` with cross-stack developer tooling — GitHub ops, quality gates, architecture planning. | [README](./presets/core/developer/README.md) |
 
 ### Framework presets
 
-| Plugin | Version | Description |
-|---|---|---|
-| [`nestjs`](./plugins/nestjs/) | 0.1.0 | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design patterns. |
-| [`nextjs`](./plugins/nextjs/) | 0.1.0 | Next.js React app structure — Turbopack dev server, frontend patterns for production apps. |
+| Plugin | Version | Description | Preset docs |
+|---|---|---|---|
+| [`nestjs`](./plugins/nestjs/) | 0.1.0 | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design patterns. | [README](./presets/framework/nestjs/README.md) |
+| [`nextjs`](./plugins/nextjs/) | 0.1.0 | Next.js React app structure — Turbopack dev server, frontend patterns for production apps. | [README](./presets/framework/nextjs/README.md) |
 
 ### Hilab streaming workflow
 
-| Plugin | Version | Description |
-|---|---|---|
-| [`cistreaming`](./plugins/cistreaming/) | 1.0.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Public `w-*` suite + `f-*` Figma flow + streaming rules + doc governance. |
-
-**cistreaming docs** (in [`presets/purpose/cistreaming/`](./presets/purpose/cistreaming/)):
-
-| Doc | Contents |
-|-----|----------|
-| [README.md](./presets/purpose/cistreaming/README.md) | What the preset bundles, dependencies (Figma MCP, Plane MCP, mgrep, glab), setup steps |
-| [WORKFLOW_GUIDE.md](./presets/purpose/cistreaming/WORKFLOW_GUIDE.md) | Full `/w-task` and `/w-fix` phase flows, free-prompt guide, `workflow.yaml` field reference |
-| [AGENTS.md](./presets/purpose/cistreaming/AGENTS.md) | Agent orchestration rules, security guidelines, NestJS/streaming coding conventions |
+| Plugin | Version | Description | Preset docs |
+|---|---|---|---|
+| [`cistreaming`](./plugins/cistreaming/) | 1.0.0 | Dev workflow for the cistreaming platform (NestJS + Next.js + SRS + GraphQL). Public `w-*` suite + `f-*` Figma flow + streaming rules + doc governance. | [README](./presets/purpose/cistreaming/README.md) · [WORKFLOW_GUIDE](./presets/purpose/cistreaming/WORKFLOW_GUIDE.md) · [AGENTS](./presets/purpose/cistreaming/AGENTS.md) |
 
 ### Dotclaude self-tooling
 
-| Plugin | Version | Description |
-|---|---|---|
-| [`dotclaude-bootstrap`](./plugins/dotclaude-bootstrap/) | 0.1.0 | First-time setup wizard, preset-creation wizard, debugger, and external plugin discovery. Install at user level when onboarding new dotclaude users. |
-| [`dotclaude-self`](./plugins/dotclaude-self/) | 0.2.0 | Full dotclaude working environment — preset authoring wizards, self-learning, component picker, skill creator. Install only when working inside a cloned `dotclaude` repo. |
+| Plugin | Version | Description | Preset docs |
+|---|---|---|---|
+| [`dotclaude-bootstrap`](./plugins/dotclaude-bootstrap/) | 0.1.0 | First-time setup wizard, preset-creation wizard, debugger, and external plugin discovery. Install at user level when onboarding new dotclaude users. | [README](./presets/purpose/dotclaude-bootstrap/README.md) |
+| [`dotclaude-self`](./plugins/dotclaude-self/) | 0.2.0 | Full dotclaude working environment — preset authoring wizards, self-learning, component picker, skill creator. Install only when working inside a cloned `dotclaude` repo. | [README](./presets/purpose/dotclaude-self/README.md) |
 
 ---
 

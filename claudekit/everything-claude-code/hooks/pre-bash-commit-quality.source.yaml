@@ -6,8 +6,8 @@ source:
   ref: main
 imported_at: 2026-05-08
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: "Changed skip logic: any path containing /hooks/ is skipped (self-flag prevention for all hook scripts); .claude/skills/ skipped as copy-installed vendored copies."
 notes: null
 dependencies:
   required:

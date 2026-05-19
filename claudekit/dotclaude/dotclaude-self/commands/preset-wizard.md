@@ -346,40 +346,90 @@ Create `presets/<kind>/<name>/README.md` with the following sections:
 1. **What this preset is for** (1–2 sentences)
 2. **Who should use it**
 3. **Components table** — type, name, one-line description
-4. **Hook wiring** — event config block with actual paths for each install level
-5. **Enable / Disable after install** — how to turn individual pieces on/off
+4. **Hooks** — full hook reference with recommended defaults
+5. **Enable / Disable after install** — per-hook and per-plugin instructions
 6. **Install instructions**
 
-**"Enable / Disable after install" section template:**
+**Hook reference section (§4) — generate one row per hook:**
+
+```markdown
+## Hooks
+
+| Hook | Event | Matcher | Recommended | What it does |
+|------|-------|---------|-------------|--------------|
+| `suggest-compact` | `PreToolUse` | `""` | ✓ Enable | Warns when context window is near limit |
+| `pre-compact` | `PreCompact` | `""` | ✓ Enable | Saves session state before compaction |
+| `desktop-notify` | `Stop` | `""` | ✓ Enable | Desktop notification when Claude stops |
+| `cost-tracker` | `Stop` | `""` | ✓ Enable | Logs session cost to `.claude/costs.log` |
+| `pre-bash-commit-quality` | `PreToolUse` | `"Bash"` | ✓ Enable — blocks bad commits | Lint + conventional commit check before git commit |
+| `doc-file-warning` | `PreToolUse` | `"Write"` | Optional | Warns before writing doc files |
+| `post-edit-typecheck` | `PostToolUse` | `"Edit"` | Optional — TypeScript projects | Runs tsc after each file edit |
+```
+
+For each hook, populate the "Recommended" column based on the preset's use case:
+- Hooks that are non-blocking and universally useful → **✓ Enable**
+- Hooks that block or are stack-specific → **Optional** with a context note
+- Hooks that are disruptive for this preset's workflow → **⚠ Consider disabling**
+
+Then show the full `settings_patch.hooks` block for the **recommended defaults only**:
+
+```yaml
+## Recommended settings_patch (enabled hooks only)
+
+settings_patch:
+  hooks:
+    PreToolUse:
+      - matcher: ""
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/suggest-compact.js"   # user-level
+            # command: "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/suggest-compact.js"  # project-level
+    PreCompact:
+      - matcher: ""
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/pre-compact.js"
+    Stop:
+      - matcher: ""
+        hooks:
+          - type: command
+            command: "node ~/.claude/hooks/desktop-notify.js"
+          - type: command
+            command: "node ~/.claude/hooks/cost-tracker.js"
+```
+
+Include both path variants (user-level `~/.claude/hooks/` and project-level `${CLAUDE_PROJECT_DIR}/.claude/hooks/`) as comments so the user can switch based on their install level.
+
+**"Enable / Disable after install" section (§5):**
 
 ```markdown
 ## Enable / Disable after install
 
 ### Hooks
 
-To **disable** a specific hook, remove its entry from `settings.json`:
+Recommended hooks are pre-wired in `settings_patch`. To adjust after install:
 
-| Hook | Event | Disable by removing |
-|------|-------|-------------------|
-| `suggest-compact` | PreToolUse | the `suggest-compact` entry under `hooks.PreToolUse` |
-| `desktop-notify` | Stop | the `desktop-notify` entry under `hooks.Stop` |
+| Hook | Event | To disable: remove from `settings.json` |
+|------|-------|----------------------------------------|
+| `suggest-compact` | PreToolUse | entry under `hooks.PreToolUse[matcher=""]` |
+| `desktop-notify` | Stop | entry under `hooks.Stop` |
+| `cost-tracker` | Stop | entry under `hooks.Stop` |
+| `pre-bash-commit-quality` | PreToolUse (Bash) | entry under `hooks.PreToolUse[matcher="Bash"]` |
 
-To **disable all hooks** from this preset temporarily, remove the `hooks` key from `settings.json`.
+To **disable all hooks** temporarily, remove the `hooks` key from `settings.json`.
 
 ### Plugins / MCP servers
 
 | Tool | How to disable |
 |------|---------------|
-| `mgrep` | Remove `"mgrep@Mixedbread-Grep": true` from `enabledPlugins` in `~/.claude/settings.json` |
-
-To **re-enable**, add the entry back or run `/plugins install <name>@<Marketplace>` again.
+| `mgrep` | Remove `"mgrep@Mixedbread-Grep": true` from `enabledPlugins` in `settings.json` |
 
 ### Full uninstall
 
 ```bash
-pnpm uninstall <preset-name>
+pnpm uninstall:project <preset-name>   # project-level
+pnpm uninstall:user <preset-name>      # user-level
 ```
-This removes all symlinks/copies and reverts `settings.json` patches applied by this preset.
 ```
 
 ### Step 3c — Build and typecheck
@@ -416,12 +466,13 @@ Report pass/fail and any output.
 
 Generate `presets/<kind>/<name>/AGENTS.md`. This file is auto-copied to the project root on `pnpm install:project`.
 
-**Step 3f.1 — Resolve full agent list**
+**Step 3f.1 — Resolve full agent list and version**
 
 Collect agents from the preset and its entire `extends:` chain:
-1. Read `preset.yaml` → `components.agents` (each entry is `{name, source}`)
-2. For each preset in the extends chain (already resolved in Phase 2): collect their `components.agents`
-3. Deduplicate by `name`. For each agent, read `claudekit/<source>/agents/<name>.md` → extract the `description:` frontmatter field.
+1. Read `preset.yaml` → extract `version:` field (default `"0.1.0"` if not set)
+2. Read `preset.yaml` → `components.agents` (each entry is `{name, source}`)
+3. For each preset in the extends chain (already resolved in Phase 2): collect their `components.agents`
+4. Deduplicate by `name`. For each agent, read `claudekit/<source>/agents/<name>.md` → extract the `description:` frontmatter field.
 
 **Step 3f.2 — Derive Core Principles**
 
@@ -444,8 +495,13 @@ Include 4–6 principles maximum. Prefer specific ones over generic.
 ```markdown
 # <Preset Display Name> — Agent Instructions
 
+<one-sentence description from preset.yaml `description:` field>
+
+**Version:** <version from preset.yaml>
+
 ## Core Principles
-<bullet list of 4-6 principles from Step 3f.2>
+
+<numbered list of 4-6 principles from Step 3f.2>
 
 ## Available Agents
 
@@ -455,22 +511,42 @@ Include 4–6 principles maximum. Prefer specific ones over generic.
 
 ## Agent Orchestration
 
-- **planner** — invoke for any feature with more than 3 files changed
-- **code-architect** — invoke for architectural decisions, new module structure
-- Use parallel agent execution for independent sub-tasks
-<add any preset-specific orchestration rules based on components>
+Use agents **proactively without waiting for the user to ask**:
+
+- Complex feature requests (>3 files) → **planner**
+- Code just written or modified → **code-reviewer**
+- Architectural decisions or new module structure → **code-architect**
+- Bug fix or new feature → **tdd-guide** (if present)
+- Security-sensitive code → **security-reviewer** (if present)
+
+Use parallel execution for independent sub-tasks — launch multiple agents simultaneously.
+<add any preset-specific orchestration rules based on which agents are included>
 
 ## Security Guidelines
 
+**Before ANY commit:**
 - No hardcoded secrets (API keys, passwords, tokens)
-- Validate all user inputs at system boundaries
-- Never bypass authentication/authorization checks
-<add stack-specific security notes if security-review skill is included>
+- All user inputs validated at system boundaries
+- SQL injection prevention (parameterized queries only)
+- XSS prevention (sanitized HTML output)
+- Authentication/authorization verified on every route
+- Error messages do not leak sensitive data
 
-## Stack Notes
+**If a security issue is found:** STOP → invoke security-reviewer → fix CRITICAL issues → rotate any exposed secrets → scan codebase for similar patterns.
+<add stack-specific security notes if security-review or nestjs-patterns skill is included>
 
-<one bullet per skill included (not inherited), describing its scope:>
-- **<skill-name>**: <one-line scope description from skill description frontmatter>
+## Coding Style
+
+<one bullet per skill included (not inherited), describing its scope — derived from each skill's description frontmatter:>
+- **<skill-name>**: <one-line scope description>
+
+<if TypeScript/JS stack, add:>
+- No `any` casts — use explicit types or generics
+- Prefer immutability — create new objects rather than mutating
+
+<if backend/API stack, add:>
+- Functions under 50 lines; files under 400 lines
+- Handle errors at every level — never swallow silently
 ```
 
 **Step 3f.4 — Write and confirm**
@@ -482,6 +558,39 @@ Show the user a preview. Ask:
 
 If the user requests changes, revise and re-present. Loop until approval.
 
+### Step 3g — Register preset in plugin index and README
+
+After AGENTS.md is approved, update the two registry files:
+
+**3g.1 — Update `docs/PLUGINS.md`**
+
+Read `docs/PLUGINS.md`. Find the section that matches the preset's `kind`:
+- `kind: core` → section `## Core`
+- `kind: framework` → section `## Framework`
+- `kind: purpose` → section `## Purpose`
+
+Append a new table row at the bottom of the matching section:
+
+```markdown
+| [`<name>`](../plugins/<name>/) | [presets/<kind>/<name>/README.md](../presets/<kind>/<name>/README.md) | <description from preset.yaml> |
+```
+
+**3g.2 — Update root `README.md`**
+
+Read `README.md`. Find the plugin table that matches the preset's `kind`:
+- `kind: core` → table under `### Cross-stack baselines`
+- `kind: framework` → table under `### Framework presets`
+- `kind: purpose` → table under the appropriate `###` heading (create one if needed)
+
+Append a new table row:
+
+```markdown
+| [`<name>`](./plugins/<name>/) | <version from preset.yaml> | <description from preset.yaml> | [README](./presets/<kind>/<name>/README.md) |
+```
+
+After writing both files, confirm:
+> "Plugin index and README updated. Ready to install — see install instructions below."
+
 ---
 
 ## Phase 4: Handoff
@@ -489,10 +598,11 @@ If the user requests changes, revise and re-present. Loop until approval.
 ### If all steps passed
 
 Report:
-- Files created (list paths, including AGENTS.md)
+- Files created (list all paths including preset.yaml, README.md, AGENTS.md)
 - Build: ✓
 - Tests: ✓ (or "skipped — no scripts in bundle")
 - AGENTS.md: ✓
+- Registry: ✓ (docs/PLUGINS.md + README.md updated)
 
 Then show install instructions:
 ```bash
