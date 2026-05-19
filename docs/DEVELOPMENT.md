@@ -4,42 +4,77 @@ How to work inside this repo: vendor components, author presets, add upstream so
 
 For design decisions see [architecture.md](architecture.md). For sidecar schema see [PROVENANCE.md](PROVENANCE.md). For preset schema see [PRESETS.md](PRESETS.md).
 
-> **Branch note:** all development work happens on `develop` / `hilab-develop`. The `master` / `hilab-master` branches contain only built plugin bundles — see [Branch Strategy](#branch-strategy) at the bottom.
+> **Branch note:** all development work happens on `develop` / `hilab-develop`. The `master` / `hilab-master` branches contain only built plugin bundles and docs — see [Branch Strategy](#branch-strategy) at the bottom.
+
+> **Claude Code first:** most workflows below have a dedicated skill or slash command. Use those instead of running shell commands manually — they handle the full pipeline, prompt for decisions, and validate the result.
+
+---
+
+## dotclaude-self components
+
+The `dotclaude-self` preset (installed at `.claude/`) provides the authoring tooling for this repo:
+
+| Component | Type | Trigger | What it does |
+|-----------|------|---------|--------------|
+| `dotclaude-component-picker` | skill | mention picking/vendoring any upstream component | Full 8-step pipeline: browse → evaluate → cross-reference → vendor → sidecar → preset → install → verify |
+| `preset-wizard` | slash command `/preset-wizard` | creating a new preset | Interactive wizard: elicits requirements, proposes components, builds and verifies the preset |
+| `plugin-discovery` | skill | finding external Claude Code components for dotclaude | Searches GitHub/npm for skills, agents, hooks, commands suitable for vendoring |
+| `preset-debugger` | skill | preset fails to build, typecheck, or test | Diagnoses broken preset/plugin artifacts |
+| `skill-creator` | skill | creating or optimizing a skill | Full lifecycle: scaffold, iterate, eval, benchmark |
+| `dotclaude-setup` | slash command `/dotclaude-setup` | first-time setup or onboarding a new contributor | Bootstrap wizard: locate repo, pick preset, install |
+
+Supporting skills available in any session:
+
+| Skill | When it activates |
+|-------|-------------------|
+| `coding-standards` | Code review, naming, readability questions |
+| `tdd-workflow` | Writing new features or fixing bugs — enforces RED → GREEN → refactor |
+| `github-ops` | GitHub issue triage, PR management, CI ops via `gh` CLI |
+| `doc-coauthoring` | Writing docs, proposals, technical specs |
 
 ---
 
 ## 1. Vendor a component from upstream
 
-Use the `dotclaude-component-picker` skill for the guided 8-step pipeline (browse → evaluate → cross-reference → vendor → sidecar → preset → install → verify). Or follow the manual path:
+**Use the `dotclaude-component-picker` skill.** Open a Claude Code session in this repo and describe what you want to vendor — the skill handles the full 8-step pipeline.
+
+Example prompts:
+- *"pick the mcp-builder skill from everything-claude-code"*
+- *"vendor the code-reviewer agent from ECC, evaluate it first"*
+- *"sync dotclaude-component-picker from upstream — check if there are updates"*
+
+The skill will: browse the upstream source, evaluate fit, scan for cross-references, copy the file(s) into the right `claudekit/<source>/` folder, create the sidecar, update a preset if needed, reinstall, and verify.
+
+**Manual path** (if needed without Claude Code):
 
 ```bash
 # Prerequisites: develop branch + submodules initialized
 git submodule update --init --recursive
 
-# 1. Find the component
-ls upstream/everything-claude-code/{agents,skills,commands,hooks,rules}/
-
-# 2. Copy into the matching source folder
 cp upstream/everything-claude-code/agents/<name>.md \
    claudekit/everything-claude-code/agents/<name>.md
 
-# 3. Get the pin commit
-git -C upstream/everything-claude-code rev-parse HEAD
+git -C upstream/everything-claude-code rev-parse HEAD   # → pinned_commit for sidecar
 
-# 4. Create sidecar (see docs/PROVENANCE.md for schema)
-#    claudekit/everything-claude-code/agents/<name>.source.yaml
+# Create sidecar: claudekit/everything-claude-code/agents/<name>.source.yaml
+# Reference in preset.yaml: components.agents: [{name: <name>, source: everything-claude-code}]
 
-# 5. Reference in a preset
-#    presets/<kind>/<name>/preset.yaml
-#    components.agents: [{name: <name>, source: everything-claude-code}]
-
-# 6. Verify
 pnpm typecheck && pnpm test
 ```
+
+See [PROVENANCE.md](PROVENANCE.md) for the sidecar schema.
 
 ---
 
 ## 2. Create or edit a preset
+
+**Use `/preset-wizard`.** The wizard elicits requirements step by step, proposes matching components from `claudekit/`, builds the `preset.yaml`, and runs validation.
+
+Example prompts after invoking `/preset-wizard`:
+- *"I want a preset for a TypeScript monorepo — needs code review, testing, GitHub ops"*
+- *"Add the mgrep skill to the existing developer preset"*
+
+**Manual path:**
 
 ```bash
 KIND=core   # or: framework, purpose
@@ -53,13 +88,26 @@ $EDITOR presets/$KIND/$NAME/preset.yaml
 pnpm validate $NAME --kind $KIND
 ```
 
-Every component reference in `preset.yaml` is an object `{name, source}` — bare strings do not parse. Valid `source` aliases are listed in [CLAUDE.md § Source layout](../CLAUDE.md).
+Every component reference in `preset.yaml` is `{name, source}` — bare strings do not parse. Valid `source` aliases are in [CLAUDE.md § Source layout](../CLAUDE.md).
 
-See [PRESETS.md](PRESETS.md) for the full schema and authoring guide.
+If the preset fails to build or validate, invoke the `preset-debugger` skill.
 
 ---
 
-## 3. Add a new upstream source
+## 3. Find and evaluate new external components
+
+**Use the `plugin-discovery` skill** to search for Claude Code components worth vendoring.
+
+Example prompts:
+- *"find external skills for database schema generation"*
+- *"search GitHub for Claude Code hooks related to cost tracking"*
+- *"discover MCP servers suitable for dotclaude"*
+
+The skill searches GitHub (and optionally npm), evaluates fit against dotclaude conventions, and hands off to `dotclaude-component-picker` for vendoring.
+
+---
+
+## 4. Add a new upstream source
 
 ```bash
 # 1. Add submodule
@@ -73,12 +121,12 @@ git submodule add <repo-url> upstream/<alias>
 # 3. Create source folder
 mkdir -p claudekit/<alias>/
 
-# 4. Vendor components (follow § 1 above)
+# 4. Vendor components — use dotclaude-component-picker skill
 ```
 
 ---
 
-## 4. Build and publish a plugin
+## 5. Build and publish a plugin
 
 ```bash
 # Build bundle into plugins/<name>/
@@ -87,30 +135,32 @@ pnpm build-plugin <preset-name> --clean
 # Verify output
 ls plugins/<preset-name>/
 
-# Commit the bundle on develop, then promote to master (see § 5)
+# Commit the bundle on develop, then promote to master (see § 6)
 pnpm publish-plugin <preset-name> --clean
 ```
 
-Plugin bundles contain component files + `.claude-plugin/plugin.json`. Sidecar files (`*.source.yaml`, `SOURCE.yaml`) are excluded from bundles.
+Plugin bundles contain component files + `.claude-plugin/plugin.json`. Sidecar files (`*.source.yaml`, `SOURCE.yaml`) are excluded.
+
+If the build fails, use the `preset-debugger` skill: *"the cistreaming plugin fails to build — debug it"*.
 
 ---
 
-## 5. Promote develop → master
+## 6. Promote develop → master
 
-`master` / `hilab-master` holds only `plugins/` and `.claude-plugin/marketplace.json`. Everything else (`claudekit/`, `presets/`, `scripts/`, `upstream/`) is absent.
+`master` holds only `plugins/`, `docs/`, and a few root files. Source dirs (`claudekit/`, `presets/`, `scripts/`) are stripped.
 
 ```bash
-git checkout hilab-master
+git checkout release/master   # or create a topic branch from hilab/master
 
-# Cherry-pick the feature commit(s) — not the strip commit
+# Cherry-pick the feature commit(s)
 git cherry-pick <commit-hash>
 
-# Re-apply the strip commit to remove dev-only directories
+# Apply the strip commit (removes claudekit/ presets/ scripts/ tsconfig.json etc.)
 # Strip commit message: "chore(master): strip dev-only dirs"
 
-# Push
-git push hilab hilab-master            # always
-git push origin master                 # only for public (non-Hilab-specific) content
+# Push — both remotes if public content, hilab only if private
+git push hilab release/master
+git push origin release/master   # only for public (non-Hilab-specific) content
 ```
 
 ---
@@ -120,6 +170,6 @@ git push origin master                 # only for public (non-Hilab-specific) co
 | Branch | Contains | Purpose |
 |--------|----------|---------|
 | `develop` / `hilab-develop` | Full source tree + submodules (~270 MB) | All development work; all PRs/MRs target here |
-| `master` / `hilab-master` | `plugins/` + marketplace index only | Lean release consumed by Claude Code marketplace |
+| `master` / `hilab-master` | `plugins/` + `docs/` + root files | Lean release consumed by Claude Code marketplace |
 
-`claudekit/` exists **only on develop** — it is the source for building `plugins/`. Once built, `claudekit/` is not needed by end-users and is stripped from master.
+`claudekit/` exists **only on develop** — it is the source for building `plugins/`. Once built, `claudekit/` is stripped from master.
