@@ -141,7 +141,7 @@ pnpm publish-plugin <preset-name> --clean
 
 Plugin bundles contain component files + `.claude-plugin/plugin.json`. Sidecar files (`*.source.yaml`, `SOURCE.yaml`) are excluded.
 
-If the build fails, use the `preset-debugger` skill: *"the cistreaming plugin fails to build — debug it"*.
+If the build fails, use the `preset-debugger` skill: *"the developer plugin fails to build — debug it"*.
 
 ---
 
