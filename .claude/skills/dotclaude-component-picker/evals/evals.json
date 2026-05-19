@@ -1,0 +1,35 @@
+{
+  "skill_name": "dotclaude-component-picker",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "pick the code-reviewer agent from ECC and add it to the dotclaude-self preset",
+      "expected_output": "Runs all 8 steps: browse ECC agents/, evaluates code-reviewer.md, runs cross-reference scan to detect any skill/hook dependencies, gets upstream commit, cp to claudekit/agents/, creates code-reviewer.source.yaml sidecar with dependencies populated, adds to preset YAML, pnpm install:project, pnpm typecheck && pnpm test"
+    },
+    {
+      "id": 2,
+      "prompt": "vendor the claude-api skill from anthropic-skills into claudekit",
+      "expected_output": "Updates submodule, lists skills/, reads SKILL.md, runs cross-reference scan (finds shared/ dir, detects external deps like python3/claude CLI), notes no inter-skill dependencies, cp -r to claudekit/skills/claude-api/, creates SOURCE.yaml with correct commit hash and external deps, adds to a preset, validates"
+    },
+    {
+      "id": 3,
+      "prompt": "I want to port a hook from everything-claude-code — there's a pre-commit hook that formats TypeScript files automatically. How do I add it?",
+      "expected_output": "Identifies it as a file component (single .sh), runs browse step, reads script header to find any dependencies on other hooks/tools, copies to claudekit/hooks/, creates <name>.source.yaml as sibling file with any detected external deps (node, prettier), adds hook to preset components.hooks[], installs and verifies"
+    },
+    {
+      "id": 4,
+      "prompt": "pick the pptx skill from anthropic-skills — I noticed it shares scripts/office/ with docx and xlsx, do I need to pick those too?",
+      "expected_output": "Runs cross-reference scan on pptx/. Detects that scripts/office/ is identical to docx/ and xlsx/ scripts/office/ (diff confirms). Explains this is upstream design — each skill is self-contained. Does NOT create artificial shared dependency. Notes the shared code in SOURCE.yaml notes field ('scripts/office/ is identical to docx and xlsx — sync together'). Sets dependencies.required to empty since pptx is self-contained. Proceeds with vendor as independent copy."
+    },
+    {
+      "id": 5,
+      "prompt": "I want to add the mcp-builder skill from anthropic-skills. It mentions using FastMCP — does it depend on any other skills already in claudekit?",
+      "expected_output": "Step 2.5 scan: greps mcp-builder/ for skill/agent references. Finds no references to other claudekit skills (FastMCP is an external Python package). Checks scripts/ for Python imports — finds only standard library + mcp/fastmcp (external). Adds fastmcp to dependencies.external with type: python_pkg. Confirms no inter-skill deps. Proceeds to vendor. SOURCE.yaml has empty dependencies.required and correct external entry."
+    },
+    {
+      "id": 6,
+      "prompt": "sync the coding-standards skill from ECC — check if it has any new cross-references in the latest upstream version that we need to pick",
+      "expected_output": "Runs pnpm sync skills/coding-standards to show diff between pinned commit and upstream HEAD. In the diff, scans for any new skill/agent/hook references added since last import. If new references found that aren't in claudekit: proposes to vendor them. If no new cross-references: confirms sidecar.dependencies is still accurate. Reports whether upgrade is safe to adopt."
+    }
+  ]
+}
