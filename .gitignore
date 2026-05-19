@@ -26,9 +26,11 @@ upstream/everything-claude-code/node_modules/
 # .dotclaude-manifest.yaml: per-target installer manifest, not repo
 # settings.local.json: machine-local permissions
 # skills/: installer-managed symlinks, recreated via pnpm install:project --force
+# rules/: installer-managed symlinks + personal rules
 .claude/.dotclaude-manifest.yaml
 .claude/settings.local.json
 .claude/skills/
+.claude/rules/git-remotes.md
 
 # TypeScript / Bun
 node_modules/
