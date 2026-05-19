@@ -25,27 +25,36 @@ Consumed by Claude Code marketplace via `/plugin marketplace add`. Contains only
 | `plugins/<name>/` | Pre-built plugin bundles ready for installation |
 | `.claude-plugin/marketplace.json` | Marketplace index read by Claude Code |
 
-`claudekit/`, `presets/`, `scripts/`, and `upstream/` are **not present** on master — stripped to keep the clone small (a few MB vs ~270 MB on develop).
+Stripped paths (not present on master): `claudekit/`, `presets/`, `scripts/`, `upstream/`,
+`CLAUDE.md`, `.claude/`, `.github/`, `.ci/` — defined in `.ci/master-strip.txt`.
 
 ## Promoting develop → master
 
-```bash
-git checkout release/master
+**Fully automated via CI — no manual action needed.**
 
-# Cherry-pick feature commits (not the strip commit itself)
-git cherry-pick <commit-hash>
+Push changes to `develop` and the CI handles everything:
 
-# Re-apply the strip commit to remove dev-only dirs
-# Result: only plugins/ and .claude-plugin/ remain as content
-
-git push origin release/master:master
+```
+develop push
+    └── CI triggers automatically
+            └── rsync develop → release/promote-to-master (strips dev-only dirs)
+                    └── opens PR (or appends commit to existing open PR)
+                            └── merge PR → master updated
 ```
 
-The strip commit message is `chore(master): strip dev-only dirs` and removes `claudekit/`, `presets/`, `scripts/`, `upstream/` from the tree.
+- GitHub: `.github/workflows/promote-to-master.yml`
+- GitLab (hilab): `.gitlab-ci.yml`
+
+**Do not:**
+- Push directly to `master` or `hilab/master`
+- Manually create PRs/MRs targeting master
+- Check out local `master` or `hilab-master` branches (both deleted)
+
+The only action needed is committing and pushing to `develop`. The CI takes care of the rest.
 
 ## Summary
 
 ```
 develop  = full source + submodules  →  where all work happens
-master   = plugins/ only             →  what users install
+master   = plugins/ only             →  what users install, managed by CI
 ```
