@@ -219,15 +219,21 @@ export async function buildPlugin(
     log.debug(`Wrote ${join(pluginRoot, 'SETUP.md')}`);
   }
 
-  // Copy AGENTS.md from preset directory if present.
+  // Copy AGENTS.md and README.md from preset directory if present.
   try {
     const { presetDir } = await locatePreset(presetName, opts.kind ? { kind: opts.kind } : {});
-    const agentsMdSrc = join(presetDir, 'AGENTS.md');
-    await stat(agentsMdSrc);
-    await copyFile(agentsMdSrc, join(pluginRoot, 'AGENTS.md'));
-    log.debug(`Copied AGENTS.md from ${presetDir}`);
+    for (const docFile of ['AGENTS.md', 'README.md'] as const) {
+      try {
+        const src = join(presetDir, docFile);
+        await stat(src);
+        await copyFile(src, join(pluginRoot, docFile));
+        log.debug(`Copied ${docFile} from ${presetDir}`);
+      } catch {
+        // File not present — skip.
+      }
+    }
   } catch {
-    // No AGENTS.md in preset — skip.
+    // Preset dir not found — skip doc copy.
   }
 
   return { outDir: pluginRoot, manifest, componentCount, skipped };
