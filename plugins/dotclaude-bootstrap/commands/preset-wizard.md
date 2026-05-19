@@ -338,6 +338,26 @@ Only include component types that have entries — omit empty lists.
 Omit `external_setup` entirely if no external tools were declared.
 Omit `extends` array if no parent preset.
 
+### Step 3a.5 — Generate hooks.yaml
+
+If `settings_patch.hooks` is non-empty, create `presets/<kind>/<name>/hooks.yaml` alongside `preset.yaml`.
+
+Use the hook metadata collected in Phase 2e (file, event, matcher, description). Attribute each hook to `<preset-name>`.
+
+```yaml
+# yaml-language-server: $schema=../../../presets/schema/hooks-manifest.schema.json
+hooks:
+  - file: <hook-name>.js
+    description: <one-line description of what the hook does>
+    event: <PreToolUse | PostToolUse | Stop | PreCompact>
+    matcher: "<matcher string — empty string if none>"
+    preset: <preset-name>
+```
+
+One entry per hook command. If two hooks share the same event + matcher block, list them as separate entries with their individual file names.
+
+Omit this file entirely if the preset has no hooks (including nothing inherited via `extends`).
+
 ### Step 3b — Create preset README
 
 Create `presets/<kind>/<name>/README.md` with the following sections:

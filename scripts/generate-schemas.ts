@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { PresetSchema, SidecarSchema, ManifestSchema } from './lib/schema.ts';
+import { PresetSchema, SidecarSchema, ManifestSchema, HooksManifestSchema } from './lib/schema.ts';
 
 const REPO_ROOT = new URL('..', import.meta.url).pathname;
 
@@ -30,6 +30,12 @@ const targets: Target[] = [
     outPath: join(REPO_ROOT, 'presets/schema/manifest.schema.json'),
     title: 'dotclaude Install Manifest',
     $id: 'https://phantien133.github.io/dotclaude/schema/manifest.schema.json',
+  },
+  {
+    schema: HooksManifestSchema,
+    outPath: join(REPO_ROOT, 'presets/schema/hooks-manifest.schema.json'),
+    title: 'dotclaude Hooks Manifest',
+    $id: 'https://phantien133.github.io/dotclaude/schema/hooks-manifest.schema.json',
   },
 ];
 

@@ -258,3 +258,25 @@ export const ManifestSchema = z
   })
   .strict();
 export type Manifest = z.infer<typeof ManifestSchema>;
+
+export const HOOK_EVENTS = ['PreToolUse', 'PostToolUse', 'Stop', 'PreCompact'] as const;
+export const HookEventSchema = z.enum(HOOK_EVENTS);
+export type HookEvent = z.infer<typeof HookEventSchema>;
+
+export const HookManifestEntrySchema = z
+  .object({
+    file: z.string().min(1),
+    description: z.string().min(1),
+    event: HookEventSchema,
+    matcher: z.string(),
+    preset: z.string().min(1),
+  })
+  .strict();
+export type HookManifestEntry = z.infer<typeof HookManifestEntrySchema>;
+
+export const HooksManifestSchema = z
+  .object({
+    hooks: z.array(HookManifestEntrySchema),
+  })
+  .strict();
+export type HooksManifest = z.infer<typeof HooksManifestSchema>;

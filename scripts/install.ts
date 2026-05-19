@@ -11,6 +11,8 @@ import { loadSettings, writeSettings, mergeSettings, subtractSettings, rewriteHo
 import { loadManifest, writeManifest, buildManifestAdditions, mergeManifest } from './lib/manifest.ts';
 import { log } from './lib/logger.ts';
 import { uninstallPreset, upgradePreset, auditTarget } from './lib/lifecycle.ts';
+import { buildHooksManifestEntries } from './lib/hooks-manifest.ts';
+import { dumpYaml } from './lib/yaml.ts';
 
 const program = new Command();
 program
@@ -319,6 +321,13 @@ async function runInstall(
   const additions = buildManifestAdditions(plan, mode, targetRoot, rewrittenPerPresetPatches);
   const newManifest = mergeManifest(existingManifest, additions);
   await writeManifest(manifestPath, newManifest);
+
+  // Write hooks.yaml — machine-readable manifest for the hook audit prompt.
+  const hookEntries = buildHooksManifestEntries(plan.all_presets);
+  if (hookEntries.length > 0) {
+    await writeFile(join(targetRoot, 'hooks.yaml'), dumpYaml({ hooks: hookEntries }), 'utf8');
+    log.info('  hooks.yaml updated');
+  }
 
   // External dep warnings.
   for (const probe of plan.external_warnings) {
