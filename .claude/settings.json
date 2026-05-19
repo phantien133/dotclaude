@@ -1,16 +1,16 @@
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-typecheck.js"
-          }
-        ]
+  "extraKnownMarketplaces": {
+    "Mixedbread-Grep": {
+      "source": {
+        "source": "github",
+        "repo": "mixedbread-ai/mgrep"
       }
-    ],
+    }
+  },
+  "enabledPlugins": {
+    "mgrep@Mixedbread-Grep": true
+  },
+  "hooks": {
     "PreToolUse": [
       {
         "matcher": "Edit|Write",
@@ -69,17 +69,17 @@
           }
         ]
       }
-    ]
-  },
-  "extraKnownMarketplaces": {
-    "Mixedbread-Grep": {
-      "source": {
-        "source": "github",
-        "repo": "mixedbread-ai/mgrep"
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ${CLAUDE_PROJECT_DIR}/.claude/hooks/post-edit-typecheck.js"
+          }
+        ]
       }
-    }
-  },
-  "enabledPlugins": {
-    "mgrep@Mixedbread-Grep": true
+    ]
   }
 }
