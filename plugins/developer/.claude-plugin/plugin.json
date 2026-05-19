@@ -1,7 +1,7 @@
 {
   "name": "developer",
   "version": "0.1.0",
-  "description": "Extends ai-native with cross-stack developer tooling \u2014 GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
+  "description": "Extends ai-native with cross-stack developer tooling — GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
   "author": {
     "name": "phantien133",
     "email": "tienpq@hilab.asia"

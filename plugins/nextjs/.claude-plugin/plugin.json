@@ -1,7 +1,7 @@
 {
   "name": "nextjs",
   "version": "0.1.0",
-  "description": "Next.js framework preset \u2014 React app structure, Turbopack dev server, and frontend patterns for production apps.",
+  "description": "Next.js framework preset — React app structure, Turbopack dev server, and frontend patterns for production apps.",
   "author": {
     "name": "phantien133",
     "email": "tienpq@hilab.asia"
