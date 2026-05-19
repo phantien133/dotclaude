@@ -5,6 +5,7 @@ description: NestJS framework preset — modular TypeScript backend with DTO val
 version: 0.1.0
 extends:
   - developer
+  - typescript
 components:
   skills:
     - name: nestjs-patterns

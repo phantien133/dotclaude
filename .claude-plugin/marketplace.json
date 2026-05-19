@@ -123,6 +123,32 @@
       "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
     },
     {
+      "name": "typescript",
+      "source": "./plugins/typescript",
+      "description": "TypeScript language preset — type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
+      "version": "0.1.0",
+      "author": {
+        "name": "hilabaikit",
+        "email": "tienpq@hilab.asia"
+      },
+      "license": "MIT",
+      "keywords": [
+        "typescript",
+        "language",
+        "type-safety",
+        "quality"
+      ],
+      "category": "workflow",
+      "tags": [
+        "typescript",
+        "language",
+        "type-safety",
+        "quality"
+      ],
+      "strict": false,
+      "repository": "https://gitlab.hilab.cloud/hilabaikit/dotclaude"
+    },
+    {
       "name": "nestjs",
       "source": "./plugins/nestjs",
       "description": "NestJS framework preset — modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.",
