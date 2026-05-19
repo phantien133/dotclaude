@@ -121,8 +121,8 @@ describe('buildPlugin', () => {
     vi.mocked(resolverMod.buildInstallPlan).mockResolvedValue(plan);
 
     let writtenJson: string | undefined;
-    vi.mocked(fsMod.writeFile).mockImplementation(async (_path, data) => {
-      writtenJson = data as string;
+    vi.mocked(fsMod.writeFile).mockImplementation(async (path, data) => {
+      if (String(path).endsWith('plugin.json')) writtenJson = data as string;
     });
 
     await buildPlugin('test-preset', {
@@ -152,8 +152,8 @@ describe('buildPlugin', () => {
     vi.mocked(resolverMod.buildInstallPlan).mockResolvedValue(plan);
 
     let writtenJson: string | undefined;
-    vi.mocked(fsMod.writeFile).mockImplementation(async (_path, data) => {
-      writtenJson = data as string;
+    vi.mocked(fsMod.writeFile).mockImplementation(async (path, data) => {
+      if (String(path).endsWith('plugin.json')) writtenJson = data as string;
     });
 
     await buildPlugin('test-preset', { outDir: '/tmp/test-plugin' });
@@ -215,8 +215,8 @@ describe('buildPlugin', () => {
     vi.mocked(resolverMod.buildInstallPlan).mockResolvedValue(makePlan(preset, []));
 
     let writtenJson: string | undefined;
-    vi.mocked(fsMod.writeFile).mockImplementation(async (_path, data) => {
-      writtenJson = data as string;
+    vi.mocked(fsMod.writeFile).mockImplementation(async (path, data) => {
+      if (String(path).endsWith('plugin.json')) writtenJson = data as string;
     });
 
     await buildPlugin('test-preset', {

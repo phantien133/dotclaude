@@ -72,3 +72,15 @@ export function buildHooksManifestEntries(allPresets: Preset[]): HookManifestEnt
 
   return entries;
 }
+
+/**
+ * Serialize hook entries to a CommonJS JS module.
+ * Claude reads this as text and parses the JSON — never executes it.
+ * File is written to hooks/hooks-manifest.js so marketplace install copies it
+ * alongside hook scripts into .claude/hooks/.
+ */
+export function buildHooksManifestJs(allPresets: Preset[]): string {
+  const entries = buildHooksManifestEntries(allPresets);
+  const json = JSON.stringify({ hooks: entries });
+  return `// hooks-manifest.js — data only, do not execute\nmodule.exports = ${json};\n`;
+}
