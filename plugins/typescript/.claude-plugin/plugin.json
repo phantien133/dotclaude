@@ -1,7 +1,7 @@
 {
   "name": "typescript",
   "version": "0.1.0",
-  "description": "TypeScript language preset \u2014 type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
+  "description": "TypeScript language preset — type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
   "author": {
     "name": "phantien133",
     "email": "tienpq@hilab.asia"
