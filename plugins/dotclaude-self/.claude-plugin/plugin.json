@@ -1,7 +1,7 @@
 {
   "name": "dotclaude-self",
   "version": "0.2.0",
-  "description": "Full dotclaude working environment \u2014 preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
+  "description": "Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
   "author": {
     "name": "phantien133",
     "email": "tienpq@hilab.asia"

@@ -1,4 +1,8 @@
-# Setup Hooks
+---
+description: Wire or unwire hooks for the installed dotclaude preset. Run when you want to enable or disable individual hooks in settings.json.
+---
+
+# Setup Dotclaude Preset Hooks
 
 Interactively wire or unwire hooks for the installed dotclaude preset.
 
