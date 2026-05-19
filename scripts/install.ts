@@ -1,4 +1,4 @@
-import { copyFile, cp, readFile, stat, writeFile } from 'node:fs/promises';
+import { copyFile, cp, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { Command } from 'commander';
@@ -11,8 +11,7 @@ import { loadSettings, writeSettings, mergeSettings, subtractSettings, rewriteHo
 import { loadManifest, writeManifest, buildManifestAdditions, mergeManifest } from './lib/manifest.ts';
 import { log } from './lib/logger.ts';
 import { uninstallPreset, upgradePreset, auditTarget } from './lib/lifecycle.ts';
-import { buildHooksManifestEntries } from './lib/hooks-manifest.ts';
-import { dumpYaml } from './lib/yaml.ts';
+import { buildHooksManifestJs } from './lib/hooks-manifest.ts';
 
 const program = new Command();
 program
@@ -322,12 +321,12 @@ async function runInstall(
   const newManifest = mergeManifest(existingManifest, additions);
   await writeManifest(manifestPath, newManifest);
 
-  // Write hooks.yaml — machine-readable manifest for the hook audit prompt.
-  const hookEntries = buildHooksManifestEntries(plan.all_presets);
-  if (hookEntries.length > 0) {
-    await writeFile(join(targetRoot, 'hooks.yaml'), dumpYaml({ hooks: hookEntries }), 'utf8');
-    log.info('  hooks.yaml updated');
-  }
+  // Write hooks/hooks-manifest.js — read by /setup-hooks skill.
+  // .js extension ensures marketplace install copies it alongside hook scripts.
+  const hooksManifestDir = join(targetRoot, 'hooks');
+  await mkdir(hooksManifestDir, { recursive: true });
+  await writeFile(join(hooksManifestDir, 'hooks-manifest.js'), buildHooksManifestJs(plan.all_presets), 'utf8');
+  log.info('  hooks/hooks-manifest.js updated');
 
   // External dep warnings.
   for (const probe of plan.external_warnings) {

@@ -5,8 +5,7 @@ import { locatePreset } from './preset.ts';
 import { PLUGINS_DIR } from './paths.ts';
 import { log } from './logger.ts';
 import type { Preset, ExternalSetupEntry } from './schema.ts';
-import { buildHooksManifestEntries } from './hooks-manifest.ts';
-import { dumpYaml } from './yaml.ts';
+import { buildHooksManifestJs } from './hooks-manifest.ts';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -231,23 +230,19 @@ export async function buildPlugin(
         await copyFile(src, join(pluginRoot, docFile));
         log.debug(`Copied ${docFile} from ${presetDir}`);
       } catch {
-        // File not present — skip.
+        // File not present in preset — skip.
       }
     }
   } catch {
-    // Preset dir not found — skip doc copy.
+    // Preset not locatable — skip.
   }
 
-  // Generate hooks.yaml manifest from the merged settings_patch.hooks chain.
-  const hookEntries = buildHooksManifestEntries(plan.all_presets);
-  if (hookEntries.length > 0) {
-    await writeFile(
-      join(pluginRoot, 'hooks.yaml'),
-      dumpYaml({ hooks: hookEntries }),
-      'utf8',
-    );
-    log.debug(`Wrote hooks.yaml (${hookEntries.length} entries)`);
-  }
+  // Generate hooks/hooks-manifest.js — read by /setup-hooks skill; .js extension
+  // ensures marketplace install copies it alongside hook scripts into .claude/hooks/.
+  const hooksDir = join(pluginRoot, 'hooks');
+  await mkdir(hooksDir, { recursive: true });
+  await writeFile(join(hooksDir, 'hooks-manifest.js'), buildHooksManifestJs(plan.all_presets), 'utf8');
+  log.debug('Wrote hooks/hooks-manifest.js');
 
   return { outDir: pluginRoot, manifest, componentCount, skipped };
 }

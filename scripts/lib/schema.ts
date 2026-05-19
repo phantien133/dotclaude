@@ -274,9 +274,3 @@ export const HookManifestEntrySchema = z
   .strict();
 export type HookManifestEntry = z.infer<typeof HookManifestEntrySchema>;
 
-export const HooksManifestSchema = z
-  .object({
-    hooks: z.array(HookManifestEntrySchema),
-  })
-  .strict();
-export type HooksManifest = z.infer<typeof HooksManifestSchema>;

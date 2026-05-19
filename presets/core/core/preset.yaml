@@ -8,6 +8,8 @@ components:
   skills:
     - name: doc-coauthoring
       source: anthropic-skills
+    - name: setup-hooks
+      source: dotclaude-self
   hooks:
     - name: suggest-compact
       source: everything-claude-code
