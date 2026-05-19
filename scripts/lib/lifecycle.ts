@@ -149,7 +149,7 @@ export async function upgradePreset(
   targetRoot: string,
   opts: UpgradeOptions = {},
 ): Promise<UpgradeResult> {
-  const mode: InstallMode = opts.mode ?? 'symlink';
+  const mode: InstallMode = opts.mode ?? 'copy';
   const conflictPolicy: ConflictPolicy = opts.conflictPolicy ?? 'backup-overwrite';
 
   const manifestPath = join(targetRoot, '.dotclaude-manifest.yaml');

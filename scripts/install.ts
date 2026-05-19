@@ -229,7 +229,7 @@ async function runInstall(
       const result = await applyComponent(src, dst, mode, conflictPolicy, layoutKind, targetRoot);
       stats[result]++;
       if (result === 'installed') {
-        const verb = (layoutKind === 'folder' || mode === 'symlink') ? 'linked' : 'copied';
+        const verb = mode === 'symlink' ? 'linked' : 'copied';
         log.info(`  ${verb}: ${component.type}/${component.id}`);
       } else if (result === 'skipped') {
         log.warn(`  skipped (conflict): ${component.type}/${component.id}`);

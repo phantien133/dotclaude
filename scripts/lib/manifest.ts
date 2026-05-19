@@ -73,13 +73,11 @@ export function buildManifestAdditions(
   }));
 
   const components: InstalledComponent[] = plan.components.map((c) => {
-    // Folder components are always symlinked (Q2-5 decision).
-    const effectiveMode: InstallMode = c.layout.kind === 'folder' ? 'symlink' : mode;
     return {
       type: COMPONENT_SINGULAR[c.type],
       id: c.id,
       target_path: componentTargetPath(c, targetRoot),
-      mode: effectiveMode,
+      mode: mode,
       source_path: c.layout.componentPath,
       source_commit: c.source_commit,
       preset: plan.preset.name,
