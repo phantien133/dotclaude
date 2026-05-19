@@ -126,7 +126,6 @@ This repo uses two long-lived branches with fundamentally different contents:
 1. **Never PR directly to `master`.** Open all PRs against `develop`.
 2. **Publishing to the marketplace** = promote `develop` → `master` by cherry-picking feature commits then re-applying the strip commit (`chore(master): strip dev-only dirs`) that removes `claudekit/`, `presets/`, `scripts/`, and `upstream/`.
 3. **Local dev** = checkout `develop` + `git submodule update --init --recursive`. Cloning `master` skips all source and submodule content.
-
 → **[docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md)** — full guide: vendoring components, creating presets, adding upstream sources, building plugins, and promoting to master.
 
 ---
