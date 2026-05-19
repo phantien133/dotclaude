@@ -34,7 +34,7 @@ jobs:
             git fetch origin release/promote-to-master:refs/heads/release/promote-to-master
             git worktree add /tmp/release-wt release/promote-to-master
           else
-            git worktree add -b release/promote-to-master /tmp/release-wt origin/master
+            git worktree add -B release/promote-to-master /tmp/release-wt origin/master
           fi
 
       - name: rsync develop to release branch
