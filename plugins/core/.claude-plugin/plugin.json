@@ -1,7 +1,7 @@
 {
   "name": "core",
   "version": "0.1.0",
-  "description": "Universal baseline for any Claude Code user \u2014 context management, productivity, and semantic search.",
+  "description": "Universal baseline for any Claude Code user — context management, productivity, and semantic search.",
   "author": {
     "name": "phantien133",
     "email": "tienpq@hilab.asia"
@@ -17,6 +17,9 @@
   "repository": "https://github.com/phantien133/dotclaude",
   "skills": [
     "./skills/"
+  ],
+  "commands": [
+    "./commands/"
   ],
   "external_setup": [
     {
