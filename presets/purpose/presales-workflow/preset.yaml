@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: presales-workflow
+kind: purpose
+description: Pre-sales developer workflow — ingest client documents (PDF/xlsx/Word), research online, break down tasks, and produce estimation templates and proposals.
+version: 0.1.0
+extends:
+  - developer
+components:
+  skills:
+    - name: pdf
+      source: anthropic-skills
+    - name: xlsx
+      source: anthropic-skills
+    - name: docx
+      source: anthropic-skills
+    - name: knowledge-ops
+      source: everything-claude-code
+settings_patch:
+  mcpServers:
+    tavily:
+      command: npx
+      args: ["-y", "tavily-mcp"]
+      env:
+        TAVILY_API_KEY: "YOUR_TAVILY_API_KEY_HERE"
+external_setup:
+  - name: tavily
+    kind: mcp_server
+    standalone: false
+    install_hint: "Get a free API key at https://tavily.com, then replace YOUR_TAVILY_API_KEY_HERE in settings.json"
+    complexity: moderate
+    docs_url: "https://github.com/tavily-ai/tavily-mcp"
+    notes: "Free tier: 1,000 searches/month. Used for structured web research alongside mgrep --web."
+recommended_install_level: project
+tags:
+  - presales
+  - document-processing
+  - estimation
+  - research
+  - proposal-writing
+  - no-code
+use_case_tags:
+  roles:
+    - pre-sales-developer
+    - business-analyst
+  project_types:
+    - presales-projects
+  stacks: []
+  use_cases:
+    - document-intake
+    - task-estimation
+    - risk-management
+    - research
+    - proposal-writing

@@ -1,0 +1,37 @@
+{
+  "name": "presales-workflow",
+  "version": "0.1.0",
+  "description": "Pre-sales developer workflow — ingest client documents (PDF/xlsx/Word), research online, break down tasks, and produce estimation templates and proposals.",
+  "author": {
+    "name": "phantien133",
+    "email": "phanqtien@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "presales",
+    "document-processing",
+    "estimation",
+    "research",
+    "proposal-writing",
+    "no-code"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/dotclaude",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ],
+  "external_setup": [
+    {
+      "name": "tavily",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "Get a free API key at https://tavily.com, then replace YOUR_TAVILY_API_KEY_HERE in settings.json",
+      "complexity": "moderate",
+      "docs_url": "https://github.com/tavily-ai/tavily-mcp",
+      "notes": "Free tier: 1,000 searches/month. Used for structured web research alongside mgrep --web."
+    }
+  ]
+}
