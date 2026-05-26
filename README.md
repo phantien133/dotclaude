@@ -37,6 +37,7 @@ Full preset docs and authoring guide: **[docs/PLUGINS.md](./docs/PLUGINS.md)**
 |---|---|---|---|
 | [`dotclaude-bootstrap`](./plugins/dotclaude-bootstrap/) | 0.1.0 | First-time setup wizard, preset-creation wizard, debugger, and external plugin discovery. Install at user level when onboarding new dotclaude users. | [README](./presets/purpose/dotclaude-bootstrap/README.md) |
 | [`dotclaude-self`](./plugins/dotclaude-self/) | 0.2.0 | Full dotclaude working environment — preset authoring wizards, self-learning, component picker, skill creator. Install only when working inside a cloned `dotclaude` repo. | [README](./presets/purpose/dotclaude-self/README.md) |
+| [`presales-workflow`](./plugins/presales-workflow/) | 0.1.0 | Pre-sales developer workflow — ingest client documents (PDF/xlsx/Word), research online, break down tasks, and produce estimation templates and proposals. | [README](./presets/purpose/presales-workflow/README.md) |
 
 ---
 
