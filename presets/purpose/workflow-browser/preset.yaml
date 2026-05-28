@@ -1,0 +1,92 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: workflow-browser
+kind: purpose
+description: >-
+  Extends developer with the w-task-v2 workflow skill — adds Phase 4c browser-based
+  localhost verification between TDD green and commit. Claude starts the local dev
+  server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI
+  changes at localhost only, then gates on developer review before committing.
+  Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.
+version: 0.1.0
+extends:
+  - developer
+components:
+  agents:
+    - name: tdd-guide
+      source: everything-claude-code
+  skills:
+    - name: w-task-v2
+      source: workflow
+    - name: w-fix
+      source: workflow
+    - name: w-checkpoint
+      source: workflow
+    - name: workflow-setup
+      source: workflow
+    - name: w-context-load
+      source: workflow
+    - name: w-oq-check
+      source: workflow
+    - name: w-impact-analyzer
+      source: workflow
+    - name: w-adr
+      source: workflow
+    - name: w-test-stubs
+      source: workflow
+    - name: w-feature-record
+      source: workflow
+    - name: w-api-doc
+      source: workflow
+    - name: w-db-doc
+      source: workflow
+    - name: w-doc-gate
+      source: workflow
+    - name: w-document-build-up
+      source: workflow
+  commands:
+    - name: w-setup
+      source: workflow
+    - name: w-status
+      source: workflow
+    - name: w-reset
+      source: workflow
+    - name: w-pr
+      source: workflow
+settings_patch:
+  mcpServers:
+    chrome-devtools:
+      command: npx
+      args:
+        - "-y"
+        - "chrome-devtools-mcp@latest"
+external_setup:
+  - name: chrome-devtools
+    kind: mcp_server
+    standalone: false
+    install_hint: "Auto-installs via npx. Requires Node.js and Google Chrome 144+."
+    complexity: simple
+    docs_url: "https://github.com/ChromeDevTools/chrome-devtools-mcp"
+    notes: >-
+      Used by w-task-v2 Phase 4c for localhost UI verification. Localhost-only
+      constraint enforced by w-task-v2 skill instruction. Phase 4c is skipped
+      gracefully when dev_server_command is not set in workflow.yaml.
+recommended_install_level: project
+tags:
+  - workflow
+  - browser-verify
+  - tdd
+  - developer
+use_case_tags:
+  roles:
+    - developer
+    - fullstack-developer
+  project_types:
+    - web-app
+    - monorepo
+  stacks:
+    - any
+  use_cases:
+    - dev-workflow
+    - tdd
+    - ui-integration
+    - browser-verify
