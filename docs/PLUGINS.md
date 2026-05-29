@@ -40,3 +40,4 @@ Workflow or role-specific presets.
 |--------|-------------|-------------|
 | [`dotclaude-bootstrap`](../plugins/dotclaude-bootstrap/) | [presets/purpose/dotclaude-bootstrap/README.md](../presets/purpose/dotclaude-bootstrap/README.md) | First-time dotclaude setup — setup wizard, preset-creation wizard, debugger, plugin discovery. |
 | [`dotclaude-self`](../plugins/dotclaude-self/) | [presets/purpose/dotclaude-self/README.md](../presets/purpose/dotclaude-self/README.md) | Full dotclaude working environment — preset authoring, self-learning, component picker, skill creator. |
+| [`presales-workflow`](../plugins/presales-workflow/) | [presets/purpose/presales-workflow/README.md](../presets/purpose/presales-workflow/README.md) | Pre-sales developer workflow — ingest client documents (PDF/xlsx/Word), research online, break down tasks, and produce estimation templates and proposals. |

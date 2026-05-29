@@ -11,7 +11,7 @@
     {
       "name": "developer",
       "source": "./plugins/developer",
-      "description": "Extends ai-native with cross-stack developer tooling \u2014 GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
+      "description": "Extends ai-native with cross-stack developer tooling — GitHub ops, quality gates, and architecture planning. Security and TDD are intentionally left to language/framework presets.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -35,7 +35,7 @@
     {
       "name": "ai-native",
       "source": "./plugins/ai-native",
-      "description": "Extends core with AI self-learning and skill creation \u2014 for users who want Claude to improve with their personal workflow over time.",
+      "description": "Extends core with AI self-learning and skill creation — for users who want Claude to improve with their personal workflow over time.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -63,7 +63,7 @@
     {
       "name": "core",
       "source": "./plugins/core",
-      "description": "Universal baseline for any Claude Code user \u2014 context management, productivity, and semantic search.",
+      "description": "Universal baseline for any Claude Code user — context management, productivity, and semantic search.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -89,7 +89,7 @@
     {
       "name": "typescript",
       "source": "./plugins/typescript",
-      "description": "TypeScript language preset \u2014 type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
+      "description": "TypeScript language preset — type-safe coding style, idiomatic patterns, testing, security, and a dedicated TS code reviewer. Foundation for any TS-based framework preset.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -115,7 +115,7 @@
     {
       "name": "nestjs",
       "source": "./plugins/nestjs",
-      "description": "NestJS framework preset \u2014 modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.",
+      "description": "NestJS framework preset — modular TypeScript backend with DTO validation, guards, database integration, and API design patterns.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -141,7 +141,7 @@
     {
       "name": "nextjs",
       "source": "./plugins/nextjs",
-      "description": "Next.js framework preset \u2014 React app structure, Turbopack dev server, and frontend patterns for production apps.",
+      "description": "Next.js framework preset — React app structure, Turbopack dev server, and frontend patterns for production apps.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -167,7 +167,7 @@
     {
       "name": "dotclaude-bootstrap",
       "source": "./plugins/dotclaude-bootstrap",
-      "description": "Bootstrap preset for new dotclaude users \u2014 includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
+      "description": "Bootstrap preset for new dotclaude users — includes the setup wizard, preset creation wizard, debugger, and external plugin discovery. Install at user level.",
       "version": "0.1.0",
       "author": {
         "name": "phantien133",
@@ -193,7 +193,7 @@
     {
       "name": "dotclaude-self",
       "source": "./plugins/dotclaude-self",
-      "description": "Full dotclaude working environment \u2014 preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
+      "description": "Full dotclaude working environment — preset authoring wizards, self-learning, component picker, and skill creator. Use when working inside the cloned dotclaude repo.",
       "version": "0.2.0",
       "author": {
         "name": "phantien133",
@@ -214,6 +214,92 @@
         "dotclaude",
         "wizard",
         "preset-authoring"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "workflow-browser@0.1.0",
+      "source": "../../plugins/workflow-browser@0.1.0",
+      "description": "Extends developer with the w-task-v2 workflow skill — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
+      "version": "0.1.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
+      ],
+      "category": "workflow",
+      "tags": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "workflow-browser",
+      "source": "../../plugins/workflow-browser",
+      "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
+      "version": "0.1.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
+      ],
+      "category": "workflow",
+      "tags": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "nestjs-nextjs",
+      "source": "../../plugins/nestjs-nextjs",
+      "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification.",
+      "version": "0.1.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "browser-verify",
+        "doc-governance"
+      ],
+      "category": "workflow",
+      "tags": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "browser-verify",
+        "doc-governance"
       ],
       "strict": false,
       "repository": "https://github.com/phantien133/dotclaude"
