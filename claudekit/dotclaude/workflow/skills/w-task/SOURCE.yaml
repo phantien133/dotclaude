@@ -3,23 +3,26 @@
 # SOURCE.yaml is INSIDE the skill folder.
 # Installer MUST exclude this file when copying the skill folder to a target.
 #
-# Vendored from upstream/dotclaude (components branch) — self-authored component library.
-# Source of truth: upstream/dotclaude/workflow/skills/w-task/
+# Self-authored — extends w-task with Phase 4c browser verification.
 source:
   repo: https://github.com/phantien133/dotclaude
-  commit: f2f3be0233f15845decc89b79be8128a8ea25d84
+  commit: 7d6113b47b391c81d1bc103cfd28eed0829b8657
   path: workflow/skills/w-task
-  ref: components
-imported_at: "2026-05-13"
+  ref: develop
+imported_at: "2026-05-28"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Phase 0: added UI signal detection (0.4) and conditional pause card (0.5) — proactively
+  detects Figma URL and UI keywords from intake, asks targeted questions instead of generic ones.
+  Saves has_ui + figma_url to state.yaml. Phase 0b updated to read developer's figma_url reply.
+  Phase 3: replaced passive gate with active orchestration — f-extract (Figma MCP snapshot) →
+  f-implement (code from snapshot, strict ASSET_PLACEHOLDER, unclear-design gate) →
+  asset resolution gate (3.3) → finalize. State transitions table updated.
 notes: >-
-  Full feature development workflow. 7-phase state machine (intake → context →
-  plan → impact → UI → TDD → docs → PR). Config-driven via .claude/workflow.yaml —
-  supports GitHub Issues, Plane (MCP/paste), Jira, Linear, or free text. Reads
-  state from .workflow/<task-slug>/state.yaml. Gate-based: advances only on explicit
-  /w-task invocation. Phase 3 references /f-import for Figma integration.
+  v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP,
+  smart UI detection at Phase 0, and active Figma orchestration at Phase 3 using
+  f-extract + f-implement (figma-v2 skills). Original w-task is unchanged.
 dependencies:
   required:
     agents:
@@ -41,6 +44,13 @@ dependencies:
     hooks: []
     rules: []
   external:
+    - name: chrome-devtools-mcp
+      type: npm
+      reason: >-
+        Required for Phase 4c browser verification. Provides navigate_page,
+        evaluate_script, get_console_messages, and take_screenshot tools.
+        Installed via npx — requires Node.js and Chrome 144+. Phase 4c is
+        skipped gracefully when this MCP is not configured.
     - name: gh
       type: system_binary
       reason: >-
@@ -57,10 +67,12 @@ tags:
   - tdd
   - feature-dev
   - config-driven
+  - browser-verify
 categories:
   purpose:
     - dev-workflow
     - tdd
+    - browser-verify
   mechanism:
     - state-machine
     - gate-based

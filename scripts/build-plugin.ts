@@ -1,6 +1,10 @@
+import { cp, readFile } from 'node:fs/promises';
+import { join, relative } from 'node:path';
 import { Command } from 'commander';
 import { PRESET_KINDS, type PresetKind } from './lib/schema.ts';
-import { buildPlugin } from './lib/plugin-build.ts';
+import { buildPlugin, type PluginManifest } from './lib/plugin-build.ts';
+import { PLUGINS_DIR } from './lib/paths.ts';
+import { appendArchiveEntry, upsertMarketplaceEntry, MARKETPLACE_DIR } from './lib/marketplace.ts';
 import { log } from './lib/logger.ts';
 
 const program = new Command();
@@ -19,13 +23,34 @@ program
       opts: { kind?: string; out?: string; includeOptional: boolean; clean: boolean },
     ) => {
       const kind = opts.kind !== undefined ? validateKind(opts.kind) : undefined;
+      const outDir = opts.out ?? join(PLUGINS_DIR, presetName);
 
       log.info(`Building plugin: ${presetName}`);
 
       try {
+        // ── Archive old version before build (if version changed) ────────────
+        const oldManifest = await readOldManifest(outDir);
+
+        if (oldManifest !== null) {
+          const archiveDir = join(PLUGINS_DIR, `${presetName}@${oldManifest.version}`);
+          // Only archive if the directory doesn't already exist (idempotent).
+          try {
+            await readFile(join(archiveDir, '.claude-plugin', 'plugin.json'), 'utf8');
+            log.debug(`Archive ${presetName}@${oldManifest.version} already exists — skipping copy`);
+          } catch {
+            log.info(`Archiving ${presetName}@${oldManifest.version} → ${archiveDir}`);
+            await cp(outDir, archiveDir, { recursive: true });
+          }
+          // Add archive entry to marketplace.json (no-op if already present).
+          const archiveRelPath = `../${relative(MARKETPLACE_DIR, archiveDir)}`;
+          await appendArchiveEntry(oldManifest, archiveRelPath);
+          log.info(`Marketplace: archived ${presetName}@${oldManifest.version}`);
+        }
+
+        // ── Build ─────────────────────────────────────────────────────────────
         const result = await buildPlugin(presetName, {
           ...(kind !== undefined && { kind }),
-          ...(opts.out !== undefined && { outDir: opts.out }),
+          outDir,
           include_optional: opts.includeOptional,
           clean: opts.clean,
           author: { name: 'phantien133', email: 'phanqtien@gmail.com' },
@@ -35,6 +60,11 @@ program
 
         log.info(`Built ${result.componentCount} component(s) → ${result.outDir}`);
         log.info(`Manifest: ${result.outDir}/.claude-plugin/plugin.json`);
+
+        // ── Update marketplace.json (latest entry) ────────────────────────────
+        const latestRelPath = `../${relative(MARKETPLACE_DIR, result.outDir)}`;
+        await upsertMarketplaceEntry(result.manifest, latestRelPath);
+        log.info(`Marketplace: updated ${presetName}@${result.manifest.version}`);
 
         if (result.skipped.length > 0) {
           log.warn(`${result.skipped.length} component(s) skipped:`);
@@ -49,6 +79,15 @@ program
       }
     },
   );
+
+async function readOldManifest(pluginDir: string): Promise<PluginManifest | null> {
+  try {
+    const raw = await readFile(join(pluginDir, '.claude-plugin', 'plugin.json'), 'utf8');
+    return JSON.parse(raw) as PluginManifest;
+  } catch {
+    return null;
+  }
+}
 
 function validateKind(s: string): PresetKind {
   if (!(PRESET_KINDS as readonly string[]).includes(s)) {

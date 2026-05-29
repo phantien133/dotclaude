@@ -1,7 +1,7 @@
 {
   "name": "workflow-browser",
   "version": "0.1.0",
-  "description": "Extends developer with the w-task-v2 workflow skill — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
+  "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
   "author": {
     "name": "phantien133",
     "email": "phanqtien@gmail.com"
@@ -29,7 +29,7 @@
       "install_hint": "Auto-installs via npx. Requires Node.js and Google Chrome 144+.",
       "complexity": "simple",
       "docs_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
-      "notes": "Used by w-task-v2 Phase 4c for localhost UI verification. Localhost-only constraint enforced by w-task-v2 skill instruction. Phase 4c is skipped gracefully when dev_server_command is not set in workflow.yaml."
+      "notes": "Used by w-task Phase 4c for localhost UI verification. Localhost-only constraint enforced by w-task skill instruction. Phase 4c is skipped gracefully when dev_server_command is not set in workflow.yaml."
     }
   ]
 }

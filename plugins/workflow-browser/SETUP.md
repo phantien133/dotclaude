@@ -14,4 +14,4 @@ Auto-installs via npx. Requires Node.js and Google Chrome 144+.
 
 **Docs:** https://github.com/ChromeDevTools/chrome-devtools-mcp
 
-**Notes:** Used by w-task-v2 Phase 4c for localhost UI verification. Localhost-only constraint enforced by w-task-v2 skill instruction. Phase 4c is skipped gracefully when dev_server_command is not set in workflow.yaml.
+**Notes:** Used by w-task Phase 4c for localhost UI verification. Localhost-only constraint enforced by w-task skill instruction. Phase 4c is skipped gracefully when dev_server_command is not set in workflow.yaml.

@@ -1,0 +1,130 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: nestjs-nextjs
+kind: purpose
+description: >-
+  Full-stack NestJS + Next.js development workflow — TDD, Figma design integration,
+  browser verification, and doc governance. Combines the full w-task workflow suite
+  (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR)
+  with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification.
+version: 0.1.0
+extends:
+  - nestjs
+  - nextjs
+components:
+  agents:
+    - name: tdd-guide
+      source: everything-claude-code
+  skills:
+    # ── workflow core ──────────────────────────────────────────────────────────
+    - name: w-task
+      source: workflow
+    - name: w-fix
+      source: workflow
+    - name: w-checkpoint
+      source: workflow
+    - name: workflow-setup
+      source: workflow
+
+    # ── workflow helpers ───────────────────────────────────────────────────────
+    - name: w-context-load
+      source: workflow
+    - name: w-oq-check
+      source: workflow
+    - name: w-impact-analyzer
+      source: workflow
+    - name: w-adr
+      source: workflow
+    - name: w-test-stubs
+      source: workflow
+    - name: w-feature-record
+      source: workflow
+    - name: w-api-doc
+      source: workflow
+    - name: w-db-doc
+      source: workflow
+    - name: w-doc-gate
+      source: workflow
+    - name: w-document-build-up
+      source: workflow
+
+    # ── Figma v2 (snapshot-based, no repeated MCP calls) ──────────────────────
+    - name: f-extract
+      source: figma
+    - name: f-implement
+      source: figma
+
+    # ── Figma classic (kept for backwards compatibility) ──────────────────────
+    - name: f-import
+      source: figma
+    - name: f-ui-kit
+      source: figma
+    - name: f-page
+      source: figma
+    - name: f-review
+      source: figma
+
+  commands:
+    - name: w-setup
+      source: workflow
+    - name: w-status
+      source: workflow
+    - name: w-reset
+      source: workflow
+    - name: w-pr
+      source: workflow
+    - name: f-setup
+      source: figma
+
+settings_patch:
+  mcpServers:
+    chrome-devtools:
+      command: npx
+      args:
+        - "-y"
+        - "chrome-devtools-mcp@latest"
+
+external_setup:
+  - name: chrome-devtools
+    kind: mcp_server
+    standalone: false
+    install_hint: "Auto-installs via npx. Requires Node.js and Google Chrome 144+."
+    complexity: simple
+    docs_url: "https://github.com/ChromeDevTools/chrome-devtools-mcp"
+    notes: >-
+      Used by w-task Phase 4c for localhost UI verification. Phase 4c is skipped
+      gracefully when dev_server_command is not set in workflow.yaml.
+
+recommended_install_level: project
+tags:
+  - nestjs
+  - nextjs
+  - fullstack
+  - workflow
+  - tdd
+  - figma
+  - browser-verify
+  - doc-governance
+use_case_tags:
+  roles:
+    - fullstack-developer
+    - backend-developer
+    - developer
+  project_types:
+    - monorepo
+    - web-app
+  stacks:
+    - typescript
+    - nestjs
+    - nextjs
+    - graphql
+    - prisma
+    - redis
+  use_cases:
+    - dev-workflow
+    - tdd
+    - ui-integration
+    - browser-verify
+    - figma
+    - pr-workflow
+    - api-development
+    - doc-governance

@@ -98,3 +98,22 @@ export async function upsertMarketplaceEntry(
   await writeMarketplace(index);
   return index;
 }
+
+// Append a versioned archive entry (name@version) only if it doesn't already exist.
+// Used to preserve old plugin builds in the marketplace after a version bump.
+export async function appendArchiveEntry(
+  manifest: PluginManifest,
+  archivedSourceRelPath: string,
+): Promise<MarketplaceIndex> {
+  const archiveName = `${manifest.name}@${manifest.version}`;
+  const index = await readMarketplace();
+  const alreadyPresent = index.plugins.some((p) => p.name === archiveName);
+  if (alreadyPresent) return index;
+  const entry = manifestToMarketplacePlugin(
+    { ...manifest, name: archiveName },
+    archivedSourceRelPath,
+  );
+  index.plugins.push(entry);
+  await writeMarketplace(index);
+  return index;
+}
