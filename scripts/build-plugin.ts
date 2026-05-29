@@ -3,8 +3,8 @@ import { join, relative } from 'node:path';
 import { Command } from 'commander';
 import { PRESET_KINDS, type PresetKind } from './lib/schema.ts';
 import { buildPlugin, type PluginManifest } from './lib/plugin-build.ts';
-import { PLUGINS_DIR } from './lib/paths.ts';
-import { appendArchiveEntry, upsertMarketplaceEntry, MARKETPLACE_DIR } from './lib/marketplace.ts';
+import { PLUGINS_DIR, REPO_ROOT } from './lib/paths.ts';
+import { appendArchiveEntry, upsertMarketplaceEntry } from './lib/marketplace.ts';
 import { log } from './lib/logger.ts';
 
 const program = new Command();
@@ -42,7 +42,7 @@ program
             await cp(outDir, archiveDir, { recursive: true });
           }
           // Add archive entry to marketplace.json (no-op if already present).
-          const archiveRelPath = `../${relative(MARKETPLACE_DIR, archiveDir)}`;
+          const archiveRelPath = `./${relative(REPO_ROOT, archiveDir)}`;
           await appendArchiveEntry(oldManifest, archiveRelPath);
           log.info(`Marketplace: archived ${presetName}@${oldManifest.version}`);
         }
@@ -62,7 +62,7 @@ program
         log.info(`Manifest: ${result.outDir}/.claude-plugin/plugin.json`);
 
         // ── Update marketplace.json (latest entry) ────────────────────────────
-        const latestRelPath = `../${relative(MARKETPLACE_DIR, result.outDir)}`;
+        const latestRelPath = `./${relative(REPO_ROOT, result.outDir)}`;
         await upsertMarketplaceEntry(result.manifest, latestRelPath);
         log.info(`Marketplace: updated ${presetName}@${result.manifest.version}`);
 
