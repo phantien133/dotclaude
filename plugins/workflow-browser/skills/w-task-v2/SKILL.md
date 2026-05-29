@@ -153,17 +153,74 @@ Create directory `<state_root>/<task-slug>/`.
 <description from issue, or "— not provided —">
 ```
 
-### 0.4 Pause
+### 0.4 UI signal detection (before pause card)
 
-Show summary card and ask developer to confirm or correct:
+Scan intake.md title + description for signals — do this automatically, no output yet.
+
 ```
-Please confirm (or correct) before we proceed:
+UI_SIGNALS    = /\bUI\b|screen|page|design|component|button|form|modal|dialog|
+                 layout|frontend|style\b|CSS|figma\.com|\bicon\b|sidebar|navbar/i
+
+BACKEND_ONLY  = /\bAPI\b|endpoint|migration|cron|queue|webhook|schema|
+                 \bdatabase\b|\bDB\b|prisma|resolver|mutation(?! UI)/i
+
+FIGMA_URL     = https?://(www\.)?figma\.com/
+```
+
+Decision logic:
+- `figma_url` present in description → `has_ui: true`, extract `figma_url`
+- `UI_SIGNALS` match AND no `BACKEND_ONLY` → `has_ui: true`
+- `BACKEND_ONLY` match AND no `UI_SIGNALS` → `has_ui: false`
+- Both signals or neither → `has_ui: unknown`
+
+### 0.5 Pause (conditional)
+
+Show summary card with targeted questions based on `has_ui`:
+
+**has_ui: true — figma URL found:**
+```
+Please confirm before we proceed:
 
 1. Title: <title> — correct?
-2. Any additional context, constraints, or related files?
+2. Figma URL detected: <url>
+   Is this the right design for this task? (confirm or paste correct URL)
+3. Any additional constraints or context?
+
+Run /w-task-v2 when ready.
+```
+
+**has_ui: true — no figma URL in intake:**
+```
+Please confirm before we proceed:
+
+1. Title: <title> — correct?
+2. UI changes detected. Do you have a Figma design URL for this task?
+   (paste URL, or reply "no Figma" to proceed without design snapshot)
+3. Any additional constraints or context?
+
+Run /w-task-v2 when ready.
+```
+
+**has_ui: false:**
+```
+Please confirm before we proceed:
+
+1. Title: <title> — correct?
+2. This looks like a backend-only change — confirm, or let me know if UI is involved.
+
+Run /w-task-v2 when ready.
+```
+
+**has_ui: unknown:**
+```
+Please confirm before we proceed:
+
+1. Title: <title> — correct?
+2. Does this task include UI / frontend changes?
+   (yes — provide Figma URL if available / no)
 3. If the description above is incomplete, paste the correct one now.
 
-Reply in chat, then run /w-task-v2 when ready.
+Run /w-task-v2 when ready.
 ```
 
 Write `state.yaml`:
@@ -172,6 +229,8 @@ task: <task-slug>
 phase: "0"
 status: gate_pending
 intake_confirmed: false
+has_ui: <true|false|unknown>
+figma_url: <url or null>
 started_at: <timestamp>
 last_updated: <timestamp>
 ```
@@ -185,6 +244,12 @@ last_updated: <timestamp>
 *Triggers when `phase: "0"` + `status: gate_pending` and developer runs `/w-task-v2`.*
 
 Read developer's reply from GATE 0. Update `intake.md` with any corrections.
+
+Update `state.yaml` from developer's reply:
+- If developer confirmed/corrected Figma URL → update `figma_url`
+- If developer said "no Figma" → set `figma_url: null`
+- If developer confirmed UI involvement → set `has_ui: true`
+- If developer confirmed backend-only → set `has_ui: false`
 
 **If `workflow.module_docs_root` is SET → use module-aware context load:**
 
@@ -318,39 +383,117 @@ Update `state.yaml`: `phase: "3"`, `status: gate_pending`.
 
 ---
 
-## Phase 3 — UI (CONDITIONAL → GATE 3)
+## Phase 3 — UI / Figma (CONDITIONAL → GATE 3)
 
 *Triggers when `phase: "3"` + `status: gate_pending`.*
 
-Check `plan.md` + `impact.md` for UI mentions.
+### 3.0 — Decide whether to run
 
-**No UI changes:**
+Read `state.yaml.has_ui` and `state.yaml.figma_url`.
+Read `plan.md` + `impact.md` for UI-related content.
 
-Update `state.yaml`: `gates.3: skipped`, `phase: "4"`, `status: gate_pending`.
-Output: "No UI changes detected. Run `/w-task-v2` to start TDD."
+**Skip conditions** (any of these → `gates.3: skipped`, advance to Phase 4):
+- `has_ui: false`
+- `has_ui: unknown` AND `plan.md` / `impact.md` contain no UI keywords (screen, page, component, button, form, modal, CSS, frontend)
+- `has_ui: true` AND `figma_url: null` AND plan has no UI scope worth implementing (pure copy/icon swap only)
+
+If skipping:
+```
+Update state.yaml: gates.3: skipped, phase: "4", status: gate_pending.
+Output: "No UI scope detected. Run /w-task-v2 to start TDD."
+```
 
 **GATE 3 (skipped):** developer runs `/w-task-v2` → Phase 4.
 
-**UI changes detected:**
+---
+
+### 3.1 — Extract Figma design snapshot
+
+*Only runs when NOT skipped.*
+
+Read `state.yaml.figma_url`.
+
+**If `figma_url` is set:**
+
+Invoke skill `f-extract <figma_url> --task <task-slug>`.
+
+This writes `<state_root>/<task-slug>/figma-snapshot.md`.
+
+If `f-extract` fails (MCP unavailable, URL invalid):
+```
+⚠️ Figma extraction failed: <reason>
+Options:
+  [1] Retry with a different URL or after configuring MCP (/f-setup)
+  [2] Continue without snapshot — implementation will be based on plan.md only
+
+Reply with your choice, then run /w-task-v2.
+```
+Wait for developer. If [2]: set `figma_url: null`, proceed to 3.2 without snapshot.
+
+**If `figma_url` is null:**
+```
+No Figma URL available. Proceeding to implementation based on plan.md only.
+UI accuracy may be limited without a design snapshot.
+```
+Proceed to 3.2 without snapshot.
+
+---
+
+### 3.2 — Implement UI
+
+Invoke skill `f-implement`:
+- With snapshot: `f-implement <state_root>/<task-slug>/figma-snapshot.md --plan <state_root>/<task-slug>/plan.md`
+- Without snapshot: `f-implement --plan <state_root>/<task-slug>/plan.md` (plan-only mode — f-implement reads plan.md for UI scope)
+
+`f-implement` will:
+- Generate components and screens
+- Use `ASSET_PLACEHOLDER` for all icons/images
+- Gate on developer when design is unclear (shows Figma link + requests PNG)
+- Write `figma-assets.md` if any assets are unresolved
+
+Do not advance Phase 3 until `f-implement` reaches its summary step.
+
+---
+
+### 3.3 — Asset resolution gate
+
+*Only runs if `figma-assets.md` exists and has unresolved entries.*
+
+Read `<state_root>/<task-slug>/figma-assets.md`.
+
+If all assets resolved: skip to 3.4.
 
 Output:
 ```
-UI changes detected in plan.md.
+## UI assets needed
 
-If you have a Figma design ready:
-  /f-import <figma-url>                   → MCP import (recommended)
-  /f-import --export <folder>             → import from Figma export folder
-  /f-import --hybrid <figma-url> <folder> → MCP classification + export code
+<N> assets require export from Figma before implementation is complete.
+See figma-assets.md for Figma links and target paths.
 
-Run /f-setup first if Figma has not been configured for this project.
-When done (or if skipping UI assets), run /w-task-v2 to proceed to TDD.
+Export each asset from Figma and place at the listed path.
+Run /w-task-v2 when done — I will replace the ASSET_PLACEHOLDER comments.
 ```
 
-Update `state.yaml`: `status: gate_pending`.
+Update `state.yaml`: `status: gate_pending`, `gates.3a: assets_pending`.
 
-**GATE 3:** developer runs UI skills manually or skips → runs `/w-task-v2`.
+**GATE 3a:** developer exports assets → runs `/w-task-v2`.
+
+When developer runs `/w-task-v2` with `gates.3a: assets_pending`:
+- Re-read `figma-assets.md`
+- For each asset: check if file exists at `target_path`
+- Replace all `ASSET_PLACEHOLDER` comments for resolved assets
+- If any still missing: re-show only the remaining entries, wait again
+- When all resolved: proceed to 3.4
+
+---
+
+### 3.4 — Finalize Phase 3
 
 Update `state.yaml`: `gates.3: ui_verified`, `phase: "4"`, `status: gate_pending`.
+
+Output: "UI implementation complete. Run `/w-task-v2` to start TDD."
+
+**GATE 3b:** developer runs `/w-task-v2` → Phase 4.
 
 ---
 
@@ -642,11 +785,12 @@ Output: "Task complete. Docs ship with code in this PR — no post-merge sync ne
 
 | phase | status | gates key | Next `/w-task-v2` triggers |
 |-------|--------|-----------|---------------------------|
-| "0" | gate_pending | — | Phase 0b (context load) |
+| "0" | gate_pending | — | Phase 0b (context load + figma_url update) |
 | "1" | gate_pending | — | Write questions.md → GATE 1 |
 | "1" | gate_pending | plan_written | Phase 2 (impact) |
-| "2" | gate_pending | — | Phase 3 (UI check) |
+| "2" | gate_pending | — | Phase 3 (UI / Figma) |
 | "3" | gate_pending | skipped | Phase 4 (TDD) |
+| "3" | gate_pending | assets_pending | Asset resolution loop |
 | "3" | gate_pending | ui_verified | Phase 4 (TDD) |
 | "4" | gate_pending | — | GREEN + checks cycle |
 | "4" | gate_pending | checks_green | Phase 4c (browser verify AUTO) |

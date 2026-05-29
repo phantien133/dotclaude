@@ -11,15 +11,18 @@ source:
   ref: develop
 imported_at: "2026-05-28"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Phase 0: added UI signal detection (0.4) and conditional pause card (0.5) — proactively
+  detects Figma URL and UI keywords from intake, asks targeted questions instead of generic ones.
+  Saves has_ui + figma_url to state.yaml. Phase 0b updated to read developer's figma_url reply.
+  Phase 3: replaced passive gate with active orchestration — f-extract (Figma MCP snapshot) →
+  f-implement (code from snapshot, strict ASSET_PLACEHOLDER, unclear-design gate) →
+  asset resolution gate (3.3) → finalize. State transitions table updated.
 notes: >-
-  v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP
-  (chrome-devtools-mcp). After TDD green + checks pass, Claude starts the dev server,
-  uses evaluate_script for targeted assertions, saves screenshots to file (no inline tokens),
-  then waits for developer gate before committing. Original w-task is unchanged.
-  Requires project.dev_server_command in workflow.yaml; Phase 4c is silently skipped
-  when unset or when no UI changes are detected.
+  v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP,
+  smart UI detection at Phase 0, and active Figma orchestration at Phase 3 using
+  f-extract + f-implement (figma-v2 skills). Original w-task is unchanged.
 dependencies:
   required:
     agents:

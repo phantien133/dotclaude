@@ -43,6 +43,10 @@ components:
       source: workflow
     - name: w-document-build-up
       source: workflow
+    - name: f-extract
+      source: figma
+    - name: f-implement
+      source: figma
   commands:
     - name: w-setup
       source: workflow

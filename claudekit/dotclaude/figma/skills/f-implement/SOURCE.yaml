@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 8124250dc7f331ad48958822b653e688d3aace6a
+  path: figma/skills/f-implement
+  ref: develop
+imported_at: "2026-05-29"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  New figma v2 skill. Implements UI from figma-snapshot.md — never calls Figma MCP,
+  never generates SVG or approximates icons. Uses ASSET_PLACEHOLDER for all icons/images.
+  Gates on developer export for missing assets. Uses unclear-design gate when snapshot
+  data is insufficient. Old f-ui-kit and f-page are unchanged.
+dependencies:
+  required:
+    agents: []
+    skills:
+      - f-extract
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design
+  - implement
+  - ui-integration
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - snapshot-driven
+    - gate-based

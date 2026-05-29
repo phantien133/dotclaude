@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 8124250dc7f331ad48958822b653e688d3aace6a
+  path: figma/skills/f-extract
+  ref: develop
+imported_at: "2026-05-29"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  New figma v2 skill. Exhaustive one-shot Figma MCP extractor — calls get_file,
+  get_file_components, get_local_variables, get_file_nodes in a single round and writes
+  figma-snapshot.md. All downstream steps (f-implement, Phase 4c) read the snapshot;
+  no downstream MCP calls. Old f-import is unchanged.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: "@figma/mcp"
+      type: npm
+      reason: >-
+        Figma MCP server is required. Install with:
+        claude mcp add figma -- npx -y @figma/mcp
+        Requires FIGMA_API_KEY env var set to a Figma personal access token.
+tags:
+  - figma
+  - design
+  - extract
+  - snapshot
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - mcp-driven
+    - snapshot
