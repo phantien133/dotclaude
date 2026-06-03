@@ -25,6 +25,11 @@ modifications: >-
   Phase 4 step 11: conditional mobile review — when impact.md has .dart files or mobile
   paths AND flutter-dart-code-review skill is installed, run it after the generic code-reviewer.
   Skipped silently otherwise so this remains safe for non-mobile projects.
+  Phase 0b step 5: UI design pre-fetch — when has_ui + figma_url are set, run f-extract
+  during context load so figma-snapshot.md exists BEFORE Phase 1 planning. Phase 1 planner
+  brief now includes the snapshot so plans scope concrete UI surfaces instead of a bare URL
+  (fixes plans under-scoping UI). Phase 3.1 reuses the pre-fetched snapshot and only
+  re-extracts when it is missing.
 notes: >-
   v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP,
   smart UI detection at Phase 0, and active Figma orchestration at Phase 3 using
