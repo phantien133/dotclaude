@@ -239,10 +239,11 @@ export async function buildPlugin(
     log.debug(`Wrote ${join(pluginRoot, 'SETUP.md')}`);
   }
 
-  // Copy AGENTS.md and README.md from preset directory if present.
+  // Copy doc files from preset directory if present. README links may reference
+  // these by bare filename, so they must ship in the bundle (and survive on master).
   try {
     const { presetDir } = await locatePreset(presetName, opts.kind ? { kind: opts.kind } : {});
-    for (const docFile of ['AGENTS.md', 'README.md'] as const) {
+    for (const docFile of ['AGENTS.md', 'README.md', 'WORKFLOW_GUIDE.md'] as const) {
       try {
         const src = join(presetDir, docFile);
         await stat(src);

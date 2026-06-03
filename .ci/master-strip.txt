@@ -11,9 +11,11 @@ vitest.config.ts
 pnpm-lock.yaml
 
 # Dev docs and metadata
-CLAUDE.md
-AGENTS.md
-dependencies.yaml
+# NOTE: leading slash anchors to repo root so plugin-level docs (e.g.
+# plugins/<name>/AGENTS.md) are NOT stripped — only the root dev-meta files.
+/CLAUDE.md
+/AGENTS.md
+/dependencies.yaml
 .claude/
 
 # CI config (not needed on distribution branch)
