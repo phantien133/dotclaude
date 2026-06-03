@@ -563,6 +563,18 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     - Resolve CRITICAL/HIGH issues immediately, re-run tests to confirm still GREEN.
     - Document MEDIUM items in `tests.md § Code Review Notes`.
 
+    **Mobile / Flutter changes** — additional pass:
+    - If `impact.md § Affected Files` lists any `.dart` files, or paths under a
+      mobile folder (e.g. `streaming-mobile/`, `mobile/`, `app/`, `lib/`), AND
+      the `flutter-dart-code-review` skill is available in this project:
+      - Invoke `flutter-dart-code-review` skill with those Dart files as scope.
+      - It applies the library-agnostic Flutter/Dart checklist (widget patterns,
+        Riverpod/BLoC state, null safety, performance, a11y, security).
+      - Resolve CRITICAL/HIGH findings the same way as the generic reviewer;
+        append MEDIUM items to `tests.md § Code Review Notes` under a
+        "Flutter / Dart review" subsection.
+    - Skip silently if no Dart files or the skill isn't installed.
+
 12. Write `verify.md`:
     ```markdown
     # Verify — <title>
@@ -573,6 +585,7 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     | lint | ✅/❌ | |
     | tests | ✅/❌ | |
     | code review | ✅/❌ | CRITICAL/HIGH resolved |
+    | flutter-dart review | ✅/❌/skipped | only if `.dart` files in scope |
     ```
 
 13. Update `tests.md`: add RED→GREEN record + reference `verify.md`.
