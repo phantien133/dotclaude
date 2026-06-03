@@ -749,7 +749,7 @@ own config field is null):**
 Update `state.yaml`: `gates.5: docs_written`, `status: gate_pending`.
 
 Output: "Docs persisted and committed. Review changes, then run `/w-task` to
-create the PR (which will trigger w-doc-gate)."
+proceed — Phase 6 will sync with default branch, run doc-gate, and create the PR automatically."
 
 **GATE 5:** developer reviews + runs `/w-task`.
 
@@ -757,27 +757,102 @@ Update `state.yaml`: `phase: "6"`, `status: gate_pending`.
 
 ---
 
-## Phase 6 — PR
+## Phase 6 — PR (AUTO)
 
 *Triggers when `phase: "6"` + `status: gate_pending`.*
 
-`/w-pr` (Phase 6) will internally invoke `w-doc-gate <task-slug>` before
-opening the PR. The doc gate verifies:
-- Every module touched (code changes under `module_glob`) has a corresponding
-  doc update in the branch diff
-- If `master_erd_path` is configured, any sub-ERD change is accompanied by
-  a master ERD update in the same branch
+Phase 6 runs fully automatically when the developer runs `/w-task`.
+No manual `/w-pr` invocation needed.
 
-If the gate fails, `/w-pr` blocks PR creation and prints the missing doc paths
-— developer must return to Phase 5 (`/w-task`) to fill the gap.
+---
 
-Output: "Run `/w-pr <task-slug>` to create the PR (w-doc-gate runs first)."
+### 6.0 — Branch sync (before everything)
 
-**GATE 6:** developer runs `/w-pr <task-slug>`.
+*Skip if `gates.6a: synced` already set (idempotent re-entry after conflict resolution).*
+
+1. Fetch origin:
+   ```bash
+   git fetch origin
+   ```
+
+2. Resolve default branch from `pr.default_branch` in workflow.yaml (default: `main`).
+
+3. Check if default branch has commits not yet in current branch:
+   ```bash
+   git log HEAD..origin/<default_branch> --oneline
+   ```
+
+4. **No new commits** → set `gates.6a: synced`, proceed to 6.1.
+
+5. **New commits found** → attempt merge:
+   ```bash
+   git merge origin/<default_branch> --no-edit
+   ```
+
+   **Clean merge (exit 0):**
+   - Output: "Merged `origin/<default_branch>` into current branch (<N> commits). No conflicts."
+   - Set `gates.6a: synced`.
+   - Proceed to 6.1.
+
+   **Conflicts (exit non-zero):**
+   - Output:
+     ```
+     ⚠️ Merge conflict with origin/<default_branch>.
+
+     Conflicting files:
+     <list from git status>
+
+     Resolve the conflicts, then run `git add <files>` and `git merge --continue`.
+     Run /w-task when the merge is complete.
+     ```
+   - Set `gates.6a: conflict_pending`, `status: gate_pending`.
+   - **GATE 6-conflict:** developer resolves conflicts + `git merge --continue` → runs `/w-task`.
+   - On re-entry with `gates.6a: conflict_pending`: verify `git status` shows clean tree.
+     - If clean: set `gates.6a: synced`, proceed to 6.1.
+     - If still conflicts: repeat the conflict output above and wait.
+
+---
+
+### 6.1 — Doc gate
+
+*Triggers when `gates.6a: synced`.*
+
+**Invoke skill** `w-doc-gate <task-slug>`.
+
+The gate verifies:
+- Every module touched (code changes under `module_glob`) has corresponding doc updates in the branch diff.
+- If `master_erd_path` is configured: any sub-ERD change is accompanied by a master ERD update.
+
+**Gate passes (exit 0):** set `gates.6b: doc_gate_passed`, proceed to 6.2.
+
+**Gate fails (exit non-zero):**
+- Print the violation report from `w-doc-gate`.
+- Output:
+  ```
+  ⚠️ Doc gate blocked. Missing docs for the modules listed above.
+  Run /w-task to return to Phase 5 and persist the missing docs.
+  ```
+- Update `state.yaml`: `phase: "5"`, `status: gate_pending`, `gates.5: pending`.
+- Stop — developer must fix docs, then run `/w-task` to retry Phase 5 → 6.
+
+---
+
+### 6.2 — Create PR (AUTO)
+
+*Triggers when `gates.6b: doc_gate_passed`.*
+
+**Invoke skill** `w-pr <task-slug>` with `--skip-doc-gate` (gate already passed in 6.1).
+
+`w-pr` will:
+- Build MR title and body from plan.md + impact.md
+- Show a **preview** (title, target branch, draft status) — this is the only point developer sees before PR is created
+- Create the MR via `glab mr create`
+
+After `w-pr` completes:
 
 Update `state.yaml`: `phase: "6"`, `status: complete`, `last_updated: <timestamp>`.
 
-Output: "Task complete. Docs ship with code in this PR — no post-merge sync needed."
+Output: "Task complete. PR created. Docs ship with code — no post-merge sync needed."
 
 ---
 
@@ -798,8 +873,11 @@ Output: "Task complete. Docs ship with code in this PR — no post-merge sync ne
 | "4" | gate_pending | browser_skipped | Commit → Phase 5 |
 | "4" | gate_pending | browser_error | Commit → Phase 5 (with error noted) |
 | "5" | gate_pending | pending | Phase 5 doc persist or skip |
-| "5" | gate_pending | docs_written | Phase 6 (PR) |
-| "6" | gate_pending | — | Dev runs `/w-pr <task-slug>` → complete |
+| "5" | gate_pending | docs_written | Phase 6 AUTO (branch sync → doc gate → PR) |
+| "6" | gate_pending | — | Phase 6.0: fetch + merge default branch |
+| "6" | gate_pending | conflict_pending | Developer resolves conflicts → runs `/w-task` |
+| "6" | gate_pending | synced | Phase 6.1: doc gate |
+| "6" | gate_pending | doc_gate_passed | Phase 6.2: auto PR via w-pr |
 
 ---
 

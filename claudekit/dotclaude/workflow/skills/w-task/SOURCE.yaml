@@ -19,6 +19,9 @@ modifications: >-
   Phase 3: replaced passive gate with active orchestration — f-extract (Figma MCP snapshot) →
   f-implement (code from snapshot, strict ASSET_PLACEHOLDER, unclear-design gate) →
   asset resolution gate (3.3) → finalize. State transitions table updated.
+  Phase 6: fully automated — branch sync (fetch + auto-merge default branch, pause on conflict),
+  doc gate (w-doc-gate auto-invoked), PR auto-created via w-pr --skip-doc-gate. Developer
+  no longer needs to manually run /w-pr.
 notes: >-
   v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP,
   smart UI detection at Phase 0, and active Figma orchestration at Phase 3 using
