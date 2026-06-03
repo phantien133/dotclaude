@@ -1,0 +1,23 @@
+{
+  "eval_id": "eval-6-sync-cross-ref",
+  "eval_name": "eval-6-sync-cross-ref",
+  "prompt": "sync the coding-standards skill from ECC — check if it has any new cross-references in the latest upstream version that we need to pick",
+  "assertions": [
+    {
+      "text": "Runs pnpm sync or git diff to see what changed in upstream",
+      "check": "Response mentions pnpm sync skills/coding-standards or equivalent diff command"
+    },
+    {
+      "text": "Explicitly applies cross-reference scan to the diff output (not just generic upgrade)",
+      "check": "Response mentions scanning the diff for new skill/agent/hook references added since last import"
+    },
+    {
+      "text": "Describes what action to take if new cross-references ARE found in the diff",
+      "check": "Response explains that newly found cross-references would trigger a vendor of that dependency"
+    },
+    {
+      "text": "Describes what action to take if NO new cross-references are found",
+      "check": "Response explains that if no new refs found, existing sidecar.dependencies is confirmed accurate"
+    }
+  ]
+}

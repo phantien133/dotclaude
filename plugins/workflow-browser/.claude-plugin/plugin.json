@@ -1,6 +1,6 @@
 {
   "name": "workflow-browser",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
   "author": {
     "name": "phantien133",
