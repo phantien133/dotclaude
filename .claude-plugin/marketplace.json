@@ -248,7 +248,7 @@
       "name": "workflow-browser",
       "source": "./plugins/workflow-browser",
       "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "author": {
         "name": "phantien133",
         "email": "phanqtien@gmail.com"
@@ -274,7 +274,7 @@
       "name": "nestjs-nextjs",
       "source": "./plugins/nestjs-nextjs",
       "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification.",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "author": {
         "name": "phantien133",
         "email": "phanqtien@gmail.com"
@@ -394,6 +394,66 @@
         "figma",
         "browser-verify",
         "doc-governance"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "nestjs-nextjs@0.2.1",
+      "source": "./plugins/nestjs-nextjs@0.2.1",
+      "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification.",
+      "version": "0.2.1",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "browser-verify",
+        "doc-governance"
+      ],
+      "category": "workflow",
+      "tags": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "browser-verify",
+        "doc-governance"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "workflow-browser@0.2.1",
+      "source": "./plugins/workflow-browser@0.2.1",
+      "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
+      "version": "0.2.1",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
+      ],
+      "category": "workflow",
+      "tags": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
       ],
       "strict": false,
       "repository": "https://github.com/phantien133/dotclaude"
