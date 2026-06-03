@@ -7,7 +7,7 @@ description: >-
   server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI
   changes at localhost only, then gates on developer review before committing.
   Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.
-version: 0.2.2
+version: 0.2.3
 extends:
   - developer
 components:

@@ -280,7 +280,15 @@ Update `state.yaml` from developer's reply:
 
 **In both branches:**
 
-5. Update `state.yaml`:
+5. **UI design pre-fetch (conditional).** If `state.yaml.has_ui: true` AND `figma_url`
+   is set, invoke skill `f-extract <figma_url> --task <task-slug>` now — it writes
+   `<state_root>/<task-slug>/figma-snapshot.md`. This lets Phase 1 scope UI work against
+   the real screens/components/states instead of a bare URL, which is the main reason
+   plans under-scope UI. On failure (MCP unavailable / bad URL), log a one-line warning
+   and continue — Phase 3.1 will retry extraction. Skip silently when `has_ui` is
+   `false`/`unknown` or `figma_url` is null.
+
+6. Update `state.yaml`:
    ```yaml
    phase: "1"
    status: gate_pending
@@ -327,7 +335,10 @@ Output: "Context loaded. Run `/w-task` to start planning."
    - `intake.md` full content
    - `context.md` § Relevant Files + § Patterns Observed
    - Answered `questions.md`
-   - Instruction: produce a plan with sections — Feature scope, Implementation approach per layer, Out of scope, Dependencies, Risks.
+   - `figma-snapshot.md` if it exists (pre-fetched at Phase 0b) — the planner must
+     scope UI work (screens, components, states, edge cases) against this design, not
+     just the textual description.
+   - Instruction: produce a plan with sections — Feature scope, Implementation approach per layer, Out of scope, Dependencies, Risks. When a Figma snapshot is present, the Feature scope and Implementation approach must enumerate the concrete UI surfaces it reveals.
 
 7. Write `plan.md` from agent output.
 
@@ -415,9 +426,11 @@ Read `state.yaml.figma_url`.
 
 **If `figma_url` is set:**
 
-Invoke skill `f-extract <figma_url> --task <task-slug>`.
+If `<state_root>/<task-slug>/figma-snapshot.md` already exists (pre-fetched at Phase 0b),
+reuse it — do not re-extract. Only invoke skill `f-extract <figma_url> --task <task-slug>`
+when the snapshot is missing (Phase 0b skipped it, or its extraction failed).
 
-This writes `<state_root>/<task-slug>/figma-snapshot.md`.
+`f-extract` writes `<state_root>/<task-slug>/figma-snapshot.md`.
 
 If `f-extract` fails (MCP unavailable, URL invalid):
 ```
