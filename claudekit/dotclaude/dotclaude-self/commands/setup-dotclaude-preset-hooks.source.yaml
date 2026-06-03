@@ -13,8 +13,13 @@ modifications: >-
   Extended to support plugin-based installs (enabledPlugins). Step 1 now also
   checks settings.json.enabledPlugins and reads hooks-manifest.js from the plugin
   cache (~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/hooks/).
-  Step 3 computes correct hook paths per flow (installer vs. plugin cache).
   Step 5 table adds Source column to show which plugin each hook comes from.
+  Plugin-flow hardening: instead of wiring the version-pinned plugin-cache path
+  (which 404s after Claude Code GCs old versions ~7 days post-upgrade, and where
+  ${CLAUDE_PLUGIN_ROOT} is undefined in project settings.json), step 7 now COPIES
+  the hook script + shared lib/ from the cache into the project's .claude/hooks/
+  and wires both flows via ${CLAUDE_PROJECT_DIR}/.claude/hooks/<file>. Step 4
+  detects legacy cache-pinned wirings and offers to re-wire them.
 notes: >-
   Self-authored command. Interactive hook wiring for any installed dotclaude preset.
   Reads hooks/hooks-manifest.js from installer location OR plugin cache, and applies
