@@ -1,0 +1,240 @@
+---
+description: One-time setup wizard that creates .claude/workflow.yaml — the project config consumed by dev-task, quick-fix, and all workflow skills. Run once per project before using any workflow skill.
+argument-hint: [--reset]
+allowed-tools: Bash, Read, Write
+---
+
+# workflow-setup
+
+Interactive wizard that writes `.claude/workflow.yaml`.
+All workflow skills (`dev-task`, `quick-fix`, `workflow-status`, etc.) read this file.
+
+**First run:** walks through setup interactively.
+**`--reset`:** shows existing config, asks which sections to reconfigure.
+
+---
+
+## Step 0 — Check existing config
+
+```bash
+cat .claude/workflow.yaml 2>/dev/null
+```
+
+- **File missing + no `--reset`:** proceed to Step 1.
+- **File exists + no `--reset`:** display current config and say:
+  > Config already exists. Run `/workflow-setup --reset` to reconfigure, or `/dev-task <title>` to start a task.
+  Stop here.
+- **`--reset` flag present:** display current config, then proceed to Step 1 (all questions
+  are pre-filled with existing values as defaults — developer can press Enter to keep).
+
+---
+
+## Step 1 — Issue tracker
+
+Detect git remote to suggest a default:
+
+```bash
+git remote get-url origin 2>/dev/null
+```
+
+If the remote contains `github.com`, suggest `github` as default.
+
+Ask:
+
+```
+Which issue tracker does this project use?
+  1) GitHub Issues  (fetch via gh CLI)
+  2) Plane          (pm.*.* URL)
+  3) Jira           (*.atlassian.net)
+  4) Linear         (linear.app)
+  5) None           (always use free text)
+
+Enter number [1]:
+```
+
+Record `issue_tracker.type`:
+- `1` → `github`
+- `2` → `plane`
+- `3` → `jira`
+- `4` → `linear`
+- `5` → `none`
+
+---
+
+## Step 2 — Issue tracker details
+
+**github:** No further questions. Auto-detects repo from `git remote get-url origin`.
+
+**plane:**
+```
+Plane workspace URL (e.g. https://pm.example.com): ___
+Workspace slug (e.g. my-workspace): ___
+Project identifier prefix (e.g. MYPROJ): ___
+Are Plane MCP tools configured in this Claude Code session? (y/n) [n]: ___
+```
+Record `url`, `workspace`, `project`, `mcp_available`.
+
+**jira:**
+```
+Jira base URL (e.g. https://company.atlassian.net): ___
+Project key (e.g. PROJ): ___
+API token env var name [JIRA_TOKEN]: ___
+```
+Record `url`, `project`, `token_env`.
+
+**linear:**
+```
+Linear workspace URL (e.g. https://linear.app/company): ___
+Team ID or key (e.g. ENG): ___
+API token env var name [LINEAR_TOKEN]: ___
+```
+Record `url`, `team_id`, `token_env`.
+
+**none:** Skip to Step 3.
+
+---
+
+## Step 3 — Workflow state root
+
+```
+Where should workflow state files (.workflow/<task-slug>/state.yaml) be stored?
+  Default: .workflow
+
+Press Enter to accept default, or type a path: ___
+```
+
+Validate: must be a relative path, no leading `/`.
+Record `workflow.state_root`.
+
+---
+
+## Step 4 — Docs root (optional)
+
+```
+Do you have a persistent docs folder for feature records?
+(Used in dev-task Phase 5 to append implementation history.)
+Leave blank to skip Phase 5 entirely.
+
+Docs folder path (e.g. docs/features), or press Enter to skip: ___
+```
+
+Record `workflow.docs_root` (null if blank).
+
+---
+
+## Step 5 — Test / typecheck / lint commands
+
+Auto-detect from project root:
+
+```bash
+# Test
+[ -f package.json ] && node -e "const p=require('./package.json'); const s=p.scripts||{}; console.log(s.test||s.jest||s.vitest||'')" 2>/dev/null
+[ -f pytest.ini ] || [ -f pyproject.toml ] && echo "pytest"
+[ -f go.mod ] && echo "go test ./..."
+[ -f Cargo.toml ] && echo "cargo test"
+
+# Typecheck
+[ -f tsconfig.json ] && echo "npx tsc --noEmit"
+[ -f pyproject.toml ] && grep -q "mypy" pyproject.toml 2>/dev/null && echo "mypy ."
+
+# Lint
+[ -f eslint.config.js ] || [ -f .eslintrc.js ] || [ -f .eslintrc.json ] || [ -f .eslintrc.yaml ] && echo "npx eslint ."
+[ -f pyproject.toml ] && grep -q "ruff" pyproject.toml 2>/dev/null && echo "ruff check ."
+```
+
+Show results:
+```
+Detected commands:
+  test:       npx jest          (press Enter to accept, or type override)
+  typecheck:  npx tsc --noEmit  (press Enter to accept, or type override)
+  lint:       npx eslint .      (press Enter to accept, or type override)
+
+Type each override and press Enter, or press Enter to keep detected value.
+test [npx jest]: ___
+typecheck [npx tsc --noEmit]: ___
+lint [npx eslint .]: ___
+```
+
+If nothing detected for a command: show `(none detected)` — user can provide one or leave blank (will be skipped during checks).
+
+Record `project.test_command`, `project.typecheck_command`, `project.lint_command`.
+Use the string `"auto"` only if user explicitly pressed Enter on an auto-detected value.
+Use `null` if blank (skip).
+
+---
+
+## Step 6 — PR settings
+
+```
+Default branch for PRs [main]: ___
+Open PRs as drafts? (y/n) [y]: ___
+Path to PR body template file (optional, press Enter to skip): ___
+```
+
+Record `pr.default_branch`, `pr.draft`, `pr.template` (null if blank).
+
+---
+
+## Step 7 — Write config
+
+Construct the YAML and write to `.claude/workflow.yaml`:
+
+```yaml
+# Generated by /workflow-setup — edit manually if needed
+# Consumed by: dev-task, quick-fix, workflow-status, workflow-reset, workflow-checkpoint, create-pr
+version: 1
+
+issue_tracker:
+  type: <github|plane|jira|linear|none>
+  # github: auto-detects repo from git remote
+  # plane/jira/linear: fields below
+  url: <url or null>
+  workspace: <workspace or null>
+  project: <project or null>
+  mcp_available: <true|false>           # plane only
+
+workflow:
+  state_root: <path>                    # default: .workflow
+  docs_root: <path or null>             # null = skip Phase 5 in dev-task
+
+project:
+  test_command: <command or null>
+  typecheck_command: <command or null>
+  lint_command: <command or null>
+
+pr:
+  default_branch: <branch>
+  draft: <true|false>
+  template: <path or null>
+```
+
+Omit `url`/`workspace`/`project`/`mcp_available` fields entirely when `type: github` or `type: none` (keep config clean).
+
+Add `.workflow/` to `.gitignore` if `state_root` starts with `.workflow` and `.gitignore` exists:
+
+```bash
+grep -q "^\.workflow" .gitignore 2>/dev/null || echo ".workflow/" >> .gitignore
+```
+
+---
+
+## Step 8 — Summary
+
+Display:
+
+```
+✓ .claude/workflow.yaml written
+
+Issue tracker:  GitHub Issues
+State root:     .workflow/  (added to .gitignore)
+Docs root:      docs/features
+Test:           npx jest
+Typecheck:      npx tsc --noEmit
+Lint:           npx eslint .
+PR branch:      main (draft)
+
+Next steps:
+  /dev-task <title or GitHub issue URL>   — start a feature task
+  /quick-fix <title or GitHub issue URL>  — fix a bug or small change
+  /workflow-status                        — check current task state
+```

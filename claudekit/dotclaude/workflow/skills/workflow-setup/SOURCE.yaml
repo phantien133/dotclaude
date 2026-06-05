@@ -12,8 +12,12 @@ source:
   ref: components
 imported_at: "2026-05-13"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Workflow v2 (multi-repo). Step 0 version detection vs CURRENT_VERSION=2 with Step 0a
+  auto-migration-with-confirm for older configs. Step 6a configures the top-level
+  repos[] list (per-repo default_branch; "." = main workspace) — a superproject may
+  mix main and master. Written YAML is version: 2 with repos[].
 notes: >-
   Setup wizard that writes .claude/workflow.yaml — the project config consumed
   by dev-task, quick-fix, workflow-status, workflow-reset, workflow-checkpoint,

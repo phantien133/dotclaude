@@ -30,6 +30,12 @@ modifications: >-
   brief now includes the snapshot so plans scope concrete UI surfaces instead of a bare URL
   (fixes plans under-scoping UI). Phase 3.1 reuses the pre-fetched snapshot and only
   re-extracts when it is missing.
+  Workflow v2 (multi-repo): Setup resolves a REPOS list from the new top-level repos[]
+  (synthesizing a single "." entry from pr.default_branch for v1 configs). Phase 6.0 syncs
+  each repo against its OWN default branch via git -C <path> (a superproject may mix main and
+  master). Phase 6.2 opens one PR per changed repo (submodules before the superproject), then
+  does a SINGLE terminal state write (status: complete + prs[]) and stops — Phase 6 is now
+  strictly terminal; re-running /w-task on a complete task is a no-op that reprints PR URLs.
 notes: >-
   v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP,
   smart UI detection at Phase 0, and active Figma orchestration at Phase 3 using

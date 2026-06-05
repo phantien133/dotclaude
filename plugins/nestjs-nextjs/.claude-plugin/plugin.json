@@ -1,7 +1,7 @@
 {
   "name": "nestjs-nextjs",
-  "version": "0.2.3",
-  "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification.",
+  "version": "0.3.0",
+  "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration.",
   "author": {
     "name": "phantien133",
     "email": "phanqtien@gmail.com"

@@ -49,7 +49,9 @@ Extract:
 - `issue_tracker.type`, `.url`, `.workspace`, `.project`, `.mcp_available`
 - `workflow.state_root` → default `.workflow`
 - `project.test_command`, `.typecheck_command`, `.lint_command`
-- `pr.default_branch`, `.draft`
+- `repos[]` (version 2) — per-repo `{path, default_branch, remote}`; if absent, synthesize
+  a single `.` entry from `pr.default_branch` (default `main`). Drives Phase 3 per-repo PRs.
+- `pr.draft`, `.default_branch`
 
 ---
 
@@ -234,17 +236,24 @@ Output: "Committed. Run `/w-fix` to create the PR."
 
 ---
 
-## Phase 3 — PR (AUTO → complete)
+## Phase 3 — PR (AUTO → complete, **terminal**)
 
 *Triggers when `phase: "2"` + `status: gate_pending`.*
 
-Output: "Run `/w-pr <task-slug>` to create the PR."
+Creating the PR is the **final** action. For each repo that has commits (the main
+workspace, plus any submodule the fix touched — see `repos[]` in workflow.yaml),
+run `/w-pr <task-slug> --repo <path> --target <that repo's default_branch>`. A
+single-repo fix is just one `/w-pr <task-slug>` against `.`.
 
-**GATE 3:** developer runs `/w-pr <task-slug>`.
+Output: "Run `/w-pr <task-slug>` to create the PR (add `--repo <path>` per submodule if the fix spans modules)."
 
-Update `state.yaml`: `phase: "3"`, `status: complete`, `last_updated: <now>`.
+**GATE 3:** developer runs `/w-pr`.
 
-Output: "Task complete."
+After the PR(s) exist, perform a **single** final state write:
+`state.yaml`: `phase: "3"`, `status: complete`, `prs: [...]`, `last_updated: <now>`.
+
+Output: "Task complete. state.yaml is final — the workflow has stopped." A later
+`/w-fix` on a `complete` task is a no-op that reprints the PR URL(s).
 
 ---
 

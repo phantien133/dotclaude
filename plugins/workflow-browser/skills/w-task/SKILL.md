@@ -64,7 +64,24 @@ Extract and store for this session:
   Phase 0b module detection, Phase 2 impact analysis, Phase 4 test stubs
 - `project.dev_server_command`, `project.dev_server_port` — drive Phase 4c browser verify.
   If `dev_server_command` is null, Phase 4c is skipped entirely.
-- `pr.default_branch`, `.draft`, `.template`
+- `repos[]` — the repos this workflow operates on, each `{path, default_branch, remote}`.
+  `path: "."` is the main workspace; other entries are git submodules. Each repo has
+  its **own** default branch (they may differ — `main` vs `master`). Drives Phase 6
+  per-repo branch sync + PR.
+- `pr.draft`, `.template`, `.default_branch`
+
+**Resolving `repos`** (config may be v1 or v2):
+
+```
+if config has top-level `repos:` (version 2):
+    REPOS = config.repos                       # use as-is
+else (version 1 / no repos):
+    REPOS = [{ path: ".",
+               default_branch: pr.default_branch or "main",
+               remote: "origin" }]             # synthesize single main-workspace repo
+```
+
+Store `REPOS` for Phase 6. A single-repo project has exactly one entry (`.`).
 
 **Path convention — streaming-docs vs flat layout**
 
@@ -783,59 +800,51 @@ Update `state.yaml`: `phase: "6"`, `status: gate_pending`.
 
 ---
 
-## Phase 6 — PR (AUTO)
+## Phase 6 — PR (AUTO, **terminal**)
 
 *Triggers when `phase: "6"` + `status: gate_pending`.*
 
-Phase 6 runs fully automatically when the developer runs `/w-task`.
-No manual `/w-pr` invocation needed.
+Phase 6 is the **final** phase and runs fully automatically when the developer runs
+`/w-task`. No manual `/w-pr` invocation needed. It works across **every repo in
+`REPOS`** (main workspace + submodules), opening one PR per repo that has commits,
+each against that repo's own default branch.
+
+**Terminal contract (Issue 1):** the very last action of this workflow is creating
+the PR(s). Once all PRs exist, w-task performs a **single** final state write
+(`status: complete`) and stops. After that, `state.yaml` is final — it is never
+updated again, and a subsequent `/w-task` is a no-op that just reprints the PR
+URLs (see § "Re-running a complete task").
 
 ---
 
-### 6.0 — Branch sync (before everything)
+### 6.0 — Branch sync (before everything, per repo)
 
 *Skip if `gates.6a: synced` already set (idempotent re-entry after conflict resolution).*
 
-1. Fetch origin:
-   ```bash
-   git fetch origin
-   ```
+For **each repo in `REPOS`** (submodules first, then the main workspace `.`), run the
+sync inside that repo's working dir with `git -C <path>` and that repo's own
+`default_branch` + `remote`:
 
-2. Resolve default branch from `pr.default_branch` in workflow.yaml (default: `main`).
-
-3. Check if default branch has commits not yet in current branch:
-   ```bash
-   git log HEAD..origin/<default_branch> --oneline
-   ```
-
-4. **No new commits** → set `gates.6a: synced`, proceed to 6.1.
-
-5. **New commits found** → attempt merge:
-   ```bash
-   git merge origin/<default_branch> --no-edit
-   ```
-
-   **Clean merge (exit 0):**
-   - Output: "Merged `origin/<default_branch>` into current branch (<N> commits). No conflicts."
-   - Set `gates.6a: synced`.
-   - Proceed to 6.1.
-
-   **Conflicts (exit non-zero):**
-   - Output:
+1. Fetch: `git -C <path> fetch <remote>`
+2. Check for new commits: `git -C <path> log HEAD..<remote>/<default_branch> --oneline`
+3. **No new commits** → repo is in sync, continue to next repo.
+4. **New commits found** → merge: `git -C <path> merge <remote>/<default_branch> --no-edit`
+   - **Clean (exit 0):** log `Merged <remote>/<default_branch> into <path> (<N> commits).`
+   - **Conflict (exit non-zero):**
      ```
-     ⚠️ Merge conflict with origin/<default_branch>.
+     ⚠️ Merge conflict in <path> with <remote>/<default_branch>.
 
      Conflicting files:
-     <list from git status>
+     <list from git -C <path> status>
 
-     Resolve the conflicts, then run `git add <files>` and `git merge --continue`.
-     Run /w-task when the merge is complete.
+     Resolve in <path>, then `git -C <path> add <files>` + `git -C <path> merge --continue`.
+     Run /w-task when every repo's merge is complete.
      ```
-   - Set `gates.6a: conflict_pending`, `status: gate_pending`.
-   - **GATE 6-conflict:** developer resolves conflicts + `git merge --continue` → runs `/w-task`.
-   - On re-entry with `gates.6a: conflict_pending`: verify `git status` shows clean tree.
-     - If clean: set `gates.6a: synced`, proceed to 6.1.
-     - If still conflicts: repeat the conflict output above and wait.
+     Set `gates.6a: conflict_pending`, `status: gate_pending`, and record which repo
+     in `notes`. **GATE 6-conflict.** On re-entry: re-check every repo's tree; only
+     set `gates.6a: synced` when ALL repos are clean and merged.
+
+When all repos are synced: set `gates.6a: synced`, proceed to 6.1.
 
 ---
 
@@ -863,22 +872,60 @@ The gate verifies:
 
 ---
 
-### 6.2 — Create PR (AUTO)
+### 6.2 — Create PRs (AUTO, one per changed repo) — **then stop**
 
 *Triggers when `gates.6b: doc_gate_passed`.*
 
-**Invoke skill** `w-pr <task-slug>` with `--skip-doc-gate` (gate already passed in 6.1).
+Determine which repos changed: a repo in `REPOS` needs a PR when it has commits on
+the current branch not yet on its `default_branch`
+(`git -C <path> log <remote>/<default_branch>..HEAD --oneline` is non-empty).
 
-`w-pr` will:
-- Build MR title and body from plan.md + impact.md
-- Show a **preview** (title, target branch, draft status) — this is the only point developer sees before PR is created
-- Create the MR via `glab mr create`
+**Order matters for submodules:** open submodule PRs **before** the main workspace
+PR, so the superproject commit that bumps submodule pointers references branches
+that already exist on the remote.
 
-After `w-pr` completes:
+For **each changed repo** (submodules first, then `.`):
 
-Update `state.yaml`: `phase: "6"`, `status: complete`, `last_updated: <timestamp>`.
+**Invoke skill** `w-pr <task-slug> --repo <path> --target <default_branch> --skip-doc-gate`
+(gate already passed in 6.1). `w-pr` will, for that repo:
+- Build the MR title + body from `plan.md` + `impact.md` (scoped to that repo's files)
+- Show a **preview** (repo path, title, target branch, draft status)
+- Create the MR via `glab mr create` inside `<path>` and capture the URL
 
-Output: "Task complete. PR created. Docs ship with code — no post-merge sync needed."
+Collect each `{repo, url}` pair.
+
+**Finalize (single terminal write):** after every changed repo's PR is created,
+write `state.yaml` ONCE:
+```yaml
+phase: "6"
+status: complete
+prs:
+  - repo: apps/api
+    url: <mr-url>
+    target: master
+  - repo: "."
+    url: <mr-url>
+    target: main
+last_updated: <timestamp>
+```
+
+Then output and **stop** — no further state writes, nothing more to advance:
+```
+✓ Task complete. <N> PR(s) created:
+  apps/api → master   <url>
+  .        → main      <url>
+
+Docs ship with code — no post-merge sync needed.
+state.yaml is final; the workflow has stopped.
+```
+
+---
+
+### Re-running a complete task
+
+If `/w-task` is invoked while `state.yaml.status: complete`: do **not** advance or
+rewrite anything. Reprint the stored `prs:` URLs and say the task is already
+complete. This keeps Phase 6 strictly terminal.
 
 ---
 
@@ -900,10 +947,11 @@ Output: "Task complete. PR created. Docs ship with code — no post-merge sync n
 | "4" | gate_pending | browser_error | Commit → Phase 5 (with error noted) |
 | "5" | gate_pending | pending | Phase 5 doc persist or skip |
 | "5" | gate_pending | docs_written | Phase 6 AUTO (branch sync → doc gate → PR) |
-| "6" | gate_pending | — | Phase 6.0: fetch + merge default branch |
-| "6" | gate_pending | conflict_pending | Developer resolves conflicts → runs `/w-task` |
+| "6" | gate_pending | — | Phase 6.0: per-repo fetch + merge each repo's default branch |
+| "6" | gate_pending | conflict_pending | Developer resolves conflicts in flagged repo → runs `/w-task` |
 | "6" | gate_pending | synced | Phase 6.1: doc gate |
-| "6" | gate_pending | doc_gate_passed | Phase 6.2: auto PR via w-pr |
+| "6" | gate_pending | doc_gate_passed | Phase 6.2: one PR per changed repo → `status: complete` (terminal) |
+| "6" | **complete** | — | **Terminal** — no-op; reprints stored `prs:` URLs |
 
 ---
 

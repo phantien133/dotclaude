@@ -12,8 +12,13 @@ source:
   ref: components
 imported_at: "2026-05-13"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Workflow v2 (multi-repo). Setup reads repos[] (synthesizes a single "." entry from
+  pr.default_branch for v1 configs). Phase 3 (PR) is now terminal and per-repo: run
+  /w-pr per changed repo with --repo/--target, then a single final state write sets
+  status: complete with prs[]. A later /w-fix on a complete task is a no-op that
+  reprints the PR URLs.
 notes: >-
   Lightweight bug-fix workflow. 4 phases: intake + locate → fix → commit + docs →
   PR. Scoped to ≤3 files, ≤2h; escalates to /w-task if scope grows. Config-driven

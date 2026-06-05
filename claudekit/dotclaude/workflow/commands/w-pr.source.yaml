@@ -16,6 +16,11 @@ modifications: >-
   `w-pr` for command-suite consistency, but body, prompts, and pr.md output use MR terminology
   and GitLab semantics (--remove-source-branch, --squash-before-merge, project resolution via
   `glab repo view`).
+  Workflow v2 (multi-repo): added --repo <path> and --target <branch> flags so Phase 6 can
+  open one MR per repo. Resolves TARGET_BRANCH from repos[] (the entry matching --repo),
+  falling back to pr.default_branch; runs git/glab inside REPO_PATH so submodules target
+  their own default branch. pr.md is now appended (one block per repo) instead of overwritten;
+  the command no longer mutates workflow phase/status (the caller marks complete).
 notes: >-
   MR creation command for workflow tasks. Args: <task-slug>. Reads pr.* settings
   from .claude/workflow.yaml and plan.md from state folder to build MR body.

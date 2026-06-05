@@ -9,8 +9,14 @@ source:
   ref: components
 imported_at: "2026-05-13"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Workflow v2 (multi-repo). Step 0: version detection vs CURRENT_VERSION=2; an older
+  config triggers Step 0a auto-migration-with-confirm (preserves all values, adds
+  repos[] + bumps version, no re-interview). Step 1 survey now enumerates git
+  submodules and each repo's own default branch. New Step 7a configures the top-level
+  repos[] list ({path, default_branch, remote}; path "." = main workspace) so a
+  superproject can mix main and master per repo. Written YAML is version: 2 with repos[].
 notes: >-
   Workflow config wizard. Writes .claude/workflow.yaml — consumed by w-task, w-fix,
   w-status, w-reset, w-pr, w-checkpoint. Spawns code-explorer agent to survey project
