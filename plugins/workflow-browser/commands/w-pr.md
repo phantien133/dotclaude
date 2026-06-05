@@ -1,34 +1,47 @@
 ---
-description: Create a GitLab merge request for the current branch using glab CLI. Reads MR settings from .claude/workflow.yaml. Pass a task slug to use plan.md as MR body, or provide a free description. Runs w-doc-gate first to enforce docs-with-code invariant.
-argument-hint: [task-slug | description] [--skip-doc-gate]
+description: Create a GitLab merge request for one repo (main workspace or a submodule) using glab CLI. Reads MR settings + per-repo default branch from .claude/workflow.yaml. Pass a task slug to use plan.md as MR body, --repo/--target to scope a submodule. Runs w-doc-gate first to enforce docs-with-code invariant.
+argument-hint: [task-slug | description] [--repo <path>] [--target <branch>] [--skip-doc-gate]
 allowed-tools: Bash, Read, Skill
 ---
 
 # w-pr
 
-Create a GitLab **merge request** for the current branch. (Name kept as `w-pr` for command-suite
+Create a GitLab **merge request** for one repo. (Name kept as `w-pr` for command-suite
 consistency; internally this is a GitLab MR via `glab`.)
 
-Reads `pr.default_branch`, `pr.draft`, `pr.template` from `.claude/workflow.yaml` if present.
+Reads `repos[]`, `pr.draft`, `pr.template` from `.claude/workflow.yaml` if present.
+Operates on the **main workspace** by default, or a **submodule** when `--repo` is given.
 Falls back to sensible defaults if config is missing.
 
 **Prerequisite:** `glab` is installed and authenticated (`glab auth status`).
 
 ---
 
-## Step 1 — Load config
+## Step 1 — Load config & resolve repo
 
 ```bash
 cat .claude/workflow.yaml 2>/dev/null
 ```
 
-Extract:
-- `pr.default_branch` → default `main`
+Parse `$ARGUMENTS` for flags (everything that isn't a flag is the task-slug / description):
+- `--repo <path>` → which repo to operate in. Default `.` (main workspace).
+- `--target <branch>` → explicit target branch. Overrides the resolved default.
+- `--skip-doc-gate` → escape hatch (see Step 1b).
+
+Resolve settings (config may be v1 or v2):
+- `REPO_PATH` = `--repo` value, else `.`
+- `TARGET_BRANCH` resolution order:
+  1. `--target` if provided
+  2. `repos[]` entry whose `path == REPO_PATH` → its `default_branch` (version 2)
+  3. `pr.default_branch` (version 1 fallback)
+  4. `main`
+- `REMOTE` = the matching `repos[]` entry's `remote`, else `origin`
 - `pr.draft` → default `true` (maps to glab `--draft`)
 - `pr.template` → default `null`
 - `workflow.state_root` → default `.workflow`
 
-Parse `$ARGUMENTS` for `--skip-doc-gate` flag (escape hatch — see Step 1b).
+All git/glab commands below run inside `REPO_PATH` — use `git -C <REPO_PATH>` and run
+`glab` with that directory as cwd. When `REPO_PATH == "."` this is just the project root.
 
 ---
 
@@ -133,8 +146,9 @@ Use the project-relative issue IID (e.g. `#42`), not the full URL.
 
 Display:
 ```
+Repo:     <REPO_PATH>   (main workspace | submodule)
 Title:    feat(auth): add email verification flow
-Target:   main  ←  feat/email-verification
+Target:   <TARGET_BRANCH>  ←  feat/email-verification
 Draft:    yes
 Project:  <namespace>/<project>   (from glab repo view)
 
@@ -155,19 +169,23 @@ If user types `n`: stop, show the `glab mr create` command for manual use.
 
 ## Step 6 — Create MR
 
+Run inside `REPO_PATH` (so `glab` targets the correct repo for a submodule):
+
 ```bash
-glab mr create \
+( cd <REPO_PATH> && glab mr create \
   --title "<title>" \
   --description "<body>" \
-  --target-branch <default_branch> \
-  --source-branch "$(git branch --show-current)" \
+  --target-branch <TARGET_BRANCH> \
+  --source-branch "$(git -C <REPO_PATH> branch --show-current)" \
   --remove-source-branch \
   --squash-before-merge \
   [--draft] \
-  --yes
+  --yes )
 ```
 
 Notes:
+- For a submodule, push its branch first if needed
+  (`git -C <REPO_PATH> push -u <REMOTE> "$(git -C <REPO_PATH> branch --show-current)"`).
 - `--remove-source-branch` and `--squash-before-merge` set the MR options; the project's
   protected-branch / approval rules still apply at merge time.
 - If `glab` is not installed or unauthenticated, print the install / auth hint and stop —
@@ -177,23 +195,26 @@ Capture the MR URL from output.
 
 ---
 
-## Step 7 — Write pr.md
+## Step 7 — Record pr.md
 
-Write `<state_root>/<task-slug>/pr.md` if task slug was resolved, else skip:
+If a task slug was resolved, **append** a per-repo MR block to
+`<state_root>/<task-slug>/pr.md` (append, not overwrite — Phase 6 may call `w-pr`
+once per repo, and each block must survive):
 
 ```markdown
-# MR — <title>
+## MR (<REPO_PATH>) — <title>
 
 **URL:** <mr-url>
-**Branch:** <current-branch> → <target>
+**Repo:** <REPO_PATH>  (main workspace | submodule)
+**Branch:** <current-branch> → <TARGET_BRANCH>
 **Created:** <date>
 
-## Post-merge checklist
-
 - [ ] Source branch removed (glab `--remove-source-branch`)
-- [ ] Verify pipeline passes
-- [ ] Update task state: close linked issue if not auto-closed
-<+ any items from workflow.docs_root if set>
+- [ ] Pipeline passes
 ```
 
-Output: MR URL. Done.
+If no task slug: skip the file write.
+
+Output the MR URL. Done. (When driven by w-task Phase 6, the workflow records the
+URL in `state.yaml.prs[]` and marks the task complete — this command does not
+update workflow phase/status itself.)

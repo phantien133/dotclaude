@@ -14,17 +14,85 @@ All workflow skills (`w-task`, `w-fix`, `w-status`, etc.) read this file.
 
 ---
 
-## Step 0 — Check existing config
+## Step 0 — Check existing config & version
 
 ```bash
 cat .claude/workflow.yaml 2>/dev/null
 ```
 
-- **File missing + no `--reset`:** proceed to Step 1.
-- **File exists + no `--reset`:** display current config and say:
-  > Config already exists. Run `/w-setup --reset` to reconfigure, or `/w-task <title>` to start a task.
+This wizard writes config schema **`CURRENT_VERSION = 2`**. Read the existing
+file's `version:` field (treat a missing `version:` as `1`) and branch:
+
+- **File missing + no `--reset`:** proceed to Step 1 (fresh setup).
+
+- **File exists, `version == 2`, no `--reset`:** display current config and say:
+  > Config already exists (version 2). Run `/w-setup --reset` to reconfigure, or `/w-task <title>` to start a task.
   Stop here.
-- **`--reset` flag:** display current config, proceed to Step 1 (existing values shown as defaults).
+
+- **File exists, `version < 2` (or no `version:`), no `--reset`:** an older config
+  was detected → **offer auto-migration** (do NOT silently overwrite, do NOT force a
+  full re-interview). See **Step 0a — Migrate** below.
+
+- **File exists, `version > 2`:** the config is newer than this wizard. Say:
+  > ⚠️ workflow.yaml is version `<N>`, but this `/w-setup` only understands version 2.
+  > Update the workflow plugin before reconfiguring, or edit the file by hand.
+  Stop here — do not rewrite.
+
+- **`--reset` flag (any version):** display current config, proceed to Step 1
+  (existing values shown as defaults). A `--reset` run also upgrades the file to
+  version 2 on write.
+
+---
+
+## Step 0a — Migrate older config (auto, with confirm)
+
+*Only when an existing file has `version < 2`.*
+
+The breaking addition in v2 is the top-level **`repos:`** list (per-repo default
+branch — see Step 7a). Migration preserves every existing value and only ADDS the
+new fields. No re-interview.
+
+1. **Detect repos / submodules** of the project:
+   ```bash
+   git submodule status 2>/dev/null            # lists submodule paths, if any
+   cat .gitmodules 2>/dev/null | grep 'path =' # fallback enumeration
+   ```
+   For each repo (the main workspace `.` plus every submodule path), resolve its
+   default branch:
+   ```bash
+   git -C <path> symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##'
+   ```
+   - Main workspace `.` → default branch = old `pr.default_branch` if set, else the
+     `symbolic-ref` result, else `main`.
+   - Each submodule → its own `symbolic-ref` result. If it can't be resolved, leave
+     it blank and flag it for the developer to fill in the confirm card.
+
+2. **Show the migration card** — only the additions, existing values are kept verbatim:
+   ```
+   Detected workflow.yaml version: <N> (current: 2)
+
+   Will ADD:
+     + version: 2
+     + repos:
+         - path: "."         default_branch: <derived>   remote: origin
+         - path: apps/api    default_branch: <derived>   remote: origin   (submodule)
+       (2 git submodule(s) detected; main workspace + submodules listed above)
+
+   All existing settings (issue_tracker, workflow.*, project.*, pr.*) are preserved.
+   Any default_branch shown as "<?>" could not be auto-detected — edit before accepting.
+
+   Migrate now? [Y]es / [e]dit a branch / [n]o (keep as-is): ___
+   ```
+
+3. **Y / Enter** → write the upgraded file (Step 8) with `version: 2` + the derived
+   `repos:` list, every other field copied unchanged. Print a one-line confirmation
+   and stop (no need to walk Steps 1–7).
+   **e** → ask which repo's `default_branch` to change, set it, re-show the card.
+   **n** → leave the file untouched, stop.
+
+If the project has **no** submodules, `repos:` is a single entry
+`[{path: ".", default_branch: <derived>, remote: origin}]` — migration is still
+applied so the file reaches version 2 and gains the explicit `repos:` list.
 
 ---
 
@@ -79,7 +147,16 @@ Use its findings to pre-fill all suggestions in Steps 2–7.
 >    - `<docs_root>/workflow/`
 >
 > 8. **Git**: run `git remote get-url origin` and `git branch -r | head -5`
->    to identify the remote host and default branch.
+>    to identify the remote host and default branch. Also enumerate submodules and
+>    each repo's own default branch — a superproject may mix `main` and `master`:
+>    ```bash
+>    git submodule status 2>/dev/null
+>    # main workspace + each submodule path:
+>    git -C <path> symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##'
+>    ```
+>    Report a `repos` list: one entry per repo `{path, default_branch, remote}`
+>    where `path: "."` is the main workspace. If there are no submodules, report a
+>    single `.` entry.
 >
 > 9. **Schema files**: probe for `prisma/schema.prisma`,
 >    `<api-dir>/prisma/schema.prisma`, `*.graphql` files under source dirs.
@@ -102,7 +179,9 @@ Use its findings to pre-fill all suggestions in Steps 2–7.
 > - **Docs convention**: `streaming-docs-convention` | `flat-layout` | `none`
 > - **Docs sub-paths present**: list of which sub-paths from item 7 exist
 > - **Git remote host**: github / gitlab / bitbucket / other
-> - **Default branch**: main / master / other
+> - **Default branch**: main / master / other (main workspace)
+> - **Repos**: list of `{path, default_branch, remote}` — main workspace `.` plus
+>   any submodules, each with its own default branch (may differ — `main` vs `master`)
 > - **Schema paths**: prisma / graphql paths found, or "none"
 > - **Module glob**: pattern with the most subdirs containing source files
 > - **Notes**: anything unusual
@@ -342,15 +421,41 @@ lint       [<value>]: ___
 
 ---
 
-## Step 7 — PR settings
+## Step 7 — Repos & PR settings
 
-Use `survey.default_branch` as default:
+### 7a — Repos (per-repo default branch)
+
+Use `survey.repos` to present the repo topology. Each repo (the main workspace and
+every submodule) carries its **own** default branch — they need not agree.
+
+**Single-repo project** (no submodules) — confirm one value:
+```
+Default branch for PRs [<survey.repos[0].default_branch or "main">]: ___
+```
+Record as `repos: [{path: ".", default_branch: <value>, remote: origin}]`.
+
+**Superproject with submodules** — present the detected list, let developer fix any:
+```
+Detected repos (each has its own default branch — main vs master is fine):
+
+  .            default_branch: main      remote: origin   (main workspace)
+  apps/api     default_branch: master    remote: origin   (submodule)
+  apps/web     default_branch: main      remote: origin   (submodule)
+
+Accept all? [Y]es / [e]dit a repo's default branch: ___
+```
+- **e** → ask which path, then the new `default_branch`, re-show.
+Record the full `repos:` list.
+
+### 7b — PR options (apply to every repo)
 
 ```
-Default branch for PRs [<survey.default_branch or "main">]: ___
 Open PRs as drafts? (y/n) [y]: ___
 Path to PR body template file (optional, Enter to skip): ___
 ```
+
+Record `pr.draft`, `pr.template`. `pr.default_branch` is kept in the written file
+(= the main workspace `.` default branch) as a fallback for older consumers.
 
 ---
 
@@ -361,7 +466,19 @@ Write `.claude/workflow.yaml`:
 ```yaml
 # Generated by /w-setup — edit manually if needed
 # Consumed by: w-task, w-fix, w-status, w-reset, w-checkpoint, w-pr
-version: 1
+version: 2
+
+# Repos this workflow operates on. path "." is the main workspace; the rest are
+# git submodules. Each repo has its OWN default branch — they need not agree
+# (one may target `main`, another `master`). w-task Phase 6 syncs and opens a PR
+# per repo against the branch named here.
+repos:
+  - path: "."
+    default_branch: <branch>           # e.g. main
+    remote: origin
+  # - path: apps/api                   # a git submodule
+  #   default_branch: master
+  #   remote: origin
 
 issue_tracker:
   type: <github|plane|jira|linear|none>
@@ -397,8 +514,8 @@ project:
   test_layers: <list or [unit]>            # e.g. [unit, integration, graphql, bullmq]
 
 pr:
-  default_branch: <branch>
-  draft: <true|false>
+  default_branch: <branch>           # = repos[path="."].default_branch — fallback for older consumers
+  draft: <true|false>                # applies to every repo's PR
   template: <path or null>
 ```
 
@@ -431,6 +548,8 @@ Survey applied:
   Commands:     from CI / detected / manual
 
 Config written:
+  Version:        2
+  Repos:          <N> (. → <branch>[, apps/api → master, ...])
   Issue tracker:  <type>
   State root:     .workflow/  (added to .gitignore)
   Docs root:      <path or "skipped">
@@ -443,7 +562,7 @@ Config written:
   Test:           <command or "none">
   Typecheck:      <command or "none">
   Lint:           <command or "none">
-  PR branch:      <branch> (<draft/open>)
+  PR:             <draft/open>, one PR per repo against its own default branch
 
 Next steps:
   /w-task <title or issue URL>      — start a feature task

@@ -16,7 +16,8 @@ Display workflow state without advancing any phase.
 cat .claude/workflow.yaml 2>/dev/null
 ```
 
-Extract `workflow.state_root` → default `.workflow`.
+Extract `workflow.state_root` → default `.workflow`. Also note `repos[]` (version 2)
+so the PR row can show one line per repo; if absent, treat as a single `.` repo.
 
 ---
 
@@ -71,10 +72,16 @@ Gates:
   5   Docs           <done | skipped | pending | not_reached>
   6   PR             <complete | not_reached>
 
+PRs (if status complete — from state.yaml prs[]):
+  <repo> → <target>   <url>
+  ...
+
 Started:       <started_at>
 Last updated:  <last_updated>
 Notes:         <notes if any>
 ```
+
+If `state.yaml` has a `prs:` list, render one line per entry. Omit the block when absent.
 
 Phase name map:
 `"0"` → Intake, `"0b"` → Context Load, `"1"` → Plan,
@@ -97,5 +104,5 @@ Show which of these exist: `intake.md`, `context.md`, `questions.md`, `plan.md`,
 
 Based on `phase` + `status`:
 - `gate_pending` → "Run `/w-task` to advance to next phase."
-- `complete` → "Task complete. PR was created — see `pr.md`."
+- `complete` → "Task complete and **terminal** — all PR(s) created (see `prs:` above / `pr.md`). Nothing left to run."
 - `blocked` → "Task is blocked — see `state.yaml notes` field."
