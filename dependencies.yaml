@@ -19,7 +19,7 @@ sources:
     description: Battle-tested agents/skills/hooks/commands collection
     repo: https://github.com/affaan-m/everything-claude-code
     local_path: upstream/everything-claude-code
-    pinned_commit: 841beea45cb25ba51f29fa45b7e272938d19b80a
+    pinned_commit: 5b173d2e6c11b976a0f13b2f59125e08956c1d47
     ref: main
     role: sync_source
     license: MIT
@@ -29,7 +29,7 @@ sources:
     description: Official Anthropic API + Claude Code recipe collection
     repo: https://github.com/anthropics/anthropic-cookbook
     local_path: upstream/anthropic-cookbook
-    pinned_commit: 93a262f1e00a9d48f58b4c6fe49241b612156452
+    pinned_commit: 34022c55c1fde7056280e01b84f562cb92575cb5
     ref: main
     role: docs
     license: MIT
@@ -39,7 +39,7 @@ sources:
     description: Official Anthropic skills collection (skill format reference)
     repo: https://github.com/anthropics/skills
     local_path: upstream/anthropic-skills
-    pinned_commit: d211d437443a7b2496a3dad9575e7dddd724c585
+    pinned_commit: 57546260929473d4e0d1c1bb75297be2fdfa1949
     ref: main
     role: docs
     license: MIT
@@ -49,7 +49,7 @@ sources:
     description: Official Model Context Protocol server implementations
     repo: https://github.com/modelcontextprotocol/servers
     local_path: upstream/mcp-servers
-    pinned_commit: 4503e2d12b799448cd05f789dd40f9643a8d1a6c
+    pinned_commit: 275175cda17ca9c49920ceed2bcf27e12e59f8b2
     ref: main
     role: docs
     license: MIT
@@ -59,7 +59,7 @@ sources:
     description: Official Claude Code CLI — plugin collection with vendorable agents/skills/commands/hooks (plugins/ dir), plus AGENTS.md format and hook schema reference
     repo: https://github.com/anthropics/claude-code
     local_path: upstream/claude-code
-    pinned_commit: 831608a360511febd4b10c77d4d03b47afda2f5b
+    pinned_commit: ca9f6045fc90c8244f9e787fb57d54b380f9a27c
     ref: main
     role: sync_source
     license: MIT
@@ -77,7 +77,7 @@ sources:
     description: Anthropic's official Claude Code plugin directory — internal Anthropic plugins (plugins/) plus vetted third-party plugins (external_plugins/) installable via /plugin install …@claude-plugins-official
     repo: git@github.com:anthropics/claude-plugins-official.git
     local_path: upstream/claude-plugins-official
-    pinned_commit: 1a2f18b05cf5652fd25403e8d229fc884fb84103
+    pinned_commit: 093e3563c30a56a67d86fa723f6ab1d5957b5b08
     ref: main
     role: sync_source
     license: MIT
@@ -87,7 +87,17 @@ sources:
     description: Figma's official Claude Code plugin source (figma@claude-plugins-official) — skills like figma-implement-design, figma-code-connect, figma-create-design-system-rules, figma-generate-library plus MCP config pointing to https://mcp.figma.com/mcp. Reference for f-* flow rebuild; not for vendoring (LICENSE absent in upstream repo).
     repo: https://github.com/figma/mcp-server-guide.git
     local_path: upstream/figma-mcp-server-guide
-    pinned_commit: fabc1ca81d839602ba7c1ca0f445a64246b3870e
+    pinned_commit: 2efd0e37d10c35c4a7cf6d2b7381c9dc1a569bd4
     ref: main
     role: docs
     license: unspecified
+
+  pm_skills:
+    name: pm-skills
+    description: Product-management skills collection by Pawel Huryn — PRD/strategy/discovery/GTM/analytics skill packs (pm-execution, pm-product-strategy, pm-product-discovery, pm-go-to-market, pm-market-research, pm-marketing-growth, pm-data-analytics, pm-ai-shipping, pm-toolkit). No infra/aws content. Vendorable (MIT).
+    repo: git@github.com:phuryn/pm-skills.git
+    local_path: upstream/pm-skills
+    pinned_commit: d384f0c9eb81fe74656a4f6da168587836939edb
+    ref: main
+    role: sync_source
+    license: MIT
