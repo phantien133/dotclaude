@@ -64,7 +64,24 @@ Extract and store for this session:
   Phase 0b module detection, Phase 2 impact analysis, Phase 4 test stubs
 - `project.dev_server_command`, `project.dev_server_port` — drive Phase 4c browser verify.
   If `dev_server_command` is null, Phase 4c is skipped entirely.
-- `pr.default_branch`, `.draft`, `.template`
+- `repos[]` — the repos this workflow operates on, each `{path, default_branch, remote}`.
+  `path: "."` is the main workspace; other entries are git submodules. Each repo has
+  its **own** default branch (they may differ — `main` vs `master`). Drives Phase 6
+  per-repo branch sync + PR.
+- `pr.draft`, `.template`, `.default_branch`
+
+**Resolving `repos`** (config may be v1 or v2):
+
+```
+if config has top-level `repos:` (version 2):
+    REPOS = config.repos                       # use as-is
+else (version 1 / no repos):
+    REPOS = [{ path: ".",
+               default_branch: pr.default_branch or "main",
+               remote: "origin" }]             # synthesize single main-workspace repo
+```
+
+Store `REPOS` for Phase 6. A single-repo project has exactly one entry (`.`).
 
 **Path convention — streaming-docs vs flat layout**
 
@@ -280,7 +297,15 @@ Update `state.yaml` from developer's reply:
 
 **In both branches:**
 
-5. Update `state.yaml`:
+5. **UI design pre-fetch (conditional).** If `state.yaml.has_ui: true` AND `figma_url`
+   is set, invoke skill `f-extract <figma_url> --task <task-slug>` now — it writes
+   `<state_root>/<task-slug>/figma-snapshot.md`. This lets Phase 1 scope UI work against
+   the real screens/components/states instead of a bare URL, which is the main reason
+   plans under-scope UI. On failure (MCP unavailable / bad URL), log a one-line warning
+   and continue — Phase 3.1 will retry extraction. Skip silently when `has_ui` is
+   `false`/`unknown` or `figma_url` is null.
+
+6. Update `state.yaml`:
    ```yaml
    phase: "1"
    status: gate_pending
@@ -327,7 +352,10 @@ Output: "Context loaded. Run `/w-task` to start planning."
    - `intake.md` full content
    - `context.md` § Relevant Files + § Patterns Observed
    - Answered `questions.md`
-   - Instruction: produce a plan with sections — Feature scope, Implementation approach per layer, Out of scope, Dependencies, Risks.
+   - `figma-snapshot.md` if it exists (pre-fetched at Phase 0b) — the planner must
+     scope UI work (screens, components, states, edge cases) against this design, not
+     just the textual description.
+   - Instruction: produce a plan with sections — Feature scope, Implementation approach per layer, Out of scope, Dependencies, Risks. When a Figma snapshot is present, the Feature scope and Implementation approach must enumerate the concrete UI surfaces it reveals.
 
 7. Write `plan.md` from agent output.
 
@@ -415,9 +443,11 @@ Read `state.yaml.figma_url`.
 
 **If `figma_url` is set:**
 
-Invoke skill `f-extract <figma_url> --task <task-slug>`.
+If `<state_root>/<task-slug>/figma-snapshot.md` already exists (pre-fetched at Phase 0b),
+reuse it — do not re-extract. Only invoke skill `f-extract <figma_url> --task <task-slug>`
+when the snapshot is missing (Phase 0b skipped it, or its extraction failed).
 
-This writes `<state_root>/<task-slug>/figma-snapshot.md`.
+`f-extract` writes `<state_root>/<task-slug>/figma-snapshot.md`.
 
 If `f-extract` fails (MCP unavailable, URL invalid):
 ```
@@ -563,6 +593,18 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     - Resolve CRITICAL/HIGH issues immediately, re-run tests to confirm still GREEN.
     - Document MEDIUM items in `tests.md § Code Review Notes`.
 
+    **Mobile / Flutter changes** — additional pass:
+    - If `impact.md § Affected Files` lists any `.dart` files, or paths under a
+      mobile folder (e.g. `streaming-mobile/`, `mobile/`, `app/`, `lib/`), AND
+      the `flutter-dart-code-review` skill is available in this project:
+      - Invoke `flutter-dart-code-review` skill with those Dart files as scope.
+      - It applies the library-agnostic Flutter/Dart checklist (widget patterns,
+        Riverpod/BLoC state, null safety, performance, a11y, security).
+      - Resolve CRITICAL/HIGH findings the same way as the generic reviewer;
+        append MEDIUM items to `tests.md § Code Review Notes` under a
+        "Flutter / Dart review" subsection.
+    - Skip silently if no Dart files or the skill isn't installed.
+
 12. Write `verify.md`:
     ```markdown
     # Verify — <title>
@@ -573,6 +615,7 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     | lint | ✅/❌ | |
     | tests | ✅/❌ | |
     | code review | ✅/❌ | CRITICAL/HIGH resolved |
+    | flutter-dart review | ✅/❌/skipped | only if `.dart` files in scope |
     ```
 
 13. Update `tests.md`: add RED→GREEN record + reference `verify.md`.
@@ -749,7 +792,7 @@ own config field is null):**
 Update `state.yaml`: `gates.5: docs_written`, `status: gate_pending`.
 
 Output: "Docs persisted and committed. Review changes, then run `/w-task` to
-create the PR (which will trigger w-doc-gate)."
+proceed — Phase 6 will sync with default branch, run doc-gate, and create the PR automatically."
 
 **GATE 5:** developer reviews + runs `/w-task`.
 
@@ -757,27 +800,132 @@ Update `state.yaml`: `phase: "6"`, `status: gate_pending`.
 
 ---
 
-## Phase 6 — PR
+## Phase 6 — PR (AUTO, **terminal**)
 
 *Triggers when `phase: "6"` + `status: gate_pending`.*
 
-`/w-pr` (Phase 6) will internally invoke `w-doc-gate <task-slug>` before
-opening the PR. The doc gate verifies:
-- Every module touched (code changes under `module_glob`) has a corresponding
-  doc update in the branch diff
-- If `master_erd_path` is configured, any sub-ERD change is accompanied by
-  a master ERD update in the same branch
+Phase 6 is the **final** phase and runs fully automatically when the developer runs
+`/w-task`. No manual `/w-pr` invocation needed. It works across **every repo in
+`REPOS`** (main workspace + submodules), opening one PR per repo that has commits,
+each against that repo's own default branch.
 
-If the gate fails, `/w-pr` blocks PR creation and prints the missing doc paths
-— developer must return to Phase 5 (`/w-task`) to fill the gap.
+**Terminal contract (Issue 1):** the very last action of this workflow is creating
+the PR(s). Once all PRs exist, w-task performs a **single** final state write
+(`status: complete`) and stops. After that, `state.yaml` is final — it is never
+updated again, and a subsequent `/w-task` is a no-op that just reprints the PR
+URLs (see § "Re-running a complete task").
 
-Output: "Run `/w-pr <task-slug>` to create the PR (w-doc-gate runs first)."
+---
 
-**GATE 6:** developer runs `/w-pr <task-slug>`.
+### 6.0 — Branch sync (before everything, per repo)
 
-Update `state.yaml`: `phase: "6"`, `status: complete`, `last_updated: <timestamp>`.
+*Skip if `gates.6a: synced` already set (idempotent re-entry after conflict resolution).*
 
-Output: "Task complete. Docs ship with code in this PR — no post-merge sync needed."
+For **each repo in `REPOS`** (submodules first, then the main workspace `.`), run the
+sync inside that repo's working dir with `git -C <path>` and that repo's own
+`default_branch` + `remote`:
+
+1. Fetch: `git -C <path> fetch <remote>`
+2. Check for new commits: `git -C <path> log HEAD..<remote>/<default_branch> --oneline`
+3. **No new commits** → repo is in sync, continue to next repo.
+4. **New commits found** → merge: `git -C <path> merge <remote>/<default_branch> --no-edit`
+   - **Clean (exit 0):** log `Merged <remote>/<default_branch> into <path> (<N> commits).`
+   - **Conflict (exit non-zero):**
+     ```
+     ⚠️ Merge conflict in <path> with <remote>/<default_branch>.
+
+     Conflicting files:
+     <list from git -C <path> status>
+
+     Resolve in <path>, then `git -C <path> add <files>` + `git -C <path> merge --continue`.
+     Run /w-task when every repo's merge is complete.
+     ```
+     Set `gates.6a: conflict_pending`, `status: gate_pending`, and record which repo
+     in `notes`. **GATE 6-conflict.** On re-entry: re-check every repo's tree; only
+     set `gates.6a: synced` when ALL repos are clean and merged.
+
+When all repos are synced: set `gates.6a: synced`, proceed to 6.1.
+
+---
+
+### 6.1 — Doc gate
+
+*Triggers when `gates.6a: synced`.*
+
+**Invoke skill** `w-doc-gate <task-slug>`.
+
+The gate verifies:
+- Every module touched (code changes under `module_glob`) has corresponding doc updates in the branch diff.
+- If `master_erd_path` is configured: any sub-ERD change is accompanied by a master ERD update.
+
+**Gate passes (exit 0):** set `gates.6b: doc_gate_passed`, proceed to 6.2.
+
+**Gate fails (exit non-zero):**
+- Print the violation report from `w-doc-gate`.
+- Output:
+  ```
+  ⚠️ Doc gate blocked. Missing docs for the modules listed above.
+  Run /w-task to return to Phase 5 and persist the missing docs.
+  ```
+- Update `state.yaml`: `phase: "5"`, `status: gate_pending`, `gates.5: pending`.
+- Stop — developer must fix docs, then run `/w-task` to retry Phase 5 → 6.
+
+---
+
+### 6.2 — Create PRs (AUTO, one per changed repo) — **then stop**
+
+*Triggers when `gates.6b: doc_gate_passed`.*
+
+Determine which repos changed: a repo in `REPOS` needs a PR when it has commits on
+the current branch not yet on its `default_branch`
+(`git -C <path> log <remote>/<default_branch>..HEAD --oneline` is non-empty).
+
+**Order matters for submodules:** open submodule PRs **before** the main workspace
+PR, so the superproject commit that bumps submodule pointers references branches
+that already exist on the remote.
+
+For **each changed repo** (submodules first, then `.`):
+
+**Invoke skill** `w-pr <task-slug> --repo <path> --target <default_branch> --skip-doc-gate`
+(gate already passed in 6.1). `w-pr` will, for that repo:
+- Build the MR title + body from `plan.md` + `impact.md` (scoped to that repo's files)
+- Show a **preview** (repo path, title, target branch, draft status)
+- Create the MR via `glab mr create` inside `<path>` and capture the URL
+
+Collect each `{repo, url}` pair.
+
+**Finalize (single terminal write):** after every changed repo's PR is created,
+write `state.yaml` ONCE:
+```yaml
+phase: "6"
+status: complete
+prs:
+  - repo: apps/api
+    url: <mr-url>
+    target: master
+  - repo: "."
+    url: <mr-url>
+    target: main
+last_updated: <timestamp>
+```
+
+Then output and **stop** — no further state writes, nothing more to advance:
+```
+✓ Task complete. <N> PR(s) created:
+  apps/api → master   <url>
+  .        → main      <url>
+
+Docs ship with code — no post-merge sync needed.
+state.yaml is final; the workflow has stopped.
+```
+
+---
+
+### Re-running a complete task
+
+If `/w-task` is invoked while `state.yaml.status: complete`: do **not** advance or
+rewrite anything. Reprint the stored `prs:` URLs and say the task is already
+complete. This keeps Phase 6 strictly terminal.
 
 ---
 
@@ -798,8 +946,12 @@ Output: "Task complete. Docs ship with code in this PR — no post-merge sync ne
 | "4" | gate_pending | browser_skipped | Commit → Phase 5 |
 | "4" | gate_pending | browser_error | Commit → Phase 5 (with error noted) |
 | "5" | gate_pending | pending | Phase 5 doc persist or skip |
-| "5" | gate_pending | docs_written | Phase 6 (PR) |
-| "6" | gate_pending | — | Dev runs `/w-pr <task-slug>` → complete |
+| "5" | gate_pending | docs_written | Phase 6 AUTO (branch sync → doc gate → PR) |
+| "6" | gate_pending | — | Phase 6.0: per-repo fetch + merge each repo's default branch |
+| "6" | gate_pending | conflict_pending | Developer resolves conflicts in flagged repo → runs `/w-task` |
+| "6" | gate_pending | synced | Phase 6.1: doc gate |
+| "6" | gate_pending | doc_gate_passed | Phase 6.2: one PR per changed repo → `status: complete` (terminal) |
+| "6" | **complete** | — | **Terminal** — no-op; reprints stored `prs:` URLs |
 
 ---
 

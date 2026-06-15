@@ -1,7 +1,7 @@
 {
   "name": "workflow-browser",
-  "version": "0.1.0",
-  "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.",
+  "version": "0.3.0",
+  "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration.",
   "author": {
     "name": "phantien133",
     "email": "phanqtien@gmail.com"

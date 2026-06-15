@@ -20,3 +20,7 @@
 [submodule "upstream/figma-mcp-server-guide"]
 	path = upstream/figma-mcp-server-guide
 	url = https://github.com/figma/mcp-server-guide.git
+[submodule "upstream/pm-skills"]
+	path = upstream/pm-skills
+	url = git@github.com:phuryn/pm-skills.git
+	branch = main
