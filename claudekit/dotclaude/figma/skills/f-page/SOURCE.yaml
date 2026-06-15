@@ -24,7 +24,8 @@ dependencies:
     agents: []
     skills:
       - f-ui-kit
-    commands: []
+    commands:
+      - f-setup
     hooks: []
     rules: []
   optional:

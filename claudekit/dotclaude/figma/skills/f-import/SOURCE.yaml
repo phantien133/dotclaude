@@ -27,7 +27,8 @@ dependencies:
     skills:
       - f-ui-kit
       - f-page
-    commands: []
+    commands:
+      - f-setup
     hooks: []
     rules: []
   optional:

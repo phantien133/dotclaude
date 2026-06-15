@@ -18,7 +18,8 @@ dependencies:
     agents: []
     skills:
       - f-extract
-    commands: []
+    commands:
+      - f-setup
     hooks: []
     rules: []
   optional:

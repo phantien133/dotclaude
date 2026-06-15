@@ -25,7 +25,8 @@ dependencies:
   required:
     agents: []
     skills: []
-    commands: []
+    commands:
+      - f-setup
     hooks: []
     rules: []
   optional:

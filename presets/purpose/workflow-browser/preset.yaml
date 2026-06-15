@@ -9,7 +9,9 @@ description: >-
   Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml.
   v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml
   repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration.
-version: 0.3.0
+  v0.4.0 adds the f-setup command (required by f-extract/f-implement — they read
+  .claude/figma.yaml); previously missing so /f-extract could not be configured.
+version: 0.4.0
 extends:
   - developer
 components:
@@ -58,6 +60,11 @@ components:
       source: workflow
     - name: w-pr
       source: workflow
+    # Figma config wizard — required by f-extract / f-implement (they read
+    # .claude/figma.yaml written by /f-setup). Also auto-included via those
+    # skills' sidecar deps; listed here explicitly for parity with sibling presets.
+    - name: f-setup
+      source: figma
 settings_patch:
   mcpServers:
     chrome-devtools:
