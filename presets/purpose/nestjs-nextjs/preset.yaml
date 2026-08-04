@@ -8,8 +8,8 @@ description: >-
   with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification.
   v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml
   repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration.
-  DEPRECATED as of v0.4.0 — superseded by `nextjs-combo`, which is the maintained port of
-  cistreaming v2 (official Figma MCP suite, Figma subagents, visual parity gate, infra
+  DEPRECATED as of v0.4.0 — superseded by `nextjs-combo`, which is the maintained
+  successor (official Figma MCP suite, Figma subagents, visual parity gate, infra
   security review). v0.4.0 only extends the `figma` preset so existing installs keep
   working with w-task's engine-aware Phase 3; no further features will land here.
 version: 0.4.0

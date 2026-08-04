@@ -18,7 +18,7 @@ notes: >-
   Canvas-write skill — drives the `use_figma` tool via the Figma Plugin API. Carries the
   largest reference set of the suite (~700 KB, including the standalone Plugin API typings)
   which is why references/ is loaded on demand rather than inlined. Not used by the
-  cistreaming design→code path; included so the figma plugin covers write workflows too.
+  design→code path; included so the figma plugin covers write workflows too.
 dependencies:
   required:
     agents: []

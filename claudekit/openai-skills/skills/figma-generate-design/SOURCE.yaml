@@ -16,7 +16,7 @@ modifications: >-
   2. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml.
 notes: >-
   Reverse direction: builds a full screen in Figma from code or a description. Not part of
-  the cistreaming design→code path; included so the figma plugin covers the round trip.
+  the design→code path; included so the figma plugin covers the round trip.
 dependencies:
   required:
     agents: []

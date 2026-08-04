@@ -9,8 +9,8 @@ license: MIT
 modified: false
 modifications: null
 notes: >-
-  Self-authored always-on rule. Written against the concrete failure mode seen on
-  cistreaming: the model implemented "close to" the design — inventing icons, rounding
+  Self-authored always-on rule. Written against a concrete observed failure mode:
+  the model implemented "close to" the design — inventing icons, rounding
   spacing to the nearest scale step, and guessing backgrounds/borders/font sizes instead
   of reading them. Encodes seven hard constraints, including the ban on generated SVG and
   icon-package substitution, and the rule that a matching token *name* with a different

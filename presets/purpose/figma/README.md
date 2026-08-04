@@ -98,8 +98,8 @@ deliberately a separate verdict — a skipped check must never read as a passing
 
 ## Relationship to the legacy `f-*` suite
 
-Both can be installed together; `cistreaming` and `nextjs-combo` keep `f-*` as a fallback
-for projects still on the REST server. They must not both be registered under the MCP
+Both can be installed together; `nextjs-combo` keeps `f-*` as a fallback for projects
+still on the REST server. They must not both be registered under the MCP
 server name `figma`. New work should use this suite.
 
 | | `f-*` (legacy) | `figma` (this preset) |

@@ -1,7 +1,7 @@
 # nextjs-combo
 
-Full-stack NestJS + Next.js workflow preset. The public port of `cistreaming` v2 — same
-workflow, same Figma pipeline, none of the hilab-private components.
+Full-stack NestJS + Next.js workflow preset — the complete w-task state machine plus the
+official Figma design-to-code pipeline.
 
 Supersedes **`nestjs-nextjs`**, which is deprecated and receives no further features.
 
@@ -44,12 +44,6 @@ w-task Phase 3 resolves a `figma_engine` by probing which MCP tools exist:
 The parity gate (Phase 3.4) renders the built screen, reads `getComputedStyle` for every
 property the design pins, and fails the phase on any drift. `NOT RUN` is a distinct
 verdict from `PASS` — a skipped check stays visible all the way into the PR description.
-
-## Differences from `cistreaming`
-
-`cistreaming` additionally carries: the `flutter` preset (mobile), and the hilab-private
-components (`create-pr`, `streaming-*` skills and rules, `hsd-*` commands). Everything
-else is identical.
 
 ## Migrating from `nestjs-nextjs`
 

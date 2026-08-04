@@ -2,16 +2,15 @@
 name: nextjs-combo
 kind: purpose
 description: >-
-  Full-stack NestJS + Next.js development workflow — the public port of cistreaming v2,
-  with every hilab-private component removed. Combines the w-task state machine
+  Full-stack NestJS + Next.js development workflow. Combines the w-task state machine
   (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with
   the official Figma design-to-code suite: figma-context-extractor absorbs the MCP
   payloads into an exact figma-spec.md, figma-asset-fetcher downloads real icons and
   images instead of generating them, figma-design-system-mapper resolves Figma values
   against the project's own tokens and components, and a Phase 3.4 visual parity gate
   blocks the task until computed styles match the design. Includes Chrome DevTools MCP
-  for localhost verification and the cloud-infrastructure security review checklist.
-  Supersedes the deprecated `nestjs-nextjs` preset.
+  for localhost verification, the cloud-infrastructure security review checklist, and the
+  terraform MCP server for IaC. Supersedes the deprecated `nestjs-nextjs` preset.
 version: 1.0.0
 extends:
   - nestjs
@@ -19,10 +18,10 @@ extends:
   - figma
 components:
   agents:
-    # planner, code-explorer, code-architect, code-reviewer, code-simplifier and the
-    # language-specific reviewers come from the developer chain (nestjs/nextjs →
-    # developer). tdd-guide is declared here because w-task invokes it by name in the
-    # TDD phase. The four figma-* agents arrive via `extends: figma`.
+    # planner, code-explorer, code-architect, code-reviewer and code-simplifier come
+    # from the developer chain (nestjs/nextjs → developer). tdd-guide is declared here
+    # because w-task invokes it by name in the TDD phase. The four figma-* agents
+    # arrive via `extends: figma`.
     - name: tdd-guide
       source: everything-claude-code
   skills:

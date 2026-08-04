@@ -26,9 +26,9 @@ modifications: >-
 notes: >-
   Primary design→code skill of the figma plugin; replaces the legacy f-extract/f-implement
   pair as the default path. The upstream workflow is sound but had no token strategy and no
-  verification loop, which is how cistreaming implementations drifted from their designs
-  (invented icons, rounded spacing, guessed backgrounds and borders). The dotclaude edits
-  add both without altering the upstream step semantics.
+  verification loop, which is how implementations drift from their designs (invented
+  icons, rounded spacing, guessed backgrounds and borders). The dotclaude edits add both
+  without altering the upstream step semantics.
 dependencies:
   required:
     agents:
