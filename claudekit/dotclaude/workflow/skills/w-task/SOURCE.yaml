@@ -36,10 +36,23 @@ modifications: >-
   master). Phase 6.2 opens one PR per changed repo (submodules before the superproject), then
   does a SINGLE terminal state write (status: complete + prs[]) and stops — Phase 6 is now
   strictly terminal; re-running /w-task on a complete task is a no-op that reprints PR URLs.
+  Figma engine split (2026-08-04): state.yaml gained `figma_engine`, resolved at Phase 0b
+  step 5 by probing which Figma MCP tools exist — `official` (get_design_context present),
+  `legacy` (only get_file*), or `none`. Phase 0b and 3.1 branch on it: official spawns
+  figma-context-extractor / figma-asset-fetcher / figma-design-system-mapper and gates on
+  resolving their gap + "No equivalent" lists with the developer; legacy keeps the old
+  f-extract path with a one-line warning about its missing rendered reference. Phase 3.2
+  routes to figma-implement-design (official) or f-implement (legacy). Phase 3.3 covers
+  both TODO(figma-asset) markers and ASSET_PLACEHOLDER comments. NEW Phase 3.4 is a visual
+  parity gate running figma-verify-parity — FAIL blocks advancement, NOT RUN is recorded
+  distinctly from PASS so a skipped check reaches the PR description. Old 3.4 finalize
+  became 3.5. Phase 1 planner brief accepts figma-spec.md or figma-snapshot.md.
 notes: >-
   v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP,
-  smart UI detection at Phase 0, and active Figma orchestration at Phase 3 using
-  f-extract + f-implement (figma-v2 skills). Original w-task is unchanged.
+  smart UI detection at Phase 0, and active Figma orchestration at Phase 3. Phase 3 now
+  prefers the official Figma MCP path (figma-implement-design + the figma-* agents, with a
+  visual parity gate) and falls back to the legacy f-extract/f-implement pair when only the
+  REST server is available. Original w-task is unchanged.
 dependencies:
   required:
     agents:
@@ -54,8 +67,19 @@ dependencies:
     hooks: []
     rules: []
   optional:
-    agents: []
+    # Figma subagents — used by Phase 0b/3 when figma_engine resolves to `official`.
+    agents:
+      - figma-context-extractor
+      - figma-asset-fetcher
+      - figma-design-system-mapper
+      - figma-visual-verifier
     skills:
+      # Official Figma MCP path (preferred at Phase 3).
+      - figma-implement-design
+      - figma-verify-parity
+      # Legacy REST path (fallback when only @figma/mcp is available).
+      - f-extract
+      - f-implement
       - f-import
     commands: []
     hooks: []
