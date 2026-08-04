@@ -633,21 +633,45 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     - Lint: `<lint_command>` on affected files from `impact.md`
     - Tests with coverage (if test command supports it)
 
-11. **Spawn `code-reviewer` agent** — scope: affected files from `impact.md` only:
-    - Resolve CRITICAL/HIGH issues immediately, re-run tests to confirm still GREEN.
-    - Document MEDIUM items in `tests.md § Code Review Notes`.
+11. **Code review — language-aware agent routing.** Scope: affected files from
+    `impact.md § Affected Files` only. **Do not default to a single generic
+    reviewer.** Group the affected files by language and, for each group, spawn
+    the reviewer agent that matches that language. Use the specific agent only if
+    it is available in this project (check installed agents); otherwise fall back
+    to the generic `code-reviewer` for that group.
 
-    **Mobile / Flutter changes** — additional pass:
-    - If `impact.md § Affected Files` lists any `.dart` files, or paths under a
-      mobile folder (e.g. `streaming-mobile/`, `mobile/`, `app/`, `lib/`), AND
-      the `flutter-dart-code-review` skill is available in this project:
-      - Invoke `flutter-dart-code-review` skill with those Dart files as scope.
-      - It applies the library-agnostic Flutter/Dart checklist (widget patterns,
-        Riverpod/BLoC state, null safety, performance, a11y, security).
-      - Resolve CRITICAL/HIGH findings the same way as the generic reviewer;
-        append MEDIUM items to `tests.md § Code Review Notes` under a
-        "Flutter / Dart review" subsection.
-    - Skip silently if no Dart files or the skill isn't installed.
+    | Changed files (match by extension / path) | Reviewer agent | Build / compile resolver |
+    |---|---|---|
+    | `*.dart`, or mobile paths (`lib/`, `mobile/`, `app/`, `*mobile*/`) | `flutter-reviewer` | `dart-build-resolver` |
+    | `*.ts`, `*.tsx` (NestJS / Next.js) | `typescript-reviewer` | `react-build-resolver` |
+    | `*.py` | `python-reviewer` (or `django-reviewer` / `fastapi-reviewer`) | `django-build-resolver` |
+    | `*.go` | `go-reviewer` | `go-build-resolver` |
+    | `*.rs` | `rust-reviewer` | `rust-build-resolver` |
+    | `*.java` | `java-reviewer` | `java-build-resolver` |
+    | `*.kt` | `kotlin-reviewer` | `kotlin-build-resolver` |
+    | `*.swift` | `swift-reviewer` | `swift-build-resolver` |
+    | `*.cs` | `csharp-reviewer` | — |
+    | `*.cpp`, `*.cc`, `*.h`, `*.hpp` | `cpp-reviewer` | `cpp-build-resolver` |
+    | `*.sql`, `*.prisma`, migration files | `database-reviewer` | — |
+    | anything else / no specific reviewer installed | `code-reviewer` | `build-error-resolver` |
+
+    Routing rules:
+    - **One reviewer invocation per language group**, each scoped to that group's
+      files only. If the change spans Dart + TypeScript, spawn `flutter-reviewer`
+      for the `.dart` files AND `typescript-reviewer` for the `.ts/.tsx` files.
+    - If a preferred agent is not installed in this project, use `code-reviewer`
+      for that group (never silently skip review).
+    - For each invocation: resolve CRITICAL/HIGH issues immediately, then re-run
+      tests to confirm still GREEN.
+    - Document MEDIUM items in `tests.md § Code Review Notes`, one subsection per
+      language group (e.g. "Flutter / Dart review", "TypeScript review").
+    - The `flutter-reviewer` agent may additionally apply the
+      `flutter-dart-code-review` skill checklist when that skill is installed.
+
+    **Build / compile failures during the inline checks (step 10) route the same
+    way:** a `.dart` compile error → `dart-build-resolver`, a TS/React build
+    error → `react-build-resolver`, etc., falling back to `build-error-resolver`
+    when no language-specific resolver is installed.
 
 12. Write `verify.md`:
     ```markdown
@@ -658,9 +682,11 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     | typecheck | ✅/❌ | |
     | lint | ✅/❌ | |
     | tests | ✅/❌ | |
-    | code review | ✅/❌ | CRITICAL/HIGH resolved |
-    | flutter-dart review | ✅/❌/skipped | only if `.dart` files in scope |
+    | code review | ✅/❌ | reviewer agent(s) used per language; CRITICAL/HIGH resolved |
     ```
+
+    List which reviewer agent ran for each language group in the Notes column
+    (e.g. "flutter-reviewer (.dart), typescript-reviewer (.ts)").
 
 13. Update `tests.md`: add RED→GREEN record + reference `verify.md`.
 14. Update `state.yaml`: `status: gate_pending`, `gates.4a: checks_green`.

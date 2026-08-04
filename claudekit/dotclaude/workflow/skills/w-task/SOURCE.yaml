@@ -22,9 +22,13 @@ modifications: >-
   Phase 6: fully automated — branch sync (fetch + auto-merge default branch, pause on conflict),
   doc gate (w-doc-gate auto-invoked), PR auto-created via w-pr --skip-doc-gate. Developer
   no longer needs to manually run /w-pr.
-  Phase 4 step 11: conditional mobile review — when impact.md has .dart files or mobile
-  paths AND flutter-dart-code-review skill is installed, run it after the generic code-reviewer.
-  Skipped silently otherwise so this remains safe for non-mobile projects.
+  Phase 4 step 11: language-aware reviewer routing — replaced the single hardcoded
+  code-reviewer spawn with a per-language routing table. Affected files are grouped by
+  language and each group is reviewed by its matching agent (flutter-reviewer for .dart,
+  typescript-reviewer for .ts/.tsx, etc.), falling back to code-reviewer when the specific
+  agent isn't installed. Build/compile failures route to the language-specific build-resolver
+  (dart-build-resolver, react-build-resolver, …) with build-error-resolver as fallback. Fixes
+  the bug where Dart/Flutter changes were reviewed by the generic agent instead of dart-*/flutter-*.
   Phase 0b step 5: UI design pre-fetch — when has_ui + figma_url are set, run f-extract
   during context load so figma-snapshot.md exists BEFORE Phase 1 planning. Phase 1 planner
   brief now includes the snapshot so plans scope concrete UI surfaces instead of a bare URL
@@ -67,8 +71,25 @@ dependencies:
     hooks: []
     rules: []
   optional:
-    # Figma subagents — used by Phase 0b/3 when figma_engine resolves to `official`.
+    # Language-specific reviewer / build-resolver agents used by the Phase 4
+    # step 11 routing table. All optional: when a given agent isn't installed,
+    # that language group falls back to the required `code-reviewer`.
     agents:
+      - flutter-reviewer
+      - dart-build-resolver
+      - typescript-reviewer
+      - react-build-resolver
+      - python-reviewer
+      - go-reviewer
+      - rust-reviewer
+      - java-reviewer
+      - kotlin-reviewer
+      - swift-reviewer
+      - csharp-reviewer
+      - cpp-reviewer
+      - database-reviewer
+      - build-error-resolver
+      # Figma subagents — used by Phase 0b/3 when figma_engine resolves to `official`.
       - figma-context-extractor
       - figma-asset-fetcher
       - figma-design-system-mapper
@@ -81,6 +102,7 @@ dependencies:
       - f-extract
       - f-implement
       - f-import
+      - flutter-dart-code-review
     commands: []
     hooks: []
     rules: []
