@@ -92,6 +92,24 @@ sources:
     role: docs
     license: unspecified
 
+  openai_skills:
+    name: openai-skills
+    description: >-
+      OpenAI's Codex skill catalog (deprecated upstream in favour of openai/plugins, but
+      still the canonical home of Figma's own Agent Skills). Source of the 8 figma-* skills
+      vendored into claudekit/openai-skills/skills/ — they target the OFFICIAL Figma MCP
+      server (https://mcp.figma.com/mcp) with get_design_context / get_screenshot /
+      get_variable_defs / get_metadata / get_code_connect_map and the localhost asset
+      endpoint, unlike the older REST-based @figma/mcp used by the legacy f-* suite.
+      Each skill carries its own LICENSE.txt — the figma-* ones are governed by the Figma
+      Developer Terms, not MIT. Check the per-skill LICENSE before vendoring anything else.
+    repo: git@github.com:openai/skills.git
+    local_path: upstream/openai-skills
+    pinned_commit: 49f948faa9258a0c61caceaf225e179651397431
+    ref: main
+    role: sync_source
+    license: per-skill
+
   pm_skills:
     name: pm-skills
     description: Product-management skills collection by Pawel Huryn — PRD/strategy/discovery/GTM/analytics skill packs (pm-execution, pm-product-strategy, pm-product-discovery, pm-go-to-market, pm-market-research, pm-marketing-growth, pm-data-analytics, pm-ai-shipping, pm-toolkit). No infra/aws content. Vendorable (MIT).

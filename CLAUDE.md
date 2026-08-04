@@ -21,6 +21,8 @@ dotclaude/
 │   │   └── {agents,skills,commands,hooks,rules}/
 │   ├── anthropic-skills/           # vendored from anthropics/skills
 │   │   └── skills/
+│   ├── openai-skills/              # vendored from openai/skills (Figma's own skills)
+│   │   └── skills/                 # figma, figma-implement-design, figma-use, …
 │   ├── dotclaude/                  # self-authored — phantien133/dotclaude
 │   │   ├── dotclaude-self/         # preset wizards, component picker, plugin discovery
 │   │   ├── workflow/               # w-* dev workflow (w-task, w-fix, …)
@@ -71,6 +73,7 @@ pnpm typecheck && pnpm test
 |---|---|---|
 | `everything-claude-code` | `claudekit/everything-claude-code/` | affaan-m/everything-claude-code |
 | `anthropic-skills` | `claudekit/anthropic-skills/` | anthropics/skills |
+| `openai-skills` | `claudekit/openai-skills/` | openai/skills — Figma-authored figma-* skills, **Figma Developer Terms** (not MIT); keep each skill's `LICENSE.txt` |
 | `dotclaude-self` | `claudekit/dotclaude/dotclaude-self/` | self — preset wizards |
 | `workflow` | `claudekit/dotclaude/workflow/` | self — w-* dev workflow |
 | `figma` | `claudekit/dotclaude/figma/` | self — f-* Figma suite |
@@ -192,4 +195,4 @@ Claude Code — never declared in plugin.json.
 | `docs/PRESETS.md` | Preset schema + authoring guide |
 | `docs/PRIVATE.md` | private/ convention + bootstrap |
 | `docs/INSTALL.md` | Installer usage |
-| `dependencies.yaml` | Upstream sources (4 submodules) + pinned commits |
+| `dependencies.yaml` | Upstream sources (9 submodules) + pinned commits |

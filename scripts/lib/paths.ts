@@ -20,6 +20,7 @@ export const DEPENDENCIES_YAML = join(REPO_ROOT, 'dependencies.yaml');
 const SOURCE_TO_RELATIVE_PATH: Record<ClaudekitSource, string> = {
   'everything-claude-code': 'everything-claude-code',
   'anthropic-skills': 'anthropic-skills',
+  'openai-skills': 'openai-skills',
   'dotclaude-self': 'dotclaude/dotclaude-self',
   'workflow': 'dotclaude/workflow',
   'figma': 'dotclaude/figma',

@@ -46,6 +46,7 @@ export type ExternalSetupEntry = z.infer<typeof ExternalSetupEntrySchema>;
 //
 //   everything-claude-code → claudekit/everything-claude-code/
 //   anthropic-skills       → claudekit/anthropic-skills/
+//   openai-skills          → claudekit/openai-skills/
 //   dotclaude-self         → claudekit/dotclaude/dotclaude-self/
 //   workflow               → claudekit/dotclaude/workflow/
 //   figma                  → claudekit/dotclaude/figma/
@@ -53,6 +54,7 @@ export type ExternalSetupEntry = z.infer<typeof ExternalSetupEntrySchema>;
 export const CLAUDEKIT_SOURCES = [
   'everything-claude-code',
   'anthropic-skills',
+  'openai-skills',
   'dotclaude-self',
   'workflow',
   'figma',
@@ -170,6 +172,11 @@ export const PresetSchema = z
     version: z
       .string()
       .regex(/^\d+\.\d+\.\d+$/, 'version must be SemVer X.Y.Z'),
+    // License string written into the built plugin's plugin.json. Omit for the
+    // MIT default. Set it when the preset bundles components under other terms —
+    // e.g. the `figma` preset vendors Figma-authored skills governed by the Figma
+    // Developer Terms, so the plugin manifest must not claim plain MIT.
+    license: z.string().min(1).optional(),
     extends: z.array(z.string().min(1)).default([]),
     components: PresetComponentRefListSchema.default({
       agents: [],
