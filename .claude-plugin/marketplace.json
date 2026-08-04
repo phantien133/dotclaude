@@ -735,6 +735,60 @@
       ],
       "strict": false,
       "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "mobile",
+      "source": "./plugins/mobile",
+      "description": "Base mobile development preset — cross-platform mobile patterns, accessibility, and code quality foundations. Extended by platform-specific presets (flutter, etc.).",
+      "version": "0.1.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "mobile",
+        "accessibility",
+        "cross-platform"
+      ],
+      "category": "workflow",
+      "tags": [
+        "mobile",
+        "accessibility",
+        "cross-platform"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "flutter",
+      "source": "./plugins/flutter",
+      "description": "Flutter/Dart framework preset — Riverpod state management, GoRouter navigation, Freezed models, GraphQL/Dio networking, JWT auth patterns, i18n, and clean feature-first architecture. Includes Flutter-specific code review, build error resolution, and Dart coding rules. Extends mobile.",
+      "version": "0.1.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "flutter",
+        "dart",
+        "riverpod",
+        "mobile",
+        "graphql",
+        "go-router"
+      ],
+      "category": "workflow",
+      "tags": [
+        "flutter",
+        "dart",
+        "riverpod",
+        "mobile",
+        "graphql",
+        "go-router"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
     }
   ]
 }
