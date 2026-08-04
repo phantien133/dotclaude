@@ -1,0 +1,44 @@
+{
+  "name": "figma",
+  "version": "1.0.0",
+  "description": "Figma design-to-code suite built on the OFFICIAL Figma MCP server (https://mcp.figma.com/mcp). Vendors Figma's own eight Agent Skills from openai/skills and wires each one to a purpose-built subagent: figma-context-extractor (absorbs the large get_design_context / get_variable_defs / get_screenshot payloads and writes an exact figma-spec.md), figma-asset-fetcher (downloads real icons and images from the MCP asset endpoint — never generates SVG or substitutes an icon pack), figma-design-system-mapper (resolves Figma variables and components against the project's real tokens and component library), and figma-visual-verifier (renders the built screen in Chrome, diffs computed styles against the spec, and fails the task on any drift). The always-on figma-fidelity rule forbids invented assets, rounded spacing and guessed colours, and figma-verify-parity gates completion on a PASS verdict. Replaces the legacy REST-based f-* flow, which had no rendered reference, no real asset export, and no verification loop.",
+  "author": {
+    "name": "phantien133",
+    "email": "phanqtien@gmail.com"
+  },
+  "license": "MIT AND Figma-Developer-Terms (see skills/*/LICENSE.txt)",
+  "keywords": [
+    "figma",
+    "design",
+    "design-to-code",
+    "design-system",
+    "mcp",
+    "ui-integration",
+    "visual-regression"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/dotclaude",
+  "skills": [
+    "./skills/"
+  ],
+  "external_setup": [
+    {
+      "name": "figma",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "claude mcp add --transport http figma https://mcp.figma.com/mcp — then run /mcp and authorise in the browser. For the local server instead, enable the MCP server in Figma desktop (Preferences) and point the url at http://127.0.0.1:3845/mcp.",
+      "complexity": "moderate",
+      "docs_url": "https://developers.figma.com/docs/figma-mcp-server/",
+      "notes": "This is NOT the legacy @figma/mcp REST server. The official server provides get_design_context, get_metadata, get_variable_defs, get_screenshot, get_code_connect_map and a localhost asset endpoint — the rendered reference and real asset exports the legacy REST server never had. A project that keeps the old f-* suite installed must not register both under the name `figma`."
+    },
+    {
+      "name": "chrome-devtools",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "Auto-installs via npx. Requires Node.js and Google Chrome 144+.",
+      "complexity": "simple",
+      "docs_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "notes": "Drives figma-verify-parity. Without it the parity gate reports NOT RUN, which is deliberately distinct from PASS — a skipped check must stay visible."
+    }
+  ]
+}

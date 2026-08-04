@@ -1,0 +1,69 @@
+{
+  "name": "nextjs-combo",
+  "version": "1.0.0",
+  "description": "Full-stack NestJS + Next.js development workflow. Combines the w-task state machine (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the official Figma design-to-code suite: figma-context-extractor absorbs the MCP payloads into an exact figma-spec.md, figma-asset-fetcher downloads real icons and images instead of generating them, figma-design-system-mapper resolves Figma values against the project's own tokens and components, and a Phase 3.4 visual parity gate blocks the task until computed styles match the design. Includes Chrome DevTools MCP for localhost verification, the cloud-infrastructure security review checklist, and the terraform MCP server for IaC. Supersedes the deprecated `nestjs-nextjs` preset.",
+  "author": {
+    "name": "phantien133",
+    "email": "phanqtien@gmail.com"
+  },
+  "license": "MIT",
+  "keywords": [
+    "nestjs",
+    "nextjs",
+    "fullstack",
+    "workflow",
+    "tdd",
+    "figma",
+    "design-to-code",
+    "browser-verify",
+    "doc-governance",
+    "security",
+    "infra"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/dotclaude",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ],
+  "external_setup": [
+    {
+      "name": "mgrep",
+      "kind": "claude_plugin",
+      "standalone": false,
+      "install_hint": "/plugins install mgrep@Mixedbread-Grep",
+      "complexity": "simple",
+      "docs_url": "https://github.com/mixedbread-ai/mgrep",
+      "notes": "Semantic code search plugin. settings_patch registers the Mixedbread-Grep marketplace and auto-enables the plugin."
+    },
+    {
+      "name": "figma",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "claude mcp add --transport http figma https://mcp.figma.com/mcp — then run /mcp and authorise in the browser. For the local server instead, enable the MCP server in Figma desktop (Preferences) and point the url at http://127.0.0.1:3845/mcp.",
+      "complexity": "moderate",
+      "docs_url": "https://developers.figma.com/docs/figma-mcp-server/",
+      "notes": "This is NOT the legacy @figma/mcp REST server. The official server provides get_design_context, get_metadata, get_variable_defs, get_screenshot, get_code_connect_map and a localhost asset endpoint — the rendered reference and real asset exports the legacy REST server never had. A project that keeps the old f-* suite installed must not register both under the name `figma`."
+    },
+    {
+      "name": "chrome-devtools",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "Auto-installs via npx. Requires Node.js and Google Chrome 144+.",
+      "complexity": "simple",
+      "docs_url": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "notes": "Drives figma-verify-parity. Without it the parity gate reports NOT RUN, which is deliberately distinct from PASS — a skipped check must stay visible."
+    },
+    {
+      "name": "terraform",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "Requires Docker. Pulls hashicorp/terraform-mcp-server:0.4.0. Set TFE_TOKEN env var for Terraform Cloud/Enterprise access.",
+      "complexity": "moderate",
+      "docs_url": "https://github.com/hashicorp/terraform-mcp-server",
+      "notes": "Infrastructure-as-Code automation for AWS/cloud provisioning. Optional — only needed when working on Terraform/IaC. Pairs with the security-review skill's cloud-infrastructure-security checklist."
+    }
+  ]
+}
