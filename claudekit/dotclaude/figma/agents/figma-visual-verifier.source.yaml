@@ -1,0 +1,44 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 910761e9a11922c55ca2df5e6b79bec8990c5583
+  path: figma/agents/figma-visual-verifier.md
+  ref: develop
+imported_at: "2026-08-04"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored. Closes the loop that the old f-* suite never had: renders the built screen
+  via chrome-devtools MCP, reads getComputedStyle for every property the Figma spec pins,
+  and diffs numerically against the design before comparing screenshots. Emits
+  figma-parity-report.md with file:line per defect. Cannot PASS with open blockers.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-context-extractor
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  # chrome-devtools + figma MCP servers are declared at preset level via external_setup.
+  external: []
+tags:
+  - figma
+  - visual-regression
+  - browser-verify
+  - quality-gate
+categories:
+  purpose:
+    - ui-integration
+    - review
+  mechanism:
+    - subagent
+    - mcp-driven

@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Added an "Agent delegation (dotclaude)" section routing MCP sweeps to
+  figma-context-extractor / figma-asset-fetcher / figma-design-system-mapper /
+  figma-visual-verifier, plus a skill-routing table that includes figma-verify-parity.
+  2. Rewrote references/figma-mcp-config.md for Claude Code — .mcp.json / `claude mcp add`
+  instead of Codex ~/.codex/config.toml, remote vs figma-desktop endpoints, mcp__figma__*
+  tool naming, and an explicit contrast with the legacy REST @figma/mcp server.
+  3. Dropped upstream agents/openai.yaml (Codex interface metadata), assets/ (Codex icons)
+  and maintainers.yml — not consumed by Claude Code.
+notes: >-
+  Index skill for the OFFICIAL Figma MCP server. Vendored as the entry point of the figma
+  plugin. Authored by Figma, distributed via openai/skills; governed by the Figma Developer
+  Terms in LICENSE.txt, not MIT — keep LICENSE.txt alongside SKILL.md in any bundle.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-context-extractor
+      - figma-asset-fetcher
+      - figma-design-system-mapper
+      - figma-visual-verifier
+    skills:
+      - figma-implement-design
+      - figma-verify-parity
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design
+  - mcp
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - mcp-driven

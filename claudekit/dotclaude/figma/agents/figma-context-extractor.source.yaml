@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 910761e9a11922c55ca2df5e6b79bec8990c5583
+  path: figma/agents/figma-context-extractor.md
+  ref: develop
+imported_at: "2026-08-04"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored. Token-isolation agent for the official Figma MCP server: absorbs the
+  large get_metadata / get_design_context / get_variable_defs / get_screenshot payloads
+  and writes an exact figma-spec.md, so the main agent never holds a raw payload. Backs
+  the figma-implement-design and figma-code-connect-components skills.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  # The Figma MCP server is a remote HTTP endpoint, not an installable package —
+  # it is declared at preset level via external_setup (kind: mcp_server) instead.
+  external: []
+tags:
+  - figma
+  - design
+  - extract
+  - mcp
+  - token-optimization
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - subagent
+    - mcp-driven

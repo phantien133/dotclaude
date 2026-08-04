@@ -1,0 +1,42 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma-create-new-file
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Appended the shared "Agent delegation (dotclaude)" section — inspect existing
+  structure via figma-context-extractor before creating.
+  2. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml.
+notes: >-
+  Smallest skill in the suite — creates a new Figma file via the MCP `create_new_file`
+  tool. Included for completeness of the write-side workflows; not used by the design→code
+  path.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents:
+      - figma-context-extractor
+    skills:
+      - figma
+      - figma-generate-design
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design-authoring
+categories:
+  purpose:
+    - design-authoring
+  mechanism:
+    - mcp-driven

@@ -1,0 +1,49 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma-generate-library
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Appended the shared "Agent delegation (dotclaude)" section — inspect before creating,
+  via figma-context-extractor (existing file structure/variables/components) and
+  figma-design-system-mapper (what the codebase already defines).
+  2. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml.
+notes: >-
+  Builds a component library with variants, semantic tokens and documentation inside Figma.
+  Ships nine upstream helper scripts under scripts/ (createComponentWithVariants,
+  createSemanticTokens, bindVariablesToComponent, validateCreation, cleanupOrphans,
+  rehydrateState, …) plus seven reference docs — all retained. Largest skill in the suite
+  after figma-use.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents:
+      - figma-context-extractor
+      - figma-design-system-mapper
+    skills:
+      - figma
+      - figma-use
+      - figma-code-connect-components
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design-system
+  - component-library
+  - design-authoring
+categories:
+  purpose:
+    - design-authoring
+  mechanism:
+    - mcp-driven

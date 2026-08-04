@@ -1,0 +1,47 @@
+# yaml-language-server: $schema=../../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 910761e9a11922c55ca2df5e6b79bec8990c5583
+  path: figma/skills/figma-verify-parity
+  ref: develop
+imported_at: "2026-08-04"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored. The gate the old f-extract/f-implement pair never had — nothing in that
+  flow ever compared the built UI against the design, so drift reached PR unchallenged.
+  Wraps the figma-visual-verifier agent so screenshots and computed-style dumps stay out
+  of the main context. NOT RUN is a distinct verdict from PASS on purpose: a skipped
+  check must never read as a passing one.
+dependencies:
+  required:
+    agents:
+      - figma-visual-verifier
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-context-extractor
+    skills:
+      - figma-implement-design
+    commands: []
+    hooks: []
+    rules: []
+  # chrome-devtools + figma MCP servers are declared at preset level via external_setup.
+  external: []
+tags:
+  - figma
+  - visual-regression
+  - browser-verify
+  - quality-gate
+categories:
+  purpose:
+    - ui-integration
+    - review
+  mechanism:
+    - mcp-driven
+    - subagent

@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 910761e9a11922c55ca2df5e6b79bec8990c5583
+  path: figma/rules/figma-fidelity.md
+  ref: develop
+imported_at: "2026-08-04"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored always-on rule. Written against the concrete failure mode seen on
+  cistreaming: the model implemented "close to" the design — inventing icons, rounding
+  spacing to the nearest scale step, and guessing backgrounds/borders/font sizes instead
+  of reading them. Encodes seven hard constraints, including the ban on generated SVG and
+  icon-package substitution, and the rule that a matching token *name* with a different
+  *value* is a defect.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents:
+      - figma-asset-fetcher
+      - figma-visual-verifier
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design-fidelity
+  - guardrail
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - always-on-rule

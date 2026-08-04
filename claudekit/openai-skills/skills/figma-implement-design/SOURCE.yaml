@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma-implement-design
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Added an "Agent delegation (dotclaude)" section explaining why steps 2-5 and 7 run in
+  subagents (context budget + strict output contracts) with a step→agent→artifact table.
+  2. Inserted a "Steps 2-3 (dotclaude): delegate extraction" block ahead of the upstream
+  Step 2, routing the whole get_metadata → get_design_context → get_variable_defs →
+  get_screenshot → get_code_connect_map sequence to figma-context-extractor, and making an
+  unresolved gap a question rather than a licence to guess.
+  3. Step 4 now delegates to figma-asset-fetcher and declares unresolved assets blocking;
+  code may carry TODO(figma-asset) markers but never hand-written SVG, icon-pack
+  substitutes, or placeholder boxes.
+  4. Step 5 now delegates to figma-design-system-mapper and uses figma-mapping.md as the
+  substitution table, with `near` matches that are visibly different resolved in favour of
+  the design.
+  5. Step 7 now requires figma-verify-parity to return PASS; NOT RUN is explicitly not a
+  pass, and self-certifying by re-reading one's own code is called out as the failure mode.
+  6. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml.
+notes: >-
+  Primary design→code skill of the figma plugin; replaces the legacy f-extract/f-implement
+  pair as the default path. The upstream workflow is sound but had no token strategy and no
+  verification loop, which is how cistreaming implementations drifted from their designs
+  (invented icons, rounded spacing, guessed backgrounds and borders). The dotclaude edits
+  add both without altering the upstream step semantics.
+dependencies:
+  required:
+    agents:
+      - figma-context-extractor
+      - figma-asset-fetcher
+      - figma-design-system-mapper
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-visual-verifier
+    skills:
+      - figma
+      - figma-verify-parity
+      - figma-code-connect-components
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design-to-code
+  - ui-implementation
+  - mcp
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - mcp-driven
+    - subagent

@@ -1,0 +1,48 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma-use
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Appended an "Agent delegation (dotclaude)" section — read the current node state via
+  figma-context-extractor before any structural or destructive `use_figma` write, and find
+  existing variables/components to bind to via figma-design-system-mapper instead of
+  creating duplicates.
+  2. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml (references/
+  maintainers.yml files removed too).
+notes: >-
+  Canvas-write skill — drives the `use_figma` tool via the Figma Plugin API. Carries the
+  largest reference set of the suite (~700 KB, including the standalone Plugin API typings)
+  which is why references/ is loaded on demand rather than inlined. Not used by the
+  cistreaming design→code path; included so the figma plugin covers write workflows too.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-context-extractor
+      - figma-design-system-mapper
+    skills:
+      - figma
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - figma-plugin-api
+  - canvas-write
+categories:
+  purpose:
+    - design-authoring
+  mechanism:
+    - mcp-driven

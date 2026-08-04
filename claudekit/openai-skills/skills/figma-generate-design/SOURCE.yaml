@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma-generate-design
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Appended the shared "Agent delegation (dotclaude)" section — inspect existing file
+  structure, variables, components and styles via figma-context-extractor before
+  generating, and check what the codebase already defines via figma-design-system-mapper
+  when generating from an existing implementation. Duplicating an existing component or
+  token is the dominant failure here and is only visible after the fact.
+  2. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml.
+notes: >-
+  Reverse direction: builds a full screen in Figma from code or a description. Not part of
+  the cistreaming design→code path; included so the figma plugin covers the round trip.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents:
+      - figma-context-extractor
+      - figma-design-system-mapper
+    skills:
+      - figma
+      - figma-use
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design-authoring
+  - code-to-design
+categories:
+  purpose:
+    - design-authoring
+  mechanism:
+    - mcp-driven

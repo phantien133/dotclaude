@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 910761e9a11922c55ca2df5e6b79bec8990c5583
+  path: figma/agents/figma-asset-fetcher.md
+  ref: develop
+imported_at: "2026-08-04"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored. Downloads icons/images from the Figma MCP localhost asset endpoint into
+  the project and writes figma-assets.md. Exists to kill the failure mode where the model
+  hand-writes SVG paths or swaps in an icon-library glyph; it verifies every downloaded
+  file and reports unresolved assets rather than approximating them.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-context-extractor
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  # Needs the official Figma MCP server's localhost asset endpoint to fetch real exports;
+  # declared at preset level via external_setup (kind: mcp_server). Without it every asset
+  # is reported unresolved for manual export rather than approximated.
+  external: []
+tags:
+  - figma
+  - assets
+  - icons
+  - mcp
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - subagent
+    - mcp-driven

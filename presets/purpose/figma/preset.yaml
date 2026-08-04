@@ -1,0 +1,143 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: figma
+kind: purpose
+description: >-
+  Figma design-to-code suite built on the OFFICIAL Figma MCP server
+  (https://mcp.figma.com/mcp). Vendors Figma's own eight Agent Skills from openai/skills
+  and wires each one to a purpose-built subagent: figma-context-extractor (absorbs the
+  large get_design_context / get_variable_defs / get_screenshot payloads and writes an
+  exact figma-spec.md), figma-asset-fetcher (downloads real icons and images from the MCP
+  asset endpoint — never generates SVG or substitutes an icon pack),
+  figma-design-system-mapper (resolves Figma variables and components against the
+  project's real tokens and component library), and figma-visual-verifier (renders the
+  built screen in Chrome, diffs computed styles against the spec, and fails the task on
+  any drift). The always-on figma-fidelity rule forbids invented assets, rounded spacing
+  and guessed colours, and figma-verify-parity gates completion on a PASS verdict.
+  Replaces the legacy REST-based f-* flow, which had no rendered reference, no real asset
+  export, and no verification loop.
+version: 1.0.0
+# Mixed licensing: the four agents, figma-verify-parity and figma-fidelity are MIT
+# (self-authored); the eight vendored skills are Figma's own, governed by the Figma
+# Developer Terms. LICENSE.txt ships inside each vendored skill folder.
+license: "MIT AND Figma-Developer-Terms (see skills/*/LICENSE.txt)"
+extends: []
+components:
+  agents:
+    # ── Figma subagents ────────────────────────────────────────────────────────
+    # Each keeps a large MCP payload out of the main context and returns a file
+    # path plus a short summary. This is both the token strategy and the quality
+    # strategy: exact values land in a file instead of being re-derived from prose.
+    - name: figma-context-extractor
+      source: figma
+    - name: figma-asset-fetcher
+      source: figma
+    - name: figma-design-system-mapper
+      source: figma
+    - name: figma-visual-verifier
+      source: figma
+  skills:
+    # ── entry point + design→code path ─────────────────────────────────────────
+    - name: figma                       # MCP rules index + Claude Code config reference
+      source: openai-skills
+    - name: figma-implement-design      # primary: design → production code, 1:1 parity
+      source: openai-skills
+    - name: figma-verify-parity         # completion gate — browser render vs Figma spec
+      source: figma
+
+    # ── design-system plumbing ─────────────────────────────────────────────────
+    - name: figma-code-connect-components
+      source: openai-skills
+    - name: figma-create-design-system-rules
+      source: openai-skills
+
+    # ── canvas-write / code→design (round trip) ────────────────────────────────
+    - name: figma-use
+      source: openai-skills
+    - name: figma-generate-design
+      source: openai-skills
+    - name: figma-generate-library
+      source: openai-skills
+    - name: figma-create-new-file
+      source: openai-skills
+  commands: []
+  hooks: []
+  rules:
+    # Always-on. Written against the observed failure mode: implementations that
+    # are "close to" the design because icons were generated, spacing was rounded
+    # to the nearest scale step, and backgrounds/borders/font sizes were guessed.
+    - name: figma-fidelity
+      source: figma
+settings_patch:
+  mcpServers:
+    # Official Figma MCP server. OAuth on first tool call (browser prompt).
+    # Must be registered under exactly this name — the figma-* agents pin
+    # mcp__figma__* tool names in their `tools:` lists.
+    #
+    # figma-desktop fallback (selection-based prompting, local asset endpoint):
+    #   replace the url with http://127.0.0.1:3845/mcp and keep the Figma desktop
+    #   app open with its local MCP server enabled.
+    figma:
+      type: http
+      url: https://mcp.figma.com/mcp
+    # Needed by figma-visual-verifier / figma-verify-parity to render the built UI.
+    chrome-devtools:
+      command: npx
+      args:
+        - "-y"
+        - "chrome-devtools-mcp@latest"
+external_setup:
+  - name: figma
+    kind: mcp_server
+    standalone: false
+    install_hint: >-
+      claude mcp add --transport http figma https://mcp.figma.com/mcp
+      — then run /mcp and authorise in the browser. For the local server instead,
+      enable the MCP server in Figma desktop (Preferences) and point the url at
+      http://127.0.0.1:3845/mcp.
+    complexity: moderate
+    docs_url: "https://developers.figma.com/docs/figma-mcp-server/"
+    notes: >-
+      This is NOT the legacy @figma/mcp REST server. The official server provides
+      get_design_context, get_metadata, get_variable_defs, get_screenshot,
+      get_code_connect_map and a localhost asset endpoint — the rendered reference and
+      real asset exports the legacy REST server never had. A project that keeps the old
+      f-* suite installed must not register both under the name `figma`.
+  - name: chrome-devtools
+    kind: mcp_server
+    standalone: false
+    install_hint: "Auto-installs via npx. Requires Node.js and Google Chrome 144+."
+    complexity: simple
+    docs_url: "https://github.com/ChromeDevTools/chrome-devtools-mcp"
+    notes: >-
+      Drives figma-verify-parity. Without it the parity gate reports NOT RUN, which is
+      deliberately distinct from PASS — a skipped check must stay visible.
+recommended_install_level: project
+tags:
+  - figma
+  - design
+  - design-to-code
+  - design-system
+  - mcp
+  - ui-integration
+  - visual-regression
+use_case_tags:
+  roles:
+    - frontend-developer
+    - fullstack-developer
+    - designer
+    - developer
+  project_types:
+    - web-app
+    - design-system
+    - monorepo
+  stacks:
+    - typescript
+    - react
+    - nextjs
+    - tailwind
+  use_cases:
+    - figma
+    - ui-integration
+    - design-handoff
+    - design-system
+    - visual-regression

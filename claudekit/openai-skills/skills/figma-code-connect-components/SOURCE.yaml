@@ -1,0 +1,53 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma-code-connect-components
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Appended an "Agent delegation (dotclaude)" section — node metadata and existing
+  get_code_connect_map entries come from figma-context-extractor; the real code component
+  behind a node, and whether it covers every Figma variant, comes from
+  figma-design-system-mapper. States that a mapping pointing at a component which does not
+  cover the variants is worse than no mapping.
+  2. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml.
+notes: >-
+  Maps Figma nodes to real code components. High leverage for design fidelity: once a node
+  is mapped, figma-implement-design reuses the mapped component instead of re-deriving one
+  from the payload, which removes a whole class of drift. Keeps upstream
+  scripts/normalize_node_id.py.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-context-extractor
+      - figma-design-system-mapper
+    skills:
+      - figma
+      - figma-implement-design
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: python3
+      type: system_binary
+      reason: scripts/normalize_node_id.py normalises node-id formats between URL and API forms.
+tags:
+  - figma
+  - code-connect
+  - design-system
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - mcp-driven

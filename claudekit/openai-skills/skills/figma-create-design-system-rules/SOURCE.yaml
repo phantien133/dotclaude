@@ -1,0 +1,51 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/openai/skills
+  commit: 49f948faa9258a0c61caceaf225e179651397431
+  path: skills/.curated/figma-create-design-system-rules
+  ref: main
+imported_at: "2026-08-04"
+license: Figma Developer Terms (see LICENSE.txt)
+modified: true
+modifications: >-
+  1. Appended an "Agent delegation (dotclaude)" section — inventory the project's real
+  tokens/components via figma-design-system-mapper and the Figma variable definitions via
+  figma-context-extractor, so generated rules describe what the repo contains rather than
+  framework defaults (a rules file describing a token scale the project lacks teaches the
+  model to invent values).
+  2. Added an instruction to extend, not restate or contradict, the figma-fidelity rules
+  this plugin already installs.
+  3. Dropped upstream agents/openai.yaml, assets/ and maintainers.yml.
+notes: >-
+  Generates a project-specific CLAUDE.md/AGENTS.md design-system rules file. Run once per
+  project after the component library stabilises; its output complements the always-on
+  figma-fidelity rule with stack-specific conventions. Keeps upstream
+  scripts/check_agents_md.sh and references/rule-template.md.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-design-system-mapper
+      - figma-context-extractor
+    skills:
+      - figma
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - figma
+  - design-system
+  - rules
+categories:
+  purpose:
+    - ui-integration
+    - project-setup
+  mechanism:
+    - mcp-driven

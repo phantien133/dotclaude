@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 910761e9a11922c55ca2df5e6b79bec8990c5583
+  path: figma/agents/figma-design-system-mapper.md
+  ref: develop
+imported_at: "2026-08-04"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored. Resolves Figma variables / text styles / components against the project's
+  actual tokens and component library and writes figma-mapping.md. Flags `near` matches
+  numerically — same token name with a different value is the silent cause of designs that
+  look "almost right". Also surfaces existing Code Connect mappings so components get
+  reused rather than rebuilt.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules:
+      - figma-fidelity
+  optional:
+    agents:
+      - figma-context-extractor
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  # Figma MCP is declared at preset level via external_setup (kind: mcp_server).
+  external: []
+tags:
+  - figma
+  - design-system
+  - design-tokens
+  - code-connect
+categories:
+  purpose:
+    - ui-integration
+    - design-handoff
+  mechanism:
+    - subagent
+    - mcp-driven
