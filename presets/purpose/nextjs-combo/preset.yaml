@@ -1,0 +1,172 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: nextjs-combo
+kind: purpose
+description: >-
+  Full-stack NestJS + Next.js development workflow — the public port of cistreaming v2,
+  with every hilab-private component removed. Combines the w-task state machine
+  (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with
+  the official Figma design-to-code suite: figma-context-extractor absorbs the MCP
+  payloads into an exact figma-spec.md, figma-asset-fetcher downloads real icons and
+  images instead of generating them, figma-design-system-mapper resolves Figma values
+  against the project's own tokens and components, and a Phase 3.4 visual parity gate
+  blocks the task until computed styles match the design. Includes Chrome DevTools MCP
+  for localhost verification and the cloud-infrastructure security review checklist.
+  Supersedes the deprecated `nestjs-nextjs` preset.
+version: 1.0.0
+extends:
+  - nestjs
+  - nextjs
+  - figma
+components:
+  agents:
+    # planner, code-explorer, code-architect, code-reviewer, code-simplifier and the
+    # language-specific reviewers come from the developer chain (nestjs/nextjs →
+    # developer). tdd-guide is declared here because w-task invokes it by name in the
+    # TDD phase. The four figma-* agents arrive via `extends: figma`.
+    - name: tdd-guide
+      source: everything-claude-code
+  skills:
+    # ── workflow core ──────────────────────────────────────────────────────────
+    - name: w-task
+      source: workflow
+    - name: w-fix
+      source: workflow
+    - name: w-checkpoint
+      source: workflow
+    - name: workflow-setup           # backing skill for the /w-setup wizard
+      source: workflow
+
+    # ── workflow helpers (invoked by w-task at specific phases) ────────────────
+    # Each is a no-op when its field in workflow.yaml is unset, so projects opt in
+    # incrementally.
+    - name: w-context-load           # Phase 0b — module-aware context load
+      source: workflow
+    - name: w-oq-check               # Phase 0b — surface blocking Open Questions
+      source: workflow
+    - name: w-impact-analyzer        # Phase 2  — DB/GraphQL/queue/cache sections
+      source: workflow
+    - name: w-adr                    # Phase 2  — append ADR for new decisions
+      source: workflow
+    - name: w-test-stubs             # Phase 4  — layer-aware test boilerplate
+      source: workflow
+    - name: w-feature-record         # Phase 5  — features/<name>.md
+      source: workflow
+    - name: w-api-doc                # Phase 5  — module api.md
+      source: workflow
+    - name: w-db-doc                 # Phase 5  — DB doc + sub-ERD + master ERD sync
+      source: workflow
+    - name: w-doc-gate               # Phase 6  — pre-PR doc invariant check
+      source: workflow
+
+    # ── one-time bootstrap ─────────────────────────────────────────────────────
+    # Backfills documentation from existing source. Run BEFORE /w-setup on legacy
+    # modules with no docs/.
+    - name: w-document-build-up
+      source: workflow
+
+    # ── Figma (primary) ───────────────────────────────────────────────────────
+    # From `extends: figma` — figma-implement-design, figma-verify-parity, the four
+    # figma-* agents and the figma-fidelity rule. w-task Phase 3 selects this path
+    # whenever get_design_context is available.
+
+    # ── Figma legacy fallback (REST @figma/mcp) ───────────────────────────────
+    - name: f-extract
+      source: figma
+    - name: f-implement
+      source: figma
+    - name: f-import
+      source: figma
+    - name: f-ui-kit
+      source: figma
+    - name: f-page
+      source: figma
+    - name: f-review
+      source: figma
+
+    # ── infra / security ───────────────────────────────────────────────────────
+    # OWASP checklist plus the cloud-infrastructure-security reference
+    # (AWS/IAM/Terraform/CloudFormation, secrets, CDN, DR).
+    - name: security-review
+      source: everything-claude-code
+  commands:
+    - name: w-setup
+      source: workflow
+    - name: w-status
+      source: workflow
+    - name: w-reset
+      source: workflow
+    - name: w-pr
+      source: workflow
+    # Writes .claude/figma.yaml, read only by the legacy f-* skills. The official
+    # suite needs no project config — just the `figma` MCP server.
+    - name: f-setup
+      source: figma
+  hooks: []
+  rules: []
+settings_patch:
+  mcpServers:
+    # `figma` and `chrome-devtools` are merged in from the figma preset.
+    # Terraform MCP server (HashiCorp) — IaC automation for AWS/cloud infra.
+    # Runs via Docker; reads TFE_TOKEN from the environment for Terraform Cloud.
+    terraform:
+      command: docker
+      args:
+        - "run"
+        - "-i"
+        - "--rm"
+        - "-e"
+        - "TFE_TOKEN=${TFE_TOKEN}"
+        - "hashicorp/terraform-mcp-server:0.4.0"
+external_setup:
+  - name: terraform
+    kind: mcp_server
+    standalone: false
+    install_hint: "Requires Docker. Pulls hashicorp/terraform-mcp-server:0.4.0. Set TFE_TOKEN env var for Terraform Cloud/Enterprise access."
+    complexity: moderate
+    docs_url: "https://github.com/hashicorp/terraform-mcp-server"
+    notes: >-
+      Infrastructure-as-Code automation for AWS/cloud provisioning. Optional — only needed
+      when working on Terraform/IaC. Pairs with the security-review skill's
+      cloud-infrastructure-security checklist.
+recommended_install_level: project
+tags:
+  - nestjs
+  - nextjs
+  - fullstack
+  - workflow
+  - tdd
+  - figma
+  - design-to-code
+  - browser-verify
+  - doc-governance
+  - security
+  - infra
+use_case_tags:
+  roles:
+    - fullstack-developer
+    - backend-developer
+    - frontend-developer
+    - developer
+  project_types:
+    - monorepo
+    - web-app
+  stacks:
+    - typescript
+    - nestjs
+    - nextjs
+    - graphql
+    - prisma
+    - redis
+  use_cases:
+    - dev-workflow
+    - tdd
+    - ui-integration
+    - figma
+    - design-handoff
+    - visual-regression
+    - browser-verify
+    - pr-workflow
+    - api-development
+    - doc-governance
+    - infrastructure-as-code
+    - cloud-security

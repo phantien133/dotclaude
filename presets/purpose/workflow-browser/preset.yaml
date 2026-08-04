@@ -11,9 +11,13 @@ description: >-
   repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration.
   v0.4.0 adds the f-setup command (required by f-extract/f-implement — they read
   .claude/figma.yaml); previously missing so /f-extract could not be configured.
-version: 0.4.0
+  v0.5.0 extends the `figma` preset — official Figma MCP suite, four Figma subagents and
+  the always-on figma-fidelity rule — and picks up w-task's engine-aware Phase 3 with its
+  new 3.4 visual parity gate. The f-* skills stay installed as the REST-server fallback.
+version: 0.5.0
 extends:
   - developer
+  - figma
 components:
   agents:
     - name: tdd-guide
@@ -47,6 +51,8 @@ components:
       source: workflow
     - name: w-document-build-up
       source: workflow
+    # Legacy REST fallback — w-task Phase 3 uses these only when the official
+    # Figma MCP server (get_design_context) is absent.
     - name: f-extract
       source: figma
     - name: f-implement
