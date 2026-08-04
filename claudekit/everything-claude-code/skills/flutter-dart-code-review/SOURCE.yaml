@@ -1,0 +1,43 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/affaan-m/everything-claude-code
+  commit: 99baa8250096f2d295583572399a5c9aba2ce312
+  path: skills/flutter-dart-code-review
+  ref: main
+imported_at: "2026-06-03"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Library-agnostic Flutter/Dart code review checklist covering widget best
+  practices, state management (BLoC, Riverpod, Provider, GetX, MobX, Signals),
+  Dart idioms, performance, accessibility, security, and clean architecture.
+  Cross-language references in section titles only — no npm/Node tooling.
+  dart-flutter-patterns recommends this skill as companion.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents:
+      - flutter-reviewer
+    skills:
+      - dart-flutter-patterns
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - flutter
+  - dart
+  - code-review
+  - framework-preset-candidate
+categories:
+  stacks:
+    - flutter
+    - dart
+  coverage:
+    - dart-only

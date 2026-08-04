@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/affaan-m/everything-claude-code
+  commit: 99baa8250096f2d295583572399a5c9aba2ce312
+  path: skills/accessibility
+  ref: main
+imported_at: "2026-06-03"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  WCAG 2.2 accessibility audit and remediation skill for Web and Native platforms.
+  Works alongside a11y-architect agent. Universal — no language-specific tooling.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents:
+      - a11y-architect
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - accessibility
+  - a11y
+  - wcag
+categories:
+  stacks:
+    - any

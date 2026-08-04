@@ -1,0 +1,33 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: mobile
+kind: framework
+description: >-
+  Base mobile development preset — cross-platform mobile patterns, accessibility,
+  and code quality foundations. Extended by platform-specific presets (flutter, etc.).
+version: 0.1.0
+extends:
+  - developer
+components:
+  agents:
+    - name: a11y-architect
+      source: everything-claude-code
+  skills:
+    - name: accessibility
+      source: everything-claude-code
+settings_patch: {}
+recommended_install_level: project
+tags:
+  - mobile
+  - accessibility
+  - cross-platform
+use_case_tags:
+  roles:
+    - mobile-developer
+    - developer
+  project_types:
+    - mobile-app
+  stacks:
+    - any
+  use_cases:
+    - mobile-development
+    - accessibility

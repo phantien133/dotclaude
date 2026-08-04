@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: flutter
+kind: framework
+description: >-
+  Flutter/Dart framework preset — Riverpod state management, GoRouter navigation,
+  Freezed models, GraphQL/Dio networking, JWT auth patterns, i18n, and clean
+  feature-first architecture. Includes Flutter-specific code review, build error
+  resolution, and Dart coding rules. Extends mobile.
+version: 0.1.0
+extends:
+  - mobile
+components:
+  agents:
+    - name: dart-build-resolver
+      source: everything-claude-code
+    - name: flutter-reviewer
+      source: everything-claude-code
+  skills:
+    - name: dart-flutter-patterns
+      source: everything-claude-code
+    - name: flutter-dart-code-review
+      source: everything-claude-code
+  rules:
+    - name: dart/coding-style
+      source: everything-claude-code
+    - name: dart/hooks
+      source: everything-claude-code
+    - name: dart/patterns
+      source: everything-claude-code
+    - name: dart/security
+      source: everything-claude-code
+    - name: dart/testing
+      source: everything-claude-code
+settings_patch: {}
+recommended_install_level: project
+tags:
+  - flutter
+  - dart
+  - riverpod
+  - mobile
+  - graphql
+  - go-router
+use_case_tags:
+  roles:
+    - mobile-developer
+    - flutter-developer
+    - developer
+  project_types:
+    - mobile-app
+    - flutter-app
+  stacks:
+    - flutter
+    - dart
+  use_cases:
+    - mobile-development
+    - state-management
+    - ui-development
+    - code-review

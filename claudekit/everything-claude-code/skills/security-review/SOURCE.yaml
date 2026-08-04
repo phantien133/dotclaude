@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
 source:
   repo: https://github.com/affaan-m/everything-claude-code
-  commit: 841beea45cb25ba51f29fa45b7e272938d19b80a
+  commit: 5b173d2e6c11b976a0f13b2f59125e08956c1d47
   path: skills/security-review
   ref: main
 imported_at: 2026-05-08
