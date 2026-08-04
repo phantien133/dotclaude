@@ -91,8 +91,21 @@ async function copyComponent(component: PlannedComponent, pluginRoot: string): P
 
 // ── Manifest builder ──────────────────────────────────────────────────────────
 
+// External setup entries from the whole extends chain, parents first, deduped by
+// name with the child's entry winning. A plugin bundles its parents' components,
+// so it has to bundle their setup instructions too — otherwise a preset that gets
+// its Figma or Chrome MCP server from `extends` ships without any way to install it.
+function mergeExternalSetup(presets: readonly Preset[]): ExternalSetupEntry[] {
+  const byName = new Map<string, ExternalSetupEntry>();
+  for (const p of presets) {
+    for (const entry of p.external_setup) byName.set(entry.name, entry);
+  }
+  return [...byName.values()];
+}
+
 function buildManifest(
   preset: Preset,
+  externalSetup: ExternalSetupEntry[],
   components: PlannedComponent[],
   opts: BuildPluginOptions,
 ): PluginManifest {
@@ -104,7 +117,9 @@ function buildManifest(
     version: preset.version,
     description: preset.description,
     author: opts.author ?? { name: 'phantien133' },
-    license: opts.license ?? 'MIT',
+    // A preset-declared license wins: it is the only place that knows the terms of
+    // the components it vendors. The CLI-supplied value is just the repo default.
+    license: preset.license ?? opts.license ?? 'MIT',
     keywords: preset.tags,
     // Explicit empty opt-out prevents auto-loading root .mcp.json on plugin install.
     mcpServers: {},
@@ -114,13 +129,12 @@ function buildManifest(
   if (opts.repository !== undefined) manifest.repository = opts.repository;
   if (hasSkills) manifest.skills = ['./skills/'];
   if (hasCommands) manifest.commands = ['./commands/'];
-  if (preset.external_setup.length > 0) manifest.external_setup = preset.external_setup;
+  if (externalSetup.length > 0) manifest.external_setup = externalSetup;
 
   return manifest;
 }
 
-function buildSetupMd(preset: Preset): string | null {
-  const entries = preset.external_setup;
+function buildSetupMd(preset: Preset, entries: ExternalSetupEntry[]): string | null {
   if (entries.length === 0) return null;
 
   const lines: string[] = [
@@ -223,7 +237,8 @@ export async function buildPlugin(
     }
   }
 
-  const manifest = buildManifest(plan.preset, plan.components, opts);
+  const externalSetup = mergeExternalSetup(plan.all_presets);
+  const manifest = buildManifest(plan.preset, externalSetup, plan.components, opts);
   const claudePluginDir = join(pluginRoot, '.claude-plugin');
   await mkdir(claudePluginDir, { recursive: true });
   await writeFile(
@@ -233,7 +248,7 @@ export async function buildPlugin(
   );
   log.debug(`Wrote ${join(claudePluginDir, 'plugin.json')}`);
 
-  const setupMd = buildSetupMd(plan.preset);
+  const setupMd = buildSetupMd(plan.preset, externalSetup);
   if (setupMd !== null) {
     await writeFile(join(pluginRoot, 'SETUP.md'), setupMd, 'utf8');
     log.debug(`Wrote ${join(pluginRoot, 'SETUP.md')}`);

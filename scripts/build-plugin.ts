@@ -5,6 +5,7 @@ import { PRESET_KINDS, type PresetKind } from './lib/schema.ts';
 import { buildPlugin, type PluginManifest } from './lib/plugin-build.ts';
 import { PLUGINS_DIR, REPO_ROOT } from './lib/paths.ts';
 import { appendArchiveEntry, upsertMarketplaceEntry } from './lib/marketplace.ts';
+import { locatePreset } from './lib/preset.ts';
 import { log } from './lib/logger.ts';
 
 const program = new Command();
@@ -30,8 +31,12 @@ program
       try {
         // ── Archive old version before build (if version changed) ────────────
         const oldManifest = await readOldManifest(outDir);
+        const { preset } = await locatePreset(presetName, kind !== undefined ? { kind } : {});
 
-        if (oldManifest !== null) {
+        // Only archive when the version actually changed. Rebuilding the same version
+        // (a content fix, a parent preset edit) must not mint a `<name>@<version>`
+        // archive that duplicates the latest entry in the marketplace.
+        if (oldManifest !== null && oldManifest.version !== preset.version) {
           const archiveDir = join(PLUGINS_DIR, `${presetName}@${oldManifest.version}`);
           // Only archive if the directory doesn't already exist (idempotent).
           try {

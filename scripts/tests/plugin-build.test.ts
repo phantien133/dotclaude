@@ -229,4 +229,59 @@ describe('buildPlugin', () => {
     expect(manifest.homepage).toBe('https://example.com');
     expect(manifest.repository).toBe('https://github.com/example/repo');
   });
+
+  it('uses the preset-declared license over the CLI default', async () => {
+    const preset = makePreset({ license: 'MIT AND Figma-Developer-Terms' });
+    vi.mocked(resolverMod.buildInstallPlan).mockResolvedValue(makePlan(preset, []));
+
+    let writtenJson: string | undefined;
+    vi.mocked(fsMod.writeFile).mockImplementation(async (path, data) => {
+      if (String(path).endsWith('plugin.json')) writtenJson = data as string;
+    });
+
+    await buildPlugin('test-preset', { outDir: '/tmp/test-plugin', license: 'MIT' });
+
+    expect(JSON.parse(writtenJson ?? '{}').license).toBe('MIT AND Figma-Developer-Terms');
+  });
+
+  it('merges external_setup across the extends chain, child wins on name collision', async () => {
+    const parentA = makePreset({
+      name: 'parent-a',
+      external_setup: [
+        { name: 'figma', kind: 'mcp_server', standalone: false, install_hint: 'from parent', complexity: 'moderate' },
+      ],
+    });
+    const parentB = makePreset({
+      name: 'parent-b',
+      external_setup: [
+        { name: 'chrome-devtools', kind: 'mcp_server', standalone: false, install_hint: 'npx', complexity: 'simple' },
+      ],
+    });
+    const child = makePreset({
+      name: 'child',
+      extends: ['parent-a', 'parent-b'],
+      external_setup: [
+        { name: 'figma', kind: 'mcp_server', standalone: false, install_hint: 'from child', complexity: 'moderate' },
+      ],
+    });
+
+    const plan = makePlan(child, []);
+    // Parents first, child last — the order resolveExtends produces.
+    plan.all_presets = [parentA, parentB, child];
+    vi.mocked(resolverMod.buildInstallPlan).mockResolvedValue(plan);
+
+    let writtenJson: string | undefined;
+    vi.mocked(fsMod.writeFile).mockImplementation(async (path, data) => {
+      if (String(path).endsWith('plugin.json')) writtenJson = data as string;
+    });
+
+    await buildPlugin('child', { outDir: '/tmp/test-plugin' });
+
+    const entries = JSON.parse(writtenJson ?? '{}').external_setup as Array<{
+      name: string;
+      install_hint: string;
+    }>;
+    expect(entries.map((e) => e.name).sort()).toEqual(['chrome-devtools', 'figma']);
+    expect(entries.find((e) => e.name === 'figma')?.install_hint).toBe('from child');
+  });
 });
