@@ -1,0 +1,26 @@
+{
+  "eval_id": "eval-6-sync-cross-ref",
+  "configuration": "old_skill",
+  "expectations": [
+    {
+      "text": "Runs pnpm sync or git diff to see what changed in upstream",
+      "passed": true,
+      "evidence": "Step 2: `pnpm sync skills/coding-standards` is explicitly shown. Also recommends reading upstream SKILL.md to understand what changed."
+    },
+    {
+      "text": "Explicitly applies cross-reference scan to the diff output (not just generic upgrade)",
+      "passed": false,
+      "evidence": "No grep scan performed. Response closes with: 'The old skill does not include a systematic step for checking whether new cross-references appeared... The operator would need to manually eyeball the diff for any new skill/agent mentions.'"
+    },
+    {
+      "text": "Describes what action to take if new cross-references ARE found in the diff",
+      "passed": false,
+      "evidence": "Old skill only says 'note [internal dependencies]; they go in dependencies.required or dependencies.optional' — no recursive pick workflow, no decision matrix, no concrete steps. Response acknowledges: 'no grep scan, no decision matrix, and no recursive pick workflow.'"
+    },
+    {
+      "text": "Describes what action to take if NO new cross-references are found",
+      "passed": false,
+      "evidence": "No guidance given for the no-new-refs case. Old skill only describes the merge/bump-commit flow, not a dependency confirmation step."
+    }
+  ]
+}
