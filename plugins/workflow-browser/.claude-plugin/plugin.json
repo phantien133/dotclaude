@@ -1,7 +1,7 @@
 {
   "name": "workflow-browser",
-  "version": "0.3.0",
-  "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration.",
+  "version": "0.5.0",
+  "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration. v0.4.0 adds the f-setup command (required by f-extract/f-implement — they read .claude/figma.yaml); previously missing so /f-extract could not be configured. v0.5.0 extends the `figma` preset — official Figma MCP suite, four Figma subagents and the always-on figma-fidelity rule — and picks up w-task's engine-aware Phase 3 with its new 3.4 visual parity gate. The f-* skills stay installed as the REST-server fallback.",
   "author": {
     "name": "phantien133",
     "email": "phanqtien@gmail.com"
@@ -22,6 +22,24 @@
     "./commands/"
   ],
   "external_setup": [
+    {
+      "name": "mgrep",
+      "kind": "claude_plugin",
+      "standalone": false,
+      "install_hint": "/plugins install mgrep@Mixedbread-Grep",
+      "complexity": "simple",
+      "docs_url": "https://github.com/mixedbread-ai/mgrep",
+      "notes": "Semantic code search plugin. settings_patch registers the Mixedbread-Grep marketplace and auto-enables the plugin."
+    },
+    {
+      "name": "figma",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "claude mcp add --transport http figma https://mcp.figma.com/mcp — then run /mcp and authorise in the browser. For the local server instead, enable the MCP server in Figma desktop (Preferences) and point the url at http://127.0.0.1:3845/mcp.",
+      "complexity": "moderate",
+      "docs_url": "https://developers.figma.com/docs/figma-mcp-server/",
+      "notes": "This is NOT the legacy @figma/mcp REST server. The official server provides get_design_context, get_metadata, get_variable_defs, get_screenshot, get_code_connect_map and a localhost asset endpoint — the rendered reference and real asset exports the legacy REST server never had. A project that keeps the old f-* suite installed must not register both under the name `figma`."
+    },
     {
       "name": "chrome-devtools",
       "kind": "mcp_server",

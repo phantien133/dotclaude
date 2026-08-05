@@ -24,3 +24,7 @@
 	path = upstream/pm-skills
 	url = git@github.com:phuryn/pm-skills.git
 	branch = main
+[submodule "upstream/openai-skills"]
+	path = upstream/openai-skills
+	url = org-14957082@github.com:openai/skills.git
+	branch = main

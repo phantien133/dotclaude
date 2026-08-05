@@ -248,6 +248,7 @@ status: gate_pending
 intake_confirmed: false
 has_ui: <true|false|unknown>
 figma_url: <url or null>
+figma_engine: <official|legacy|none|null>   # resolved at Phase 0b step 5
 started_at: <timestamp>
 last_updated: <timestamp>
 ```
@@ -298,12 +299,25 @@ Update `state.yaml` from developer's reply:
 **In both branches:**
 
 5. **UI design pre-fetch (conditional).** If `state.yaml.has_ui: true` AND `figma_url`
-   is set, invoke skill `f-extract <figma_url> --task <task-slug>` now — it writes
-   `<state_root>/<task-slug>/figma-snapshot.md`. This lets Phase 1 scope UI work against
-   the real screens/components/states instead of a bare URL, which is the main reason
-   plans under-scope UI. On failure (MCP unavailable / bad URL), log a one-line warning
-   and continue — Phase 3.1 will retry extraction. Skip silently when `has_ui` is
-   `false`/`unknown` or `figma_url` is null.
+   is set, pre-fetch the design now so Phase 1 scopes UI work against the real
+   screens/components/states instead of a bare URL — the main reason plans under-scope UI.
+
+   First resolve the Figma engine and record it in `state.yaml` as `figma_engine`:
+
+   | Available MCP tools | `figma_engine` | Path |
+   |---|---|---|
+   | `mcp__figma__get_design_context` | `official` | Figma's own MCP server — preferred |
+   | only `mcp__figma__get_file*` | `legacy` | REST `@figma/mcp` — fallback |
+   | neither | `none` | no extraction possible |
+
+   - `official` → spawn the `figma-context-extractor` agent with `figma_url` and output
+     path `<state_root>/<task-slug>/figma-spec.md`. It also writes `figma-screens/`.
+   - `legacy` → invoke skill `f-extract <figma_url> --task <task-slug>`, which writes
+     `<state_root>/<task-slug>/figma-snapshot.md`.
+   - `none` → log a one-line warning and continue.
+
+   On failure, log one line and continue — Phase 3.1 retries. Skip silently when `has_ui`
+   is `false`/`unknown` or `figma_url` is null.
 
 6. Update `state.yaml`:
    ```yaml
@@ -352,10 +366,10 @@ Output: "Context loaded. Run `/w-task` to start planning."
    - `intake.md` full content
    - `context.md` § Relevant Files + § Patterns Observed
    - Answered `questions.md`
-   - `figma-snapshot.md` if it exists (pre-fetched at Phase 0b) — the planner must
-     scope UI work (screens, components, states, edge cases) against this design, not
-     just the textual description.
-   - Instruction: produce a plan with sections — Feature scope, Implementation approach per layer, Out of scope, Dependencies, Risks. When a Figma snapshot is present, the Feature scope and Implementation approach must enumerate the concrete UI surfaces it reveals.
+   - `figma-spec.md` (official engine) or `figma-snapshot.md` (legacy), whichever Phase 0b
+     pre-fetched — the planner must scope UI work (screens, components, states, edge
+     cases) against this design, not just the textual description.
+   - Instruction: produce a plan with sections — Feature scope, Implementation approach per layer, Out of scope, Dependencies, Risks. When Figma design data is present, the Feature scope and Implementation approach must enumerate the concrete UI surfaces it reveals.
 
 7. Write `plan.md` from agent output.
 
@@ -435,93 +449,123 @@ Output: "No UI scope detected. Run /w-task to start TDD."
 
 ---
 
-### 3.1 — Extract Figma design snapshot
+### 3.1 — Extract the design
 
 *Only runs when NOT skipped.*
 
-Read `state.yaml.figma_url`.
+Read `state.yaml.figma_url` and `state.yaml.figma_engine`. If `figma_engine` is null
+(Phase 0b never resolved it), resolve it now using the table in Phase 0b step 5.
 
-**If `figma_url` is set:**
+**`figma_engine: official`** — the Figma MCP server exposing `get_design_context`.
 
-If `<state_root>/<task-slug>/figma-snapshot.md` already exists (pre-fetched at Phase 0b),
-reuse it — do not re-extract. Only invoke skill `f-extract <figma_url> --task <task-slug>`
-when the snapshot is missing (Phase 0b skipped it, or its extraction failed).
+Reuse `<state_root>/<task-slug>/figma-spec.md` if Phase 0b already wrote it. Otherwise
+spawn the `figma-context-extractor` agent with `figma_url` and that output path.
 
-`f-extract` writes `<state_root>/<task-slug>/figma-snapshot.md`.
+Then, in parallel where possible:
+- spawn `figma-asset-fetcher` with the spec path → downloads every icon/image into the
+  project and writes `figma-assets.md`,
+- spawn `figma-design-system-mapper` with the spec path → writes `figma-mapping.md`.
 
-If `f-extract` fails (MCP unavailable, URL invalid):
+Read the three result files. **Resolve the extractor's gap list and the mapper's
+"No equivalent" table with the developer before writing any code.** A gap is a question;
+answering it with a plausible value is how implementations drift from designs.
+
+**`figma_engine: legacy`** — REST-only `@figma/mcp`.
+
+Reuse `<state_root>/<task-slug>/figma-snapshot.md` if it exists; otherwise invoke skill
+`f-extract <figma_url> --task <task-slug>`. Warn once, in one line, that the legacy engine
+has no rendered reference and no asset endpoint, so Phase 3.4 parity checking is limited
+and assets require manual export.
+
+**Extraction failed, or `figma_engine: none`:**
 ```
-⚠️ Figma extraction failed: <reason>
+⚠️ Figma extraction unavailable: <reason>
 Options:
-  [1] Retry with a different URL or after configuring MCP (/f-setup)
-  [2] Continue without snapshot — implementation will be based on plan.md only
+  [1] Configure the official Figma MCP server, then re-run
+      claude mcp add --transport http figma https://mcp.figma.com/mcp
+  [2] Continue without design data — implementation will follow plan.md only,
+      and UI accuracy will be limited
 
 Reply with your choice, then run /w-task.
 ```
-Wait for developer. If [2]: set `figma_url: null`, proceed to 3.2 without snapshot.
+Wait for developer. On [2]: set `figma_url: null`, proceed to 3.2 with no design data.
 
-**If `figma_url` is null:**
-```
-No Figma URL available. Proceeding to implementation based on plan.md only.
-UI accuracy may be limited without a design snapshot.
-```
-Proceed to 3.2 without snapshot.
+**If `figma_url` is null:** proceed to 3.2 with no design data, after saying so plainly.
 
 ---
 
 ### 3.2 — Implement UI
 
-Invoke skill `f-implement`:
-- With snapshot: `f-implement <state_root>/<task-slug>/figma-snapshot.md --plan <state_root>/<task-slug>/plan.md`
-- Without snapshot: `f-implement --plan <state_root>/<task-slug>/plan.md` (plan-only mode — f-implement reads plan.md for UI scope)
+**`figma_engine: official`** — invoke skill `figma-implement-design` with:
+- `figma-spec.md`, `figma-assets.md`, `figma-mapping.md` from 3.1,
+- `<state_root>/<task-slug>/plan.md` for scope.
 
-`f-implement` will:
-- Generate components and screens
-- Use `ASSET_PLACEHOLDER` for all icons/images
-- Gate on developer when design is unclear (shows Figma link + requests PNG)
-- Write `figma-assets.md` if any assets are unresolved
+The `figma-fidelity` rules bind this step: real exported assets only, exact values only,
+reuse existing components, no rounding, no invented colours or icons. Assets still
+unresolved after `figma-asset-fetcher` are marked `TODO(figma-asset): <node-id>` in the
+code and carried into 3.3 — never replaced with generated SVG or an icon-pack glyph.
 
-Do not advance Phase 3 until `f-implement` reaches its summary step.
+**`figma_engine: legacy` or none** — invoke skill `f-implement`:
+- with snapshot: `f-implement <state_root>/<task-slug>/figma-snapshot.md --plan <state_root>/<task-slug>/plan.md`
+- without: `f-implement --plan <state_root>/<task-slug>/plan.md` (plan-only mode)
+
+Do not advance Phase 3 until the implementing skill reaches its summary step.
 
 ---
 
 ### 3.3 — Asset resolution gate
 
-*Only runs if `figma-assets.md` exists and has unresolved entries.*
+*Only runs if `figma-assets.md` has unresolved entries (official) or `ASSET_PLACEHOLDER`
+comments remain (legacy).*
 
-Read `<state_root>/<task-slug>/figma-assets.md`.
-
-If all assets resolved: skip to 3.4.
+If everything resolved: skip to 3.4.
 
 Output:
 ```
 ## UI assets needed
 
-<N> assets require export from Figma before implementation is complete.
+<N> assets could not be exported automatically.
 See figma-assets.md for Figma links and target paths.
 
-Export each asset from Figma and place at the listed path.
-Run /w-task when done — I will replace the ASSET_PLACEHOLDER comments.
+Export each from Figma and save to the listed path.
+Run /w-task when done — I will wire them in.
 ```
 
 Update `state.yaml`: `status: gate_pending`, `gates.3a: assets_pending`.
 
 **GATE 3a:** developer exports assets → runs `/w-task`.
 
-When developer runs `/w-task` with `gates.3a: assets_pending`:
-- Re-read `figma-assets.md`
-- For each asset: check if file exists at `target_path`
-- Replace all `ASSET_PLACEHOLDER` comments for resolved assets
-- If any still missing: re-show only the remaining entries, wait again
-- When all resolved: proceed to 3.4
+On resume: re-read `figma-assets.md`, check each `target_path` exists, wire up the
+resolved ones (replacing `TODO(figma-asset)` markers / `ASSET_PLACEHOLDER` comments),
+re-show only what is still missing. When all resolved: proceed to 3.4.
 
 ---
 
-### 3.4 — Finalize Phase 3
+### 3.4 — Visual parity gate
+
+*Skipped only when `figma_engine` is `none`, or when `workflow.dev_server_command` is
+unset. Record the skip explicitly — never let it read as a pass.*
+
+Invoke skill `figma-verify-parity` for each screen implemented, passing the route and
+`figma-spec.md`. It renders the page, diffs computed styles against the spec, verifies
+every asset resolves to a real file, and writes `figma-parity-report.md`.
+
+- **PASS** → record `gates.3c: parity_pass` and continue to 3.5.
+- **FAIL** → fix the listed blockers and majors, then re-run. Do not advance on a FAIL,
+  and do not reason that a fix must have worked — only a fresh PASS closes the gate.
+- **NOT RUN** → record `gates.3c: parity_not_run` with the reason and surface it in the
+  Phase 3 summary so it reaches the PR description.
+
+On `figma_engine: legacy`, run the gate anyway if a dev server exists — the computed-style
+pass still catches spacing, colour and font drift; only the screenshot comparison degrades.
+
+---
+
+### 3.5 — Finalize Phase 3
 
 Update `state.yaml`: `gates.3: ui_verified`, `phase: "4"`, `status: gate_pending`.
 
-Output: "UI implementation complete. Run `/w-task` to start TDD."
+Output: "UI implementation complete (parity: <PASS|NOT RUN>). Run `/w-task` to start TDD."
 
 **GATE 3b:** developer runs `/w-task` → Phase 4.
 
@@ -589,21 +633,45 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     - Lint: `<lint_command>` on affected files from `impact.md`
     - Tests with coverage (if test command supports it)
 
-11. **Spawn `code-reviewer` agent** — scope: affected files from `impact.md` only:
-    - Resolve CRITICAL/HIGH issues immediately, re-run tests to confirm still GREEN.
-    - Document MEDIUM items in `tests.md § Code Review Notes`.
+11. **Code review — language-aware agent routing.** Scope: affected files from
+    `impact.md § Affected Files` only. **Do not default to a single generic
+    reviewer.** Group the affected files by language and, for each group, spawn
+    the reviewer agent that matches that language. Use the specific agent only if
+    it is available in this project (check installed agents); otherwise fall back
+    to the generic `code-reviewer` for that group.
 
-    **Mobile / Flutter changes** — additional pass:
-    - If `impact.md § Affected Files` lists any `.dart` files, or paths under a
-      mobile folder (e.g. `streaming-mobile/`, `mobile/`, `app/`, `lib/`), AND
-      the `flutter-dart-code-review` skill is available in this project:
-      - Invoke `flutter-dart-code-review` skill with those Dart files as scope.
-      - It applies the library-agnostic Flutter/Dart checklist (widget patterns,
-        Riverpod/BLoC state, null safety, performance, a11y, security).
-      - Resolve CRITICAL/HIGH findings the same way as the generic reviewer;
-        append MEDIUM items to `tests.md § Code Review Notes` under a
-        "Flutter / Dart review" subsection.
-    - Skip silently if no Dart files or the skill isn't installed.
+    | Changed files (match by extension / path) | Reviewer agent | Build / compile resolver |
+    |---|---|---|
+    | `*.dart`, or mobile paths (`lib/`, `mobile/`, `app/`, `*mobile*/`) | `flutter-reviewer` | `dart-build-resolver` |
+    | `*.ts`, `*.tsx` (NestJS / Next.js) | `typescript-reviewer` | `react-build-resolver` |
+    | `*.py` | `python-reviewer` (or `django-reviewer` / `fastapi-reviewer`) | `django-build-resolver` |
+    | `*.go` | `go-reviewer` | `go-build-resolver` |
+    | `*.rs` | `rust-reviewer` | `rust-build-resolver` |
+    | `*.java` | `java-reviewer` | `java-build-resolver` |
+    | `*.kt` | `kotlin-reviewer` | `kotlin-build-resolver` |
+    | `*.swift` | `swift-reviewer` | `swift-build-resolver` |
+    | `*.cs` | `csharp-reviewer` | — |
+    | `*.cpp`, `*.cc`, `*.h`, `*.hpp` | `cpp-reviewer` | `cpp-build-resolver` |
+    | `*.sql`, `*.prisma`, migration files | `database-reviewer` | — |
+    | anything else / no specific reviewer installed | `code-reviewer` | `build-error-resolver` |
+
+    Routing rules:
+    - **One reviewer invocation per language group**, each scoped to that group's
+      files only. If the change spans Dart + TypeScript, spawn `flutter-reviewer`
+      for the `.dart` files AND `typescript-reviewer` for the `.ts/.tsx` files.
+    - If a preferred agent is not installed in this project, use `code-reviewer`
+      for that group (never silently skip review).
+    - For each invocation: resolve CRITICAL/HIGH issues immediately, then re-run
+      tests to confirm still GREEN.
+    - Document MEDIUM items in `tests.md § Code Review Notes`, one subsection per
+      language group (e.g. "Flutter / Dart review", "TypeScript review").
+    - The `flutter-reviewer` agent may additionally apply the
+      `flutter-dart-code-review` skill checklist when that skill is installed.
+
+    **Build / compile failures during the inline checks (step 10) route the same
+    way:** a `.dart` compile error → `dart-build-resolver`, a TS/React build
+    error → `react-build-resolver`, etc., falling back to `build-error-resolver`
+    when no language-specific resolver is installed.
 
 12. Write `verify.md`:
     ```markdown
@@ -614,9 +682,11 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
     | typecheck | ✅/❌ | |
     | lint | ✅/❌ | |
     | tests | ✅/❌ | |
-    | code review | ✅/❌ | CRITICAL/HIGH resolved |
-    | flutter-dart review | ✅/❌/skipped | only if `.dart` files in scope |
+    | code review | ✅/❌ | reviewer agent(s) used per language; CRITICAL/HIGH resolved |
     ```
+
+    List which reviewer agent ran for each language group in the Notes column
+    (e.g. "flutter-reviewer (.dart), typescript-reviewer (.ts)").
 
 13. Update `tests.md`: add RED→GREEN record + reference `verify.md`.
 14. Update `state.yaml`: `status: gate_pending`, `gates.4a: checks_green`.
