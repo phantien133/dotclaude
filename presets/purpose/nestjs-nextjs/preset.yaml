@@ -12,7 +12,10 @@ description: >-
   successor (official Figma MCP suite, Figma subagents, visual parity gate, infra
   security review). v0.4.0 only extends the `figma` preset so existing installs keep
   working with w-task's engine-aware Phase 3; no further features will land here.
-version: 0.4.0
+  v0.5.0 is likewise a compatibility bump only — it installs the two skills workflow v3
+  added (`w-codegraph`, `w-acceptance-verify`) so existing installs keep working with the
+  updated w-task. New work belongs in `nextjs-combo`.
+version: 0.5.0
 extends:
   - nestjs
   - nextjs
@@ -49,7 +52,11 @@ components:
       source: workflow
     - name: w-db-doc
       source: workflow
+    - name: w-acceptance-verify
+      source: workflow
     - name: w-doc-gate
+      source: workflow
+    - name: w-codegraph
       source: workflow
     - name: w-document-build-up
       source: workflow

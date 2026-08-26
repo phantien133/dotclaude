@@ -11,7 +11,14 @@ description: >-
   blocks the task until computed styles match the design. Includes Chrome DevTools MCP
   for localhost verification, the cloud-infrastructure security review checklist, and the
   terraform MCP server for IaC. Supersedes the deprecated `nestjs-nextjs` preset.
-version: 1.0.0
+  v1.1.0 workflow v3: a CodeGraph fast path (`w-codegraph`) lets Phases 0b/2/4 query a
+  code knowledge graph instead of grepping the tree; Phase 4c splits its non-run outcomes
+  and waits out a busy browser MCP before asking the operator rather than self-recording a
+  skip; new Phase 5b (`w-acceptance-verify`) traces every ticket requirement to evidence and
+  compares the UI against the Figma export, fixing findings in at most three committed and
+  re-documented iterations; and Phase 6.3 commits and pushes the final task state into the PR
+  so a finished run never leaves a dirty tree. Requires workflow.yaml v3 — `/w-setup` migrates.
+version: 1.1.0
 extends:
   - nestjs
   - nextjs
@@ -54,7 +61,15 @@ components:
       source: workflow
     - name: w-db-doc                 # Phase 5  — DB doc + sub-ERD + master ERD sync
       source: workflow
+    - name: w-acceptance-verify      # Phase 5b — requirement traceability + visual parity
+      source: workflow
     - name: w-doc-gate               # Phase 6  — pre-PR doc invariant check
+      source: workflow
+
+    # ── code intelligence ──────────────────────────────────────────────────────
+    # Queried by Phases 0b / 2 / 4 when a .codegraph/ index exists; every caller
+    # falls back to git grep on its own when it doesn't.
+    - name: w-codegraph
       source: workflow
 
     # ── one-time bootstrap ─────────────────────────────────────────────────────

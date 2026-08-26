@@ -14,7 +14,12 @@ description: >-
   v0.5.0 extends the `figma` preset — official Figma MCP suite, four Figma subagents and
   the always-on figma-fidelity rule — and picks up w-task's engine-aware Phase 3 with its
   new 3.4 visual parity gate. The f-* skills stay installed as the REST-server fallback.
-version: 0.5.0
+  v0.6.0 workflow v3: adds the CodeGraph fast path (`w-codegraph`) for Phases 0b/2/4, splits
+  Phase 4c's non-run outcomes so a browser MCP held by another session waits and then asks the
+  operator instead of being marked skipped, adds Phase 5b acceptance verification
+  (`w-acceptance-verify`) with a bounded fix-commit-redocument loop, and makes Phase 6.3 commit
+  and push the final state into the PR. Requires workflow.yaml v3 — `/w-setup` migrates.
+version: 0.6.0
 extends:
   - developer
   - figma
@@ -47,7 +52,11 @@ components:
       source: workflow
     - name: w-db-doc
       source: workflow
+    - name: w-acceptance-verify
+      source: workflow
     - name: w-doc-gate
+      source: workflow
+    - name: w-codegraph
       source: workflow
     - name: w-document-build-up
       source: workflow

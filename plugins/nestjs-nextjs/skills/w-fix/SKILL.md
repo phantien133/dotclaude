@@ -49,6 +49,8 @@ Extract:
 - `issue_tracker.type`, `.url`, `.workspace`, `.project`, `.mcp_available`
 - `workflow.state_root` → default `.workflow`
 - `project.test_command`, `.typecheck_command`, `.lint_command`
+- `project.codegraph.*` — probe once with `w-codegraph detect` and store the result in
+  `state.yaml.codegraph`; drives file location in 0.3 and test targeting in Phase 1
 - `repos[]` (version 2) — per-repo `{path, default_branch, remote}`; if absent, synthesize
   a single `.` entry from `pr.default_branch` (default `main`). Drives Phase 3 per-repo PRs.
 - `pr.draft`, `.default_branch`
@@ -89,11 +91,24 @@ Create directory `<state_root>/<task-slug>/`.
 
 ### 0.3 Locate affected files
 
-Targeted search — not a full codebase scan:
+Targeted search — not a full codebase scan.
+
+**With CodeGraph** (`state.yaml.codegraph` is `ready`/`stale`) — the graph is faster and
+catches the caller a grep misses:
+```bash
+codegraph sync -q
+codegraph query "<symbol or error identifier>" --limit 10 --json
+codegraph callers "<suspect symbol>" --json      # who reaches the broken code
+codegraph affected <suspect files> --quiet       # which tests should have caught it
+```
+A bug with no covering test in the `affected` list tells you what to write before fixing.
+
+**Without it:**
 - Parse description/title for file names, function names, class names, error strings.
 - Grep for relevant identifiers in source dirs (from `project.src_dirs` if set, else repo root).
 - Read only specific implicated files (max 5).
-- Form a root cause hypothesis.
+
+Either way: form a root cause hypothesis before editing anything.
 
 ### 0.4 Scope check
 
@@ -252,8 +267,22 @@ Output: "Run `/w-pr <task-slug>` to create the PR (add `--repo <path>` per submo
 After the PR(s) exist, perform a **single** final state write:
 `state.yaml`: `phase: "3"`, `status: complete`, `prs: [...]`, `last_updated: <now>`.
 
-Output: "Task complete. state.yaml is final — the workflow has stopped." A later
-`/w-fix` on a `complete` task is a no-op that reprints the PR URL(s).
+**Then ship that state — the workflow does not end with a dirty tree.** Unless
+`state_root` is gitignored (`git check-ignore -q <state_root>` → nothing to do):
+
+```bash
+git -C <repo> add <state_root>/<task-slug>/
+git -C <repo> commit -m "chore(<task-slug>): finalize workflow state"
+git -C <repo> push <remote> HEAD:<current-branch>      # plain push — never --force
+```
+
+A rejected push means someone else pushed to the branch: merge (`pull --rebase=false`)
+and push again. Never force, never rewrite — the PR may already carry review comments.
+If it still fails, say so and leave the commit local.
+
+Output: "Task complete. Final state committed and pushed to <branch> — the PR carries the
+full record. state.yaml is final." A later `/w-fix` on a `complete` task is a no-op that
+reprints the PR URL(s).
 
 ---
 

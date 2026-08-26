@@ -247,8 +247,8 @@
     {
       "name": "workflow-browser",
       "source": "./plugins/workflow-browser",
-      "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration. v0.4.0 adds the f-setup command (required by f-extract/f-implement — they read .claude/figma.yaml); previously missing so /f-extract could not be configured. v0.5.0 extends the `figma` preset — official Figma MCP suite, four Figma subagents and the always-on figma-fidelity rule — and picks up w-task's engine-aware Phase 3 with its new 3.4 visual parity gate. The f-* skills stay installed as the REST-server fallback.",
-      "version": "0.5.0",
+      "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration. v0.4.0 adds the f-setup command (required by f-extract/f-implement — they read .claude/figma.yaml); previously missing so /f-extract could not be configured. v0.5.0 extends the `figma` preset — official Figma MCP suite, four Figma subagents and the always-on figma-fidelity rule — and picks up w-task's engine-aware Phase 3 with its new 3.4 visual parity gate. The f-* skills stay installed as the REST-server fallback. v0.6.0 workflow v3: adds the CodeGraph fast path (`w-codegraph`) for Phases 0b/2/4, splits Phase 4c's non-run outcomes so a browser MCP held by another session waits and then asks the operator instead of being marked skipped, adds Phase 5b acceptance verification (`w-acceptance-verify`) with a bounded fix-commit-redocument loop, and makes Phase 6.3 commit and push the final state into the PR. Requires workflow.yaml v3 — `/w-setup` migrates.",
+      "version": "0.6.0",
       "author": {
         "name": "phantien133",
         "email": "phanqtien@gmail.com"
@@ -273,8 +273,8 @@
     {
       "name": "nestjs-nextjs",
       "source": "./plugins/nestjs-nextjs",
-      "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration. DEPRECATED as of v0.4.0 — superseded by `nextjs-combo`, which is the maintained successor (official Figma MCP suite, Figma subagents, visual parity gate, infra security review). v0.4.0 only extends the `figma` preset so existing installs keep working with w-task's engine-aware Phase 3; no further features will land here.",
-      "version": "0.4.0",
+      "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration. DEPRECATED as of v0.4.0 — superseded by `nextjs-combo`, which is the maintained successor (official Figma MCP suite, Figma subagents, visual parity gate, infra security review). v0.4.0 only extends the `figma` preset so existing installs keep working with w-task's engine-aware Phase 3; no further features will land here. v0.5.0 is likewise a compatibility bump only — it installs the two skills workflow v3 added (`w-codegraph`, `w-acceptance-verify`) so existing installs keep working with the updated w-task. New work belongs in `nextjs-combo`.",
+      "version": "0.5.0",
       "author": {
         "name": "phantien133",
         "email": "phanqtien@gmail.com"
@@ -639,8 +639,8 @@
     {
       "name": "nextjs-combo",
       "source": "./plugins/nextjs-combo",
-      "description": "Full-stack NestJS + Next.js development workflow. Combines the w-task state machine (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the official Figma design-to-code suite: figma-context-extractor absorbs the MCP payloads into an exact figma-spec.md, figma-asset-fetcher downloads real icons and images instead of generating them, figma-design-system-mapper resolves Figma values against the project's own tokens and components, and a Phase 3.4 visual parity gate blocks the task until computed styles match the design. Includes Chrome DevTools MCP for localhost verification, the cloud-infrastructure security review checklist, and the terraform MCP server for IaC. Supersedes the deprecated `nestjs-nextjs` preset.",
-      "version": "1.0.0",
+      "description": "Full-stack NestJS + Next.js development workflow. Combines the w-task state machine (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the official Figma design-to-code suite: figma-context-extractor absorbs the MCP payloads into an exact figma-spec.md, figma-asset-fetcher downloads real icons and images instead of generating them, figma-design-system-mapper resolves Figma values against the project's own tokens and components, and a Phase 3.4 visual parity gate blocks the task until computed styles match the design. Includes Chrome DevTools MCP for localhost verification, the cloud-infrastructure security review checklist, and the terraform MCP server for IaC. Supersedes the deprecated `nestjs-nextjs` preset. v1.1.0 workflow v3: a CodeGraph fast path (`w-codegraph`) lets Phases 0b/2/4 query a code knowledge graph instead of grepping the tree; Phase 4c splits its non-run outcomes and waits out a busy browser MCP before asking the operator rather than self-recording a skip; new Phase 5b (`w-acceptance-verify`) traces every ticket requirement to evidence and compares the UI against the Figma export, fixing findings in at most three committed and re-documented iterations; and Phase 6.3 commits and pushes the final task state into the PR so a finished run never leaves a dirty tree. Requires workflow.yaml v3 — `/w-setup` migrates.",
+      "version": "1.1.0",
       "author": {
         "name": "phantien133",
         "email": "phanqtien@gmail.com"
@@ -786,6 +786,106 @@
         "mobile",
         "graphql",
         "go-router"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "nextjs-combo@1.0.0",
+      "source": "./plugins/nextjs-combo@1.0.0",
+      "description": "Full-stack NestJS + Next.js development workflow. Combines the w-task state machine (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the official Figma design-to-code suite: figma-context-extractor absorbs the MCP payloads into an exact figma-spec.md, figma-asset-fetcher downloads real icons and images instead of generating them, figma-design-system-mapper resolves Figma values against the project's own tokens and components, and a Phase 3.4 visual parity gate blocks the task until computed styles match the design. Includes Chrome DevTools MCP for localhost verification, the cloud-infrastructure security review checklist, and the terraform MCP server for IaC. Supersedes the deprecated `nestjs-nextjs` preset.",
+      "version": "1.0.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "design-to-code",
+        "browser-verify",
+        "doc-governance",
+        "security",
+        "infra"
+      ],
+      "category": "workflow",
+      "tags": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "design-to-code",
+        "browser-verify",
+        "doc-governance",
+        "security",
+        "infra"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "workflow-browser@0.5.0",
+      "source": "./plugins/workflow-browser@0.5.0",
+      "description": "Extends developer with the w-task workflow skill (v2 with browser verify) — adds Phase 4c browser-based localhost verification between TDD green and commit. Claude starts the local dev server, uses Chrome DevTools MCP (evaluate_script + screenshots) to verify UI changes at localhost only, then gates on developer review before committing. Requires chrome-devtools-mcp and project.dev_server_command in workflow.yaml. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration. v0.4.0 adds the f-setup command (required by f-extract/f-implement — they read .claude/figma.yaml); previously missing so /f-extract could not be configured. v0.5.0 extends the `figma` preset — official Figma MCP suite, four Figma subagents and the always-on figma-fidelity rule — and picks up w-task's engine-aware Phase 3 with its new 3.4 visual parity gate. The f-* skills stay installed as the REST-server fallback.",
+      "version": "0.5.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
+      ],
+      "category": "workflow",
+      "tags": [
+        "workflow",
+        "browser-verify",
+        "tdd",
+        "developer"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "nestjs-nextjs@0.4.0",
+      "source": "./plugins/nestjs-nextjs@0.4.0",
+      "description": "Full-stack NestJS + Next.js development workflow — TDD, Figma design integration, browser verification, and doc governance. Combines the full w-task workflow suite (intake → context → plan → impact → UI/Figma → TDD → browser-verify → docs → PR) with the f-* Figma skill suite and Chrome DevTools MCP for localhost UI verification. v0.3.0 workflow v2: per-repo/submodule default branches (main vs master) via workflow.yaml repos[], terminal one-PR-per-repo Phase 6, and w-setup version detection + auto-migration. DEPRECATED as of v0.4.0 — superseded by `nextjs-combo`, which is the maintained successor (official Figma MCP suite, Figma subagents, visual parity gate, infra security review). v0.4.0 only extends the `figma` preset so existing installs keep working with w-task's engine-aware Phase 3; no further features will land here.",
+      "version": "0.4.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT",
+      "keywords": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "browser-verify",
+        "doc-governance"
+      ],
+      "category": "workflow",
+      "tags": [
+        "nestjs",
+        "nextjs",
+        "fullstack",
+        "workflow",
+        "tdd",
+        "figma",
+        "browser-verify",
+        "doc-governance"
       ],
       "strict": false,
       "repository": "https://github.com/phantien133/dotclaude"
