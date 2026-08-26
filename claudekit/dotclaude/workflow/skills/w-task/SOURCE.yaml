@@ -51,6 +51,23 @@ modifications: >-
   parity gate running figma-verify-parity — FAIL blocks advancement, NOT RUN is recorded
   distinctly from PASS so a skipped check reaches the PR description. Old 3.4 finalize
   became 3.5. Phase 1 planner brief accepts figma-spec.md or figma-snapshot.md.
+  Workflow v3 (2026-08-26): (a) CodeGraph fast path — setup check probes `w-codegraph
+  detect` once per task and stores the result in state.yaml; Phase 0b replaces the
+  git-grep inventory with `codegraph context`, Phase 2 seeds § Affected Files from
+  `codegraph impact`/`callers`, Phase 4 step 0 uses `codegraph affected` so existing
+  tests are extended instead of shadowed, and every commit is followed by a sync.
+  Everything falls back to git grep when the binary or index is absent. (b) Phase 4c
+  no longer collapses every non-run into `browser_skipped` — outcomes split into
+  browser_not_applicable (no UI scope), browser_unavailable (cannot be set up) and
+  browser_contended, the last of which retries the MCP for verify.browser_wait_seconds
+  (default 180s) and then opens a w/s/a confirm gate instead of self-recording a skip.
+  (c) NEW Phase 5b — acceptance verify: runs w-acceptance-verify in a bounded loop
+  (verify.max_loops, default 3), each iteration fixing blockers/majors, committing per
+  finding, re-persisting docs and re-syncing the graph; on exhaustion it writes
+  open-issues.md and offers continue / re-plan / hold. (d) NEW Phase 6.3 — the terminal
+  state write is committed and pushed (plain fast-forward, never force) into the PR
+  branch, so a completed task no longer leaves state.yaml dirty; a gitignored state_root
+  is detected and skipped. State transitions table covers all new gate values.
 notes: >-
   v2 of w-task — adds Phase 4c localhost browser verification via Chrome DevTools MCP,
   smart UI detection at Phase 0, and active Figma orchestration at Phase 3. Phase 3 now
@@ -66,6 +83,7 @@ dependencies:
     skills:
       - w-checkpoint
       - tdd-workflow
+      - w-acceptance-verify
     commands:
       - w-pr
     hooks: []
@@ -95,6 +113,8 @@ dependencies:
       - figma-design-system-mapper
       - figma-visual-verifier
     skills:
+      # Code intelligence — Phases 0b / 2 / 4 fast path, git-grep fallback without it.
+      - w-codegraph
       # Official Figma MCP path (preferred at Phase 3).
       - figma-implement-design
       - figma-verify-parity
@@ -131,11 +151,14 @@ tags:
   - feature-dev
   - config-driven
   - browser-verify
+  - acceptance-verify
+  - codegraph
 categories:
   purpose:
     - dev-workflow
     - tdd
     - browser-verify
+    - quality-gate
   mechanism:
     - state-machine
     - gate-based
