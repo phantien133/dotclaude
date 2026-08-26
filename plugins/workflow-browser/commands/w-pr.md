@@ -127,9 +127,26 @@ If no template: use this default structure:
 - [ ] Manual smoke test on affected paths
 <+ any items from tests.md if exists>
 
+## Verification
+
+<verify.md check table — typecheck / lint / tests / review>
+<verify.md § Browser Verify verdict, including a not-run reason when it did not run>
+<acceptance.md § Verdict + the visual result, when acceptance.md exists:
+ "Acceptance: PASS — <R> requirements verified, <N> fix iteration(s), visual: <result>">
+
+## Known gaps
+
+<open-issues.md verbatim, when it exists — this is the whole point of that file:
+ the reviewer must see what survived the fix loop before approving.
+ Omit this section entirely when there is no open-issues.md.>
+
 ---
 🤖 Generated with workflow skill
 ```
+
+A not-run check is never omitted from the body. "Browser verify: not run (MCP held by
+another session — skipped by operator)" is information a reviewer needs; silence reads
+as a pass.
 
 If the task folder contains a linked issue ID (from intake), append a GitLab close keyword on
 its own line so the MR auto-closes on merge:

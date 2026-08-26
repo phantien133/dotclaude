@@ -75,6 +75,19 @@ last_updated: <now>
 notes: "Reset to phase 0"
 ```
 
+Also clear the artefacts that would otherwise be read as current on the next run —
+a stale verdict is worse than none:
+
+```bash
+rm -f <state_root>/<task-slug>/acceptance.md \
+      <state_root>/<task-slug>/open-issues.md \
+      <state_root>/<task-slug>/figma-parity-report.md
+```
+
+`codegraph` in `state.yaml` is dropped with the rest of the keys — the next run
+re-probes. The `.codegraph/` index itself is never touched: it describes the repo,
+not the task.
+
 **`--wipe`:**
 
 ```bash

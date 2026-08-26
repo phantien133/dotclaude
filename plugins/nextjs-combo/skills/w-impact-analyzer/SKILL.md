@@ -14,6 +14,8 @@ Reads `.claude/workflow.yaml`:
 - `project.schema_paths.prisma`
 - `project.schema_paths.graphql`
 - `project.module_glob`
+- `project.codegraph.*` — when a CodeGraph index is usable, Step 1 derives the affected
+  set from the graph instead of from plan prose
 
 Input: `<state_root>/<task-slug>/{plan,context}.md` + current `impact.md` skeleton.
 
@@ -21,8 +23,28 @@ Input: `<state_root>/<task-slug>/{plan,context}.md` + current `impact.md` skelet
 
 ## Step 1 — Build base impact.md
 
+**Affected files come from the graph when there is one.** With
+`state.yaml.codegraph` at `ready`/`stale`, resolve each symbol `plan.md` says will
+change and ask the graph what depends on it:
+
+```bash
+codegraph impact "<symbol>" --depth 2 --json      # downstream blast radius
+codegraph callers "<symbol>" --json               # breaks on a signature change
+codegraph callees "<symbol>" --json               # what this change relies on
+```
+
+The union of those file lists is the authoritative § Affected Files set — it includes
+indirect callers that reading the plan cannot reveal and a name grep does not match.
+Add anything the plan names that the graph missed (new files do not exist in the index
+yet); never remove a file the graph reported because the plan did not mention it —
+investigate it instead, it is usually a real dependency nobody noticed.
+
+Mark each row's origin (`plan` / `graph`) so the developer can see what was inferred.
+
+Without CodeGraph, derive the set from plan.md "Implementation approach" as before.
+
 Always include:
-- § Affected Files (from plan.md "Implementation approach")
+- § Affected Files (graph union, or plan-derived)
 - § Dependencies (new packages, new modules)
 - § Risks (from plan.md "Risks")
 - § Sequence Diagram (Mermaid happy path — auto-generate from plan.md "Implementation approach")

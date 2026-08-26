@@ -1,5 +1,5 @@
 ---
-description: Orchestrate a full feature dev workflow with browser verification (intake → context → plan → impact → UI → TDD → browser-verify → docs → PR). Adds Phase 4c localhost browser verification via Chrome DevTools MCP after TDD green. Reads project config from .claude/workflow.yaml.
+description: Orchestrate a full feature dev workflow with browser and acceptance verification (intake → context → plan → impact → UI → TDD → browser-verify → docs → acceptance-verify → PR). Uses a CodeGraph index when available to explore and analyse impact cheaply, gates UI work on a localhost browser check via Chrome DevTools MCP, then proves every ticket requirement is delivered in a bounded fix loop before opening the PR. Reads project config from .claude/workflow.yaml.
 argument-hint: <issue-url | #N | title>
 allowed-tools: Bash, Read, Write, Edit, Skill
 ---
@@ -12,9 +12,19 @@ gates — advances only when the developer runs `/w-task`.
 **First run:** `$ARGUMENTS` is an issue reference or free title → starts Phase 0.  
 **Subsequent runs:** `$ARGUMENTS` empty or `continue` → reads `state.yaml`, advances to next phase.
 
-Extends `w-task` with **Phase 4c — Browser Verify**: after TDD green and checks pass,
-Claude starts the local dev server, uses Chrome DevTools MCP to verify UI changes at
-`localhost` only, then waits for developer confirmation before committing.
+Two gates make this workflow more than a task runner:
+
+- **Phase 4c — Browser Verify**: after TDD green and checks pass, Claude starts the local
+  dev server, uses Chrome DevTools MCP to verify UI changes at `localhost` only, then waits
+  for developer confirmation before committing.
+- **Phase 5b — Acceptance Verify**: after docs are persisted, every requirement from the
+  ticket is traced to evidence and — for UI work — the implementation is compared against
+  the Figma export. Findings are fixed, committed and re-documented in a bounded loop
+  (default 3 iterations) before the PR is opened.
+
+When a **CodeGraph** index (`.codegraph/`) is available, Phases 0b, 2 and 4 query the graph
+instead of grepping the tree — same answers, far fewer file reads. Everything degrades to
+the git-grep path when it is not.
 
 ---
 
@@ -63,7 +73,12 @@ Extract and store for this session:
 - `project.module_glob`, `schema_paths.{prisma,graphql}`, `test_layers` — drive
   Phase 0b module detection, Phase 2 impact analysis, Phase 4 test stubs
 - `project.dev_server_command`, `project.dev_server_port` — drive Phase 4c browser verify.
-  If `dev_server_command` is null, Phase 4c is skipped entirely.
+  If `dev_server_command` is null, Phase 4c is not applicable and is recorded as such.
+- `project.codegraph.{enabled, auto_index, sync_phases}` — drive the CodeGraph fast path
+  in Phases 0b / 2 / 4. Absent or `enabled: false` → every phase uses its git-grep fallback.
+- `verify.{acceptance, visual, max_loops, browser_wait_seconds}` — drive Phase 5b and the
+  MCP contention protocol. Absent → acceptance `true`, visual `auto`, max_loops `3`,
+  browser_wait_seconds `180`.
 - `repos[]` — the repos this workflow operates on, each `{path, default_branch, remote}`.
   `path: "."` is the main workspace; other entries are git submodules. Each repo has
   its **own** default branch (they may differ — `main` vs `master`). Drives Phase 6
@@ -82,6 +97,17 @@ else (version 1 / no repos):
 ```
 
 Store `REPOS` for Phase 6. A single-repo project has exactly one entry (`.`).
+
+**Config version.** This skill reads schema **v3**. A v1/v2 file still works — every v3
+field is optional and falls back to the default above — but say so once, in one line:
+`workflow.yaml is version <N>; run /w-setup to migrate to 3 and enable codegraph +
+acceptance verify.` Do not migrate the file yourself and do not repeat the notice.
+
+**CodeGraph probe.** Once per task, at the setup check, invoke skill `w-codegraph detect`
+and store the result in `state.yaml` as `codegraph: ready|stale|not-indexed|unavailable|disabled`.
+Phases 0b/2/4 read that value instead of re-probing. On `not-indexed`, `w-codegraph ensure`
+asks the developer once whether to build the index — the answer is recorded and never asked
+again within this task.
 
 **Path convention — streaming-docs vs flat layout**
 
@@ -112,11 +138,13 @@ silently skipped otherwise):
 
 | Phase | Helper skills |
 |-------|---------------|
-| 0b | `w-context-load`, `w-oq-check` |
-| 2 | `w-impact-analyzer`, `w-adr` |
-| 4 | `w-test-stubs` |
+| setup | `w-codegraph detect` |
+| 0b | `w-context-load`, `w-oq-check`, `w-codegraph context` |
+| 2 | `w-impact-analyzer`, `w-adr`, `w-codegraph impact` |
+| 4 | `w-test-stubs`, `w-codegraph affected` |
 | 4c | Chrome DevTools MCP (external — must be configured in settings.json) |
 | 5 | `w-feature-record`, `w-api-doc`, `w-db-doc` |
+| 5b | `w-acceptance-verify`, `figma-verify-parity` |
 | 6 | `w-doc-gate` (called from `/w-pr` — see Phase 6) |
 
 ---
@@ -269,6 +297,17 @@ Update `state.yaml` from developer's reply:
 - If developer confirmed UI involvement → set `has_ui: true`
 - If developer confirmed backend-only → set `has_ui: false`
 
+**CodeGraph fast path (runs first when `state.yaml.codegraph` is `ready` or `stale`):**
+
+1. `w-codegraph sync` — cheap, keeps the graph matching the tree.
+2. `w-codegraph context "<title> — <one-line description from intake.md>"` — returns the
+   relevant symbols, their files and the code that matters, in one bounded call.
+
+Treat that output as the file inventory for this task: it replaces `git ls-files` +
+per-keyword `git grep` below, and the follow-up `Read` of each hit. Read a file directly
+only when the task needs something the graph did not surface. The module-aware doc load
+below still runs — the graph knows the code, the module docs know the decisions.
+
 **If `workflow.module_docs_root` is SET → use module-aware context load:**
 
 1. **Invoke skill** `w-context-load <task-slug>`:
@@ -285,7 +324,10 @@ Update `state.yaml` from developer's reply:
    If `w-oq-check` returns non-zero (blocker found): pause, write
    `state.yaml.status: blocked`, surface the OQ, and wait for developer.
 
-**If `workflow.module_docs_root` is NULL → fall back to generic git-grep load:**
+**If `workflow.module_docs_root` is NULL → generic code load:**
+
+*With CodeGraph ready, steps 1–3 are already answered by the `context` call above — go
+straight to step 4. Without it, fall back to git-grep:*
 
 1. **File inventory:**
    ```bash
@@ -387,7 +429,19 @@ Output: "Review plan.md. Run `/w-task` to approve and proceed."
 
 1. Read `context.md` + `plan.md`.
 
-2. **Invoke skill** `w-impact-analyzer <task-slug>` — produces structured
+2. **CodeGraph blast radius (when `state.yaml.codegraph` is `ready`/`stale`).** Before
+   the analyzer runs, resolve the symbols `plan.md` says will change and query the graph:
+
+   ```bash
+   codegraph impact "<symbol>" --depth 2 --json     # everything affected downstream
+   codegraph callers "<symbol>" --json              # who breaks on a signature change
+   ```
+
+   The graph's file set is authoritative for § Affected Files — it catches indirect
+   callers that a name grep misses. Pass it to the analyzer as a starting set rather
+   than letting the analyzer rediscover it.
+
+3. **Invoke skill** `w-impact-analyzer <task-slug>` — produces structured
    `impact.md` with layer-aware sections:
    - § Affected Files (always)
    - § Dependencies, § Risks, § Sequence Diagram (always)
@@ -403,11 +457,11 @@ Output: "Review plan.md. Run `/w-task` to approve and proceed."
    decision (e.g. DB schema change touching >2 tables, new cross-module async
    contract).
 
-3. **Manual ADR opportunity** — if a decision surfaced during the impact analysis
+4. **Manual ADR opportunity** — if a decision surfaced during the impact analysis
    that wasn't auto-captured, invoke `w-adr <task-slug> "<decision-title>"`
    to append it to `adr_docs_path`.
 
-4. Update `state.yaml`: `phase: "2"`, `status: gate_pending`.
+5. Update `state.yaml`: `phase: "2"`, `status: gate_pending`.
 
 Output:
 ```
@@ -575,6 +629,16 @@ Output: "UI implementation complete (parity: <PASS|NOT RUN>). Run `/w-task` to s
 
 *Triggers when `phase: "4"` + `status: gate_pending`.*
 
+0. **Existing coverage (when `state.yaml.codegraph` is `ready`/`stale`).**
+
+   ```bash
+   codegraph affected <files from impact.md § Affected Files> --quiet
+   ```
+
+   Any test file returned here already covers code in scope: **extend it, never
+   shadow it with a new stub**. Pass the list to `w-test-stubs` so it skips those
+   paths. Without CodeGraph, `w-test-stubs` uses its layer-glob conventions.
+
 1. **Invoke skill** `w-test-stubs <task-slug>` — classifies each affected file
    by layer (unit / graphql / bullmq / nestjs / nextjs / integration) and writes
    layer-appropriate test boilerplate with correct imports, mocking setup, and
@@ -622,7 +686,9 @@ Output: "Review tests.md — confirm test structure covers impact.md scope. Run 
 
 7. **Invoke `tdd-workflow` skill** — pass `plan.md` + `tests.md` as context for RED→GREEN→refactor.
 
-8. Run tests → confirm GREEN.
+8. Run tests → confirm GREEN. With CodeGraph available, iterate on the
+   `codegraph affected` set for speed, then run the **full** suite once before the
+   gate — the affected set narrows the loop, it never replaces the final run.
 
 9. **Run `w-checkpoint GREEN <task-slug>`** — checkpoint after GREEN.
 
@@ -699,14 +765,60 @@ Output: "Code is GREEN and checks pass. Review verify.md and diff. Run `/w-task`
 
 ## Phase 4c — Browser Verify (AUTO → GATE 4c)
 
-*Triggers when `phase: "4"` + `status: gate_pending` + `gates.4a: checks_green` + no `gates.4c`.*
+*Triggers when `phase: "4"` + `status: gate_pending` + `gates.4a: checks_green` and
+`gates.4c` is unset or `browser_contended` (re-entry after the contention gate).*
 
-**Skip conditions (set `gates.4c: browser_skipped` and proceed to GATE 4c immediately):**
-- `project.dev_server_command` is null or unset in `workflow.yaml`
-- `plan.md` contains no UI changes (no frontend/component/page/CSS/style mentions)
-- `chrome-devtools` MCP tools are unavailable
+### When this phase does not run
 
-If skipping: output "Browser verify skipped (<reason>). Run `/w-task` to commit."
+Three outcomes, and they are **not** interchangeable. Only the first two are decided
+without a human.
+
+| Outcome | Condition | `gates.4c` | Advance? |
+|---|---|---|---|
+| **Not applicable** | `plan.md` has no UI change — no frontend / component / page / CSS / style scope | `browser_not_applicable` | yes, immediately |
+| **Not available** | the `chrome-devtools` MCP is not configured at all, or `project.dev_server_command` is null — the check *cannot* be set up here | `browser_unavailable` | yes, but the reason ships in the PR description |
+| **Contended** | the MCP tools exist but are busy, locked, or held by another Claude session | see the protocol below | **no — never on your own** |
+
+Output for the first two: `Browser verify not run (<not applicable | not available>: <reason>). Run /w-task to commit.`
+
+Never record a contended run as skipped, unavailable, or passed. A check that could
+have run and did not is a decision for the operator, not a default.
+
+---
+
+### MCP contention protocol
+
+Symptoms: a `chrome-devtools` tool call fails with busy / locked / target-in-use /
+connection-refused, or the browser is visibly driven by another session.
+
+1. **Retry with backoff** for up to `verify.browser_wait_seconds` (default **180s**):
+   attempt at 0s, then every 15s. Report progress on one rewritten line —
+   `Browser MCP busy — retrying (<elapsed>s / <limit>s)` — not one line per attempt.
+2. **Acquired within the window** → continue to Execution below as normal.
+3. **Still blocked at the limit** → stop retrying, kill any dev server started, and
+   open the confirm gate:
+
+   ```
+   ⚠️ Browser verify could not start — the chrome-devtools MCP has been busy for <limit>s.
+      Likely another Claude session is holding the browser.
+
+   This task has UI changes, so the check is meaningful. Choose:
+     [w] wait — retry for another <limit>s (repeat as needed)
+     [s] skip — record `browser_skipped_by_operator` and continue to commit
+     [a] abort — stay at this gate; free the browser, then run /w-task
+
+   Reply with w / s / a.
+   ```
+
+   Set `gates.4c: browser_contended`, `status: gate_pending`, and record the elapsed
+   wait in `notes`. **GATE 4c-contended.**
+
+   - **w** → run another retry window, then re-show this gate if still blocked.
+   - **s** → set `gates.4c: browser_skipped_by_operator`, note who decided and why,
+     and carry that line into the PR description.
+   - **a** → leave state as is and stop. `/w-task` re-enters at step 1.
+
+The same protocol governs the visual verification step in Phase 5b.
 
 ---
 
@@ -804,7 +916,9 @@ Output: "Browser verify complete. Review verify.md § Browser Verify and screens
     ```
     Do NOT use `git add -A` — stage only files listed in `impact.md`.
 
-16. Update `state.yaml`: `phase: "5"`, `status: gate_pending`, `gates.4b: committed`.
+16. `w-codegraph sync` — the graph should match the tree the next phase reasons about.
+
+17. Update `state.yaml`: `phase: "5"`, `status: gate_pending`, `gates.4b: committed`.
 
 Output: "Implementation committed. Run `/w-task` to proceed to doc persistence."
 
@@ -819,8 +933,8 @@ Output: "Implementation committed. Run `/w-task` to proceed to doc persistence."
 Read doc-related fields from `workflow.yaml`.
 
 **If `docs_root` is null AND `module_docs_root` is null:** skip entirely.
-Update `state.yaml`: `gates.5: skipped`, `phase: "6"`, `status: gate_pending`.
-Output: "Doc roots not configured — skipping. Run `/w-task` to create the PR."
+Update `state.yaml`: `gates.5: skipped`, `phase: "5b"`, `status: gate_pending`.
+Output: "Doc roots not configured — skipping. Run `/w-task` to run acceptance verification."
 
 **Otherwise — invoke per-target helper skills (each skill is a no-op if its
 own config field is null):**
@@ -861,12 +975,107 @@ own config field is null):**
 
 Update `state.yaml`: `gates.5: docs_written`, `status: gate_pending`.
 
-Output: "Docs persisted and committed. Review changes, then run `/w-task` to
-proceed — Phase 6 will sync with default branch, run doc-gate, and create the PR automatically."
+Output: "Docs persisted and committed. Review changes, then run `/w-task` — Phase 5b
+verifies every ticket requirement against the delivered code, tests, docs and UI."
 
 **GATE 5:** developer reviews + runs `/w-task`.
 
-Update `state.yaml`: `phase: "6"`, `status: gate_pending`.
+Update `state.yaml`: `phase: "5b"`, `status: gate_pending`.
+
+---
+
+## Phase 5b — Acceptance Verify (AUTO, LOOPING → GATE 5b)
+
+*Triggers when `phase: "5b"` + `status: gate_pending`.*
+
+Phases 4 and 4c proved the code works. This phase proves it is **the thing that was
+asked for** — every requirement in the ticket traced to evidence, and, for UI work,
+the implementation compared against the design export so a redrawn icon or an eyeballed
+colour cannot reach the PR.
+
+Skipped entirely when `verify.acceptance: false` AND `verify.visual: false` — set
+`gates.5b: skipped`, `phase: "6"`, and say so.
+
+### 5b.1 — Verify
+
+**Invoke skill** `w-acceptance-verify <task-slug> --iteration <N>` (N starts at 1).
+
+It builds the requirement matrix from `intake.md`, `questions.md`, `plan.md` and the
+Figma spec, fans out independent adversarial verifiers, runs visual comparison against
+the design export, and writes `acceptance.md`. Its **exit code drives this phase**:
+
+- **exit 0** — no blocker, no major → go to 5b.3.
+- **exit non-zero** — go to 5b.2.
+
+The visual step drives the same browser MCP as Phase 4c and inherits its
+**contention protocol** — retry up to `verify.browser_wait_seconds`, then gate on the
+operator. Never self-record a contended visual check as NOT RUN.
+
+### 5b.2 — Fix, commit, re-document (one iteration)
+
+For each blocker and major in `acceptance.md § Findings`, in severity order:
+
+1. Make the **smallest change that closes the finding**. A finding about a wrong asset
+   is closed by using the real exported asset — never by adjusting the check.
+2. Re-run the test suite → must be GREEN. A fix that breaks a test is not a fix.
+3. **Commit it** — one commit per finding so the PR reads as a sequence of closures:
+   ```bash
+   git add <files changed by this fix>
+   git commit -m "fix(<scope>): <finding title> [<finding-id>]"
+   ```
+4. **Re-persist docs** for anything the fix changed — re-invoke the Phase 5 helpers
+   (`w-feature-record`, `w-api-doc`, `w-db-doc`) and commit the doc change in the same
+   iteration:
+   ```bash
+   git commit -m "docs(<module>): sync <feature-name> after <finding-id>"
+   ```
+   Docs must never lag the fix — `w-doc-gate` at Phase 6 enforces exactly this.
+5. `w-codegraph sync` so later queries see the fixed tree.
+
+Then increment the iteration and return to 5b.1.
+
+**Loop bound:** `verify.max_loops` (default **3**). Iterations are recorded in
+`state.yaml.gates.5b_iteration`. Never exceed the bound — re-running the same failing
+fix a fourth time is not progress, it is a decision the operator has not been given.
+
+### 5b.3 — Pass
+
+Update `state.yaml`: `gates.5b: accepted`, `phase: "6"`, `status: gate_pending`.
+
+Output:
+```
+Acceptance verified — <R> requirements, <N> fix iteration(s), visual: <PASS|NOT RUN (reason)>.
+Minor findings carried to the PR description: <m>
+Run /w-task to create the PR.
+```
+
+**GATE 5b:** developer runs `/w-task` → Phase 6.
+
+### 5b.4 — Loop exhausted
+
+When iteration `> max_loops` and blockers or majors remain, stop fixing. The skill
+writes `open-issues.md` — a one-screen, plain-language account of what is still wrong,
+what was tried, why it did not close, and what would unblock it.
+
+Update `state.yaml`: `status: blocked`, `gates.5b: open_issues`.
+
+Output:
+```
+⚠️ <N> issue(s) survived <max_loops> fix attempts — see open-issues.md.
+
+Everything else is complete: code committed, tests GREEN, docs persisted.
+
+  [c] continue to Phase 6 and open the PR with these known gaps documented
+  [p] re-plan — return to Phase 1 with open-issues.md as input
+  [f] you fix it — I stay at this gate; run /w-task when done
+
+Reply with c / p / f.
+```
+
+- **c** → carry `open-issues.md` verbatim into the PR description under
+  **Known gaps**, set `gates.5b: accepted_with_gaps`, `phase: "6"`.
+- **p** → `phase: "1"`, `status: gate_pending`, keep `open-issues.md` as planner input.
+- **f** → stay put. On re-entry, restart at 5b.1 with the iteration counter reset to 1.
 
 ---
 
@@ -879,11 +1088,11 @@ Phase 6 is the **final** phase and runs fully automatically when the developer r
 `REPOS`** (main workspace + submodules), opening one PR per repo that has commits,
 each against that repo's own default branch.
 
-**Terminal contract (Issue 1):** the very last action of this workflow is creating
-the PR(s). Once all PRs exist, w-task performs a **single** final state write
-(`status: complete`) and stops. After that, `state.yaml` is final — it is never
-updated again, and a subsequent `/w-task` is a no-op that just reprints the PR
-URLs (see § "Re-running a complete task").
+**Terminal contract:** once all PRs exist, w-task performs a **single** final state
+write (`status: complete`), then 6.3 commits and pushes that record into the PR branch.
+After that, `state.yaml` is final — it is never updated again, and a subsequent
+`/w-task` is a no-op that just reprints the PR URLs (see § "Re-running a complete
+task"). The workflow never ends with uncommitted state.
 
 ---
 
@@ -979,14 +1188,68 @@ prs:
 last_updated: <timestamp>
 ```
 
+Then run 6.3 — the workflow does not end with a dirty tree.
+
+---
+
+### 6.3 — Ship the final state (AUTO, last action)
+
+A completed task used to leave `state.yaml` and the task's markdown modified but
+uncommitted, so the PR carried an implementation whose own record was missing. Close
+that: the terminal write is committed and pushed into the PR that was just opened.
+
+1. **Is the state tracked?** `state_root` under a gitignored path (the default
+   `.workflow`) is ephemeral scratch — nothing to commit:
+   ```bash
+   git check-ignore -q <state_root> && echo ephemeral
+   ```
+   If ephemeral: say `State root is gitignored — nothing to commit.` and stop here.
+
+2. **Commit the task record** in the repo that holds it (normally the main workspace `.`):
+   ```bash
+   git -C <repo> add <state_root>/<task-slug>/
+   git -C <repo> commit -m "chore(<task-slug>): finalize workflow state"
+   ```
+   Stage the task folder only — never `git add -A`. This picks up `state.yaml` plus
+   every artefact the run produced: `intake.md`, `context.md`, `questions.md`, `plan.md`,
+   `impact.md`, `tests.md`, `verify.md`, `acceptance.md`, `open-issues.md`, `pr.md`,
+   and the browser / parity screenshots.
+
+3. **Push to the PR branch** — a plain fast-forward push to the branch the PR was opened
+   from, so the PR updates in place:
+   ```bash
+   git -C <repo> push <remote> HEAD:<current-branch>
+   ```
+   **Never `--force`, never `--force-with-lease`, never rewrite history here.** The PR
+   may already have review comments anchored to these commits.
+
+   If the push is rejected as non-fast-forward, someone else pushed to the branch:
+   ```bash
+   git -C <repo> pull --rebase=false <remote> <current-branch>   # merge, do not rebase
+   git -C <repo> push <remote> HEAD:<current-branch>
+   ```
+   If it still fails, report it plainly and leave the commit local — a stuck push is a
+   thing to tell the operator, not to force past.
+
+4. If several repos carry task state (rare — a submodule with its own `state_root`),
+   repeat 2–3 per repo, submodules first.
+
 Then output and **stop** — no further state writes, nothing more to advance:
 ```
 ✓ Task complete. <N> PR(s) created:
   apps/api → master   <url>
   .        → main      <url>
 
+Final state committed and pushed to <branch> — the PR carries the full task record.
 Docs ship with code — no post-merge sync needed.
 state.yaml is final; the workflow has stopped.
+```
+
+If step 3 could not push:
+```
+✓ PR(s) created, but the final state commit is still local:
+  <reason>
+  Push it with: git -C <repo> push <remote> HEAD:<branch>
 ```
 
 ---
@@ -1013,14 +1276,23 @@ complete. This keeps Phase 6 strictly terminal.
 | "4" | gate_pending | — | GREEN + checks cycle |
 | "4" | gate_pending | checks_green | Phase 4c (browser verify AUTO) |
 | "4" | gate_pending | browser_verified | Commit → Phase 5 |
-| "4" | gate_pending | browser_skipped | Commit → Phase 5 |
+| "4" | gate_pending | browser_not_applicable | Commit → Phase 5 (no UI scope) |
+| "4" | gate_pending | browser_unavailable | Commit → Phase 5 (reason ships in PR) |
+| "4" | gate_pending | browser_contended | Operator replies w / s / a → retry, skip, or hold |
+| "4" | gate_pending | browser_skipped_by_operator | Commit → Phase 5 (decision noted) |
 | "4" | gate_pending | browser_error | Commit → Phase 5 (with error noted) |
 | "5" | gate_pending | pending | Phase 5 doc persist or skip |
-| "5" | gate_pending | docs_written | Phase 6 AUTO (branch sync → doc gate → PR) |
+| "5" | gate_pending | docs_written | Phase 5b AUTO (acceptance verify) |
+| "5" | gate_pending | skipped | Phase 5b AUTO (acceptance verify) |
+| "5b" | gate_pending | — | Phase 5b.1: run `w-acceptance-verify` |
+| "5b" | gate_pending | accepted | Phase 6 AUTO (branch sync → doc gate → PR) |
+| "5b" | gate_pending | accepted_with_gaps | Phase 6 AUTO, `open-issues.md` in PR body |
+| "5b" | gate_pending | skipped | Phase 6 AUTO |
+| "5b" | **blocked** | open_issues | Operator replies c / p / f → PR with gaps, re-plan, or hold |
 | "6" | gate_pending | — | Phase 6.0: per-repo fetch + merge each repo's default branch |
 | "6" | gate_pending | conflict_pending | Developer resolves conflicts in flagged repo → runs `/w-task` |
 | "6" | gate_pending | synced | Phase 6.1: doc gate |
-| "6" | gate_pending | doc_gate_passed | Phase 6.2: one PR per changed repo → `status: complete` (terminal) |
+| "6" | gate_pending | doc_gate_passed | Phase 6.2: one PR per repo → 6.3 commit + push state → `status: complete` |
 | "6" | **complete** | — | **Terminal** — no-op; reprints stored `prs:` URLs |
 
 ---

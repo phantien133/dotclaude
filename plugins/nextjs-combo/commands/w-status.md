@@ -60,6 +60,7 @@ If file missing: say "No state.yaml found for `<task-slug>`. The task may not ha
 Task:    <task>
 Phase:   <phase> — <phase-name>
 Status:  <status>
+Graph:   <ready | stale | not-indexed | unavailable | disabled>   (state.yaml codegraph)
 
 Gates:
   0   Intake         <confirmed | pending | not_reached>
@@ -68,8 +69,10 @@ Gates:
   2   Impact         <approved | pending | not_reached>
   3   UI             <approved | skipped | pending | not_reached>
   4a  TDD Review     <approved | pending | not_reached>
+  4c  Browser        <verified | not_applicable | unavailable | contended | skipped_by_operator | error | not_reached>
   4b  Commit         <done | pending | not_reached>
   5   Docs           <done | skipped | pending | not_reached>
+  5b  Acceptance     <accepted | accepted_with_gaps | open_issues | skipped | iteration <N>/<max> | not_reached>
   6   PR             <complete | not_reached>
 
 PRs (if status complete — from state.yaml prs[]):
@@ -85,7 +88,11 @@ If `state.yaml` has a `prs:` list, render one line per entry. Omit the block whe
 
 Phase name map:
 `"0"` → Intake, `"0b"` → Context Load, `"1"` → Plan,
-`"2"` → Impact, `"3"` → UI, `"4"` → TDD, `"5"` → Docs, `"6"` → PR
+`"2"` → Impact, `"3"` → UI, `"4"` → TDD, `"5"` → Docs,
+`"5b"` → Acceptance Verify, `"6"` → PR
+
+When `gates.5b` is `open_issues`, add one line after the gate list:
+`⚠️ <N> open issue(s) — see open-issues.md`
 
 ---
 
@@ -96,7 +103,8 @@ ls <state_root>/<task-slug>/
 ```
 
 Show which of these exist: `intake.md`, `context.md`, `questions.md`, `plan.md`,
-`impact.md`, `ui-inventory.md`, `tests.md`, `verify.md`, `pr.md`
+`impact.md`, `ui-inventory.md`, `figma-spec.md`, `figma-parity-report.md`, `tests.md`,
+`verify.md`, `acceptance.md`, `open-issues.md`, `pr.md`
 
 ---
 
@@ -105,4 +113,7 @@ Show which of these exist: `intake.md`, `context.md`, `questions.md`, `plan.md`,
 Based on `phase` + `status`:
 - `gate_pending` → "Run `/w-task` to advance to next phase."
 - `complete` → "Task complete and **terminal** — all PR(s) created (see `prs:` above / `pr.md`). Nothing left to run."
-- `blocked` → "Task is blocked — see `state.yaml notes` field."
+- `blocked` + `gates.5b: open_issues` → "Acceptance verification exhausted its fix loop —
+  read `open-issues.md`, then run `/w-task` and reply c (PR with known gaps), p (re-plan)
+  or f (you fix it)."
+- `blocked` (other) → "Task is blocked — see `state.yaml notes` field."
