@@ -9,8 +9,11 @@ source:
   ref: components
 imported_at: "2026-05-13"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Workflow v3 (2026-08-26): a default reset now also deletes acceptance.md, open-issues.md and
+  figma-parity-report.md — a stale verdict left behind would be read as current by the next run.
+  The .codegraph/ index is deliberately untouched: it describes the repo, not the task.
 notes: >-
   Workflow task reset. Default: resets state.yaml to phase 0, preserves docs.
   --wipe: removes the entire task folder. Reads state_root from .claude/workflow.yaml.

@@ -14,6 +14,12 @@ modifications: >-
   Workflow v2 (multi-repo). Reads top-level repos[] for the PR row; renders one line
   per repo from state.yaml prs[] when status is complete. The complete-status next-step
   message now states the task is terminal (all PRs created, nothing left to run).
+  Workflow v3 (2026-08-26): status card gained a Graph row (state.yaml codegraph), a 4c Browser gate
+  row with the split outcomes (verified / not_applicable / unavailable / contended /
+  skipped_by_operator / error) and a 5b Acceptance row including the live iteration counter.
+  Phase name map covers "5b"; document list covers acceptance.md, open-issues.md,
+  figma-spec.md and figma-parity-report.md; a blocked task with open issues gets an explicit
+  next-action line instead of the generic blocked message.
 notes: >-
   Read-only workflow state display. Lists all task folders under state_root, shows
   phase/status table. Reads .claude/workflow.yaml for state_root path. No side effects.

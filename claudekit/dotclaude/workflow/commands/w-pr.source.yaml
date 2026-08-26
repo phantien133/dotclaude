@@ -21,6 +21,11 @@ modifications: >-
   falling back to pr.default_branch; runs git/glab inside REPO_PATH so submodules target
   their own default branch. pr.md is now appended (one block per repo) instead of overwritten;
   the command no longer mutates workflow phase/status (the caller marks complete).
+  Workflow v3 (2026-08-26): default MR body gained a § Verification section (verify.md check table,
+  browser-verify verdict WITH its not-run reason, acceptance.md verdict + visual result) and a
+  § Known gaps section that inlines open-issues.md verbatim when the Phase 5b fix loop was
+  exhausted, so a reviewer sees what survived before approving. A check that did not run is
+  never omitted — silence would read as a pass.
 notes: >-
   MR creation command for workflow tasks. Args: <task-slug>. Reads pr.* settings
   from .claude/workflow.yaml and plan.md from state folder to build MR body.

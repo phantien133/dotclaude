@@ -17,6 +17,12 @@ modifications: >-
   submodules and each repo's own default branch. New Step 7a configures the top-level
   repos[] list ({path, default_branch, remote}; path "." = main workspace) so a
   superproject can mix main and master per repo. Written YAML is version: 2 with repos[].
+  Workflow v3 (2026-08-26): CURRENT_VERSION 2 -> 3. Step 0a migration is now staged (v1->v2 repos[],
+  then v2->v3) and add-only. v3 adds project.codegraph.{enabled,auto_index,sync_phases} and
+  verify.{acceptance,visual,max_loops,browser_wait_seconds}, plus project.dev_server_command/port
+  in the written template. New Step 5a (CodeGraph probe + one confirm card, never indexes here —
+  w-task asks on the first task) and Step 5b (acceptance verification defaults). Summary card
+  reports config version 3, CodeGraph and Acceptance rows.
 notes: >-
   Workflow config wizard. Writes .claude/workflow.yaml — consumed by w-task, w-fix,
   w-status, w-reset, w-pr, w-checkpoint. Spawns code-explorer agent to survey project
