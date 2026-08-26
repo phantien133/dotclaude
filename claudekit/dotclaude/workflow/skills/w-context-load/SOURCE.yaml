@@ -9,8 +9,13 @@ source:
   ref: components
 imported_at: "2026-05-14"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Workflow v3 (2026-08-26): Step 4 gained a CodeGraph fast path — when state.yaml.codegraph
+  is ready/stale it runs `codegraph sync` + `codegraph context "<task>"` and uses that single
+  bounded call as § Relevant Files instead of the git ls-files + git grep inventory and the
+  per-file Read that followed it. README-filtered and generic grep paths are kept as
+  fallbacks, and context.md now records which path produced the inventory.
 notes: >-
   Phase 0b helper for w-task. Generic version of dev-task's streaming-docs context
   load: reads module README + features/*.md + workflow-links instead of raw git-grep.

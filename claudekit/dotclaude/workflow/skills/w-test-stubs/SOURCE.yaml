@@ -6,8 +6,12 @@ source:
   ref: components
 imported_at: "2026-05-14"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Workflow v3 (2026-08-26): added Step 0 — with a CodeGraph index, `codegraph affected` finds the
+  tests that already cover the changed files so they are EXTENDED rather than shadowed by a new
+  stub for the same subject. Only uncovered files fall through to the layer-glob classifier, and
+  the summary distinguishes extended from created.
 notes: >-
   Phase 4 helper. Classifies each affected file by layer (unit/graphql/bullmq/
   nestjs/nextjs/integration) and writes layer-appropriate test boilerplate, so

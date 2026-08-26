@@ -6,8 +6,13 @@ source:
   ref: components
 imported_at: "2026-05-14"
 license: MIT
-modified: false
-modifications: null
+modified: true
+modifications: >-
+  Workflow v3 (2026-08-26): § Affected Files is now derived from the CodeGraph index when one
+  exists — `codegraph impact/callers/callees` per changed symbol, unioned, with each row marked
+  plan- or graph-derived. The graph set is authoritative because it surfaces indirect callers
+  that plan prose and name greps miss; a graph-reported file is never dropped for being absent
+  from the plan. Plan-derived extraction remains the fallback.
 notes: >-
   Phase 2 helper. Enriches impact.md with DB/GraphQL/queue/cache sections by
   reading schema_paths.* + scanning module_glob for async/cache patterns. Auto-

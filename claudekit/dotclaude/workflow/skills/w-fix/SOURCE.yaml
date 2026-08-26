@@ -19,6 +19,13 @@ modifications: >-
   /w-pr per changed repo with --repo/--target, then a single final state write sets
   status: complete with prs[]. A later /w-fix on a complete task is a no-op that
   reprints the PR URLs.
+  Workflow v3 (2026-08-26): Setup check probes w-codegraph once; 0.3 locates affected files via
+  `codegraph query/callers/affected` when an index exists (a bug with no covering test in the
+  affected list tells you what to write first), git grep otherwise. Phase 3 no longer ends with
+  a dirty tree — after the terminal state write it commits <state_root>/<task-slug>/ and pushes
+  it to the PR branch with a plain fast-forward push (never --force, never a rewrite); a
+  gitignored state_root is detected and skipped, and a rejected push is merged then retried,
+  or reported and left local.
 notes: >-
   Lightweight bug-fix workflow. 4 phases: intake + locate → fix → commit + docs →
   PR. Scoped to ≤3 files, ≤2h; escalates to /w-task if scope grows. Config-driven
