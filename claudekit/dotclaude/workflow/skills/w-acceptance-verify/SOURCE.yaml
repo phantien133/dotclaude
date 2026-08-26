@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 34cad7d0461e7774892f5aa6dc26dc9230272431
+  path: workflow/skills/w-acceptance-verify
+  ref: develop
+imported_at: "2026-08-26"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored Phase 5b helper. Builds a stable requirement-to-evidence matrix from
+  intake / questions / plan / figma spec, fans out adversarial verifier agents (ticket
+  coverage, test adequacy, language review, doc accuracy, out-of-scope), and runs visual
+  verification against the Figma design export so wrong or invented assets are caught
+  before the PR. Writes acceptance.md; on an exhausted fix loop writes a human-readable
+  open-issues.md and sets status: blocked. Exit code is 0 only when no blocker and no
+  major finding remains, which is what drives the w-task Phase 5b loop.
+dependencies:
+  required:
+    agents:
+      - code-reviewer
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents:
+      - planner
+      - tdd-guide
+      - figma-visual-verifier
+      - typescript-reviewer
+      - flutter-reviewer
+    skills:
+      - figma-verify-parity
+      - w-codegraph
+      - w-feature-record
+      - w-api-doc
+      - w-db-doc
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: chrome-devtools-mcp
+      type: npm
+      reason: >-
+        Used by the visual verification step to render implemented screens on localhost
+        for comparison against the Figma export. Subject to the same MCP contention
+        protocol as w-task Phase 4c — the step gates on a human decision rather than
+        silently recording NOT RUN.
+tags:
+  - workflow
+  - phase-5b
+  - acceptance
+  - verification
+  - visual-parity
+  - traceability
+categories:
+  purpose:
+    - dev-workflow
+    - quality-gate
+    - doc-governance
+  mechanism:
+    - agent-fanout
+    - gate-based
+    - loop

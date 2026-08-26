@@ -1,0 +1,50 @@
+# yaml-language-server: $schema=../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/phantien133/dotclaude
+  commit: 34cad7d0461e7774892f5aa6dc26dc9230272431
+  path: workflow/skills/w-codegraph
+  ref: develop
+imported_at: "2026-08-26"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  Self-authored code-intelligence helper. Wraps the codegraph CLI (detect / ensure /
+  sync / context / impact / affected / query) behind one skill so w-task Phases 0b, 2
+  and 4 and w-fix can query a knowledge graph instead of grepping the tree. Every
+  subcommand exits 0 with a CODEGRAPH: status line when the binary or index is
+  missing, so callers keep their git-grep fallback and no phase can be broken by it.
+  The .codegraph/ index is a local build artefact and is gitignored, never committed.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external:
+    - name: codegraph
+      type: system_binary
+      reason: >-
+        Provides the code knowledge graph (codegraph init/sync/status/context/impact/
+        affected/query). Optional — every consumer falls back to git grep when the
+        binary or the .codegraph/ index is absent.
+tags:
+  - workflow
+  - codegraph
+  - code-intelligence
+  - performance
+  - phase-0b
+categories:
+  purpose:
+    - dev-workflow
+    - code-exploration
+  mechanism:
+    - cli-wrapper
+    - graceful-degradation
