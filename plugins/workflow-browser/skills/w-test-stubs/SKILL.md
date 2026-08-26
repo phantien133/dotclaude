@@ -12,6 +12,8 @@ the boilerplate appropriate to each affected file's layer.
 Reads `.claude/workflow.yaml`:
 - `project.test_layers` (e.g. `[unit, integration, graphql, bullmq]`)
 - `project.test_command`
+- `project.codegraph.*` — when a CodeGraph index is usable, Step 0 finds the tests that
+  already cover the change
 
 ---
 
@@ -20,6 +22,29 @@ Reads `.claude/workflow.yaml`:
 - `$1` — task slug
 
 Reads `<state_root>/<task-slug>/impact.md`.
+
+---
+
+## Step 0 — Existing coverage (CodeGraph)
+
+*Runs when `state.yaml.codegraph` is `ready` or `stale`, or when w-task passes an
+affected-test list.*
+
+```bash
+codegraph affected <files from impact.md § Affected Files> --depth 5 --quiet
+```
+
+Every path returned is a test that **already exercises code in scope**. For each:
+
+- **Extend it** — add the new cases to that file. Do not create a parallel stub for
+  the same subject; two half-covering suites for one unit is worse than one, because
+  neither run tells you the subject is covered.
+- Record it in the summary as `extended` rather than `created`.
+
+Only files with no covering test proceed to Step 1.
+
+Without CodeGraph, the layer-glob conventions below decide the target path, and an
+existing file at that path is preserved (never overwritten) as before.
 
 ---
 

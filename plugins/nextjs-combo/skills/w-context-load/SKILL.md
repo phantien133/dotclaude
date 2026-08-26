@@ -16,6 +16,8 @@ Reads `.claude/workflow.yaml` to find:
 - `workflow.workflow_links_filename`
 - `project.module_glob`
 - `project.src_dirs`
+- `project.codegraph.*` — when a CodeGraph index is usable, Step 4 queries it instead
+  of grepping the tree
 
 ---
 
@@ -62,19 +64,37 @@ If `<module_docs_root>/<NN>-<module>/<feature_records_subdir>/` exists:
 
 ---
 
-## Step 4 — Read code (filtered by README)
+## Step 4 — Read code (CodeGraph first, README-filtered otherwise)
 
-Use the Implementation Status ✅ Complete list to scope file reads:
-- For each ✅ item, find the matching file under `project.module_glob` /
+**A. CodeGraph path** — when `state.yaml.codegraph` is `ready` or `stale`:
+
+```bash
+codegraph sync -q
+codegraph context "<title> — <one-line description>" --max-nodes 60 --max-code 12
+```
+
+One call returns the relevant symbols, their files and the code that matters. Use it
+as § Relevant Files and as the raw material for § Patterns Observed. Do **not** then
+re-read those files individually — that spends the saving the graph just made. Read a
+file directly only for something the graph did not surface (a config file, a migration).
+
+Narrow to the current module with a repeat query when the graph returns cross-module
+noise: `codegraph query "<module keyword>" --limit 15 --json`.
+
+**B. README-filtered path** — no CodeGraph, module README present:
+- For each ✅ Complete item, find the matching file under `project.module_glob` /
   `project.src_dirs` and read it.
 - Skip ⏳ Deferred items — they don't exist yet.
 
-If no README available, fall back to generic Phase 0b behaviour:
+**C. Generic fallback** — neither available:
 ```bash
 git ls-files | head -300
 git grep -l "<keyword>" 2>/dev/null | head -20
 ```
 Read top 3-5 matched files.
+
+Record which path ran in context.md § Relevant Files (`source: codegraph | readme | grep`)
+so a later phase knows how the inventory was built.
 
 ---
 

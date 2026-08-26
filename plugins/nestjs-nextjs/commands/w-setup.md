@@ -20,37 +20,85 @@ All workflow skills (`w-task`, `w-fix`, `w-status`, etc.) read this file.
 cat .claude/workflow.yaml 2>/dev/null
 ```
 
-This wizard writes config schema **`CURRENT_VERSION = 2`**. Read the existing
+This wizard writes config schema **`CURRENT_VERSION = 3`**. Read the existing
 file's `version:` field (treat a missing `version:` as `1`) and branch:
 
 - **File missing + no `--reset`:** proceed to Step 1 (fresh setup).
 
-- **File exists, `version == 2`, no `--reset`:** display current config and say:
-  > Config already exists (version 2). Run `/w-setup --reset` to reconfigure, or `/w-task <title>` to start a task.
+- **File exists, `version == 3`, no `--reset`:** display current config and say:
+  > Config already exists (version 3). Run `/w-setup --reset` to reconfigure, or `/w-task <title>` to start a task.
   Stop here.
 
-- **File exists, `version < 2` (or no `version:`), no `--reset`:** an older config
+- **File exists, `version < 3` (or no `version:`), no `--reset`:** an older config
   was detected → **offer auto-migration** (do NOT silently overwrite, do NOT force a
   full re-interview). See **Step 0a — Migrate** below.
 
-- **File exists, `version > 2`:** the config is newer than this wizard. Say:
-  > ⚠️ workflow.yaml is version `<N>`, but this `/w-setup` only understands version 2.
+- **File exists, `version > 3`:** the config is newer than this wizard. Say:
+  > ⚠️ workflow.yaml is version `<N>`, but this `/w-setup` only understands version 3.
   > Update the workflow plugin before reconfiguring, or edit the file by hand.
   Stop here — do not rewrite.
 
 - **`--reset` flag (any version):** display current config, proceed to Step 1
   (existing values shown as defaults). A `--reset` run also upgrades the file to
-  version 2 on write.
+  version 3 on write.
 
 ---
 
 ## Step 0a — Migrate older config (auto, with confirm)
 
-*Only when an existing file has `version < 2`.*
+*Only when an existing file has `version < 3`.*
 
-The breaking addition in v2 is the top-level **`repos:`** list (per-repo default
-branch — see Step 7a). Migration preserves every existing value and only ADDS the
-new fields. No re-interview.
+Migration is **add-only**: every existing value is preserved verbatim, and each
+version's additions are applied in order. No re-interview.
+
+| Target | Adds |
+|---|---|
+| v2 | top-level `repos:` — per-repo default branch (Step 7a) |
+| v3 | `project.codegraph.*` — CodeGraph fast path (Step 5a)<br>`verify.*` — Phase 5b acceptance verification (Step 5b) |
+
+Run the v1→v2 block below when the file is below 2, then the v2→v3 block. A file
+already at 2 skips straight to v2→v3.
+
+### v2 → v3 additions
+
+1. **Probe for CodeGraph:**
+   ```bash
+   command -v codegraph >/dev/null 2>&1 && echo binary
+   test -d .codegraph && echo indexed
+   ```
+   - binary + index → `enabled: auto`, `auto_index: true`
+   - binary, no index → `enabled: auto`, `auto_index: true` (w-task asks once, per task)
+   - no binary → still write `enabled: auto` — the block costs nothing and starts
+     working the day the binary is installed.
+
+2. **Show the v3 card:**
+   ```
+   Detected workflow.yaml version: <N> (current: 3)
+
+   Will ADD:
+     + version: 3
+     + project.codegraph:      enabled: auto   auto_index: true
+         CodeGraph: <found, indexed | found, not indexed | not installed>
+         Phases 0b / 2 / 4 query the graph instead of grepping — falls back on its own.
+     + verify:                 acceptance: true   visual: auto   max_loops: 3
+                               browser_wait_seconds: 180
+         Adds Phase 5b: every ticket requirement traced to evidence, UI compared
+         against the Figma export, findings fixed in at most 3 committed iterations.
+
+   All existing settings are preserved.
+
+   Migrate now? [Y]es / [e]dit a value / [n]o (keep as-is): ___
+   ```
+
+3. **Y / Enter** → write the upgraded file with `version: 3` plus both blocks.
+   **e** → ask which value to change, set it, re-show the card.
+   **n** → leave untouched. w-task still runs; it prints a one-line notice that
+   codegraph and acceptance verification are off until the file is migrated.
+
+### v1 → v2 additions
+
+The addition in v2 is the top-level **`repos:`** list (per-repo default branch —
+see Step 7a).
 
 1. **Detect repos / submodules** of the project:
    ```bash
@@ -398,6 +446,60 @@ Accept all? [Y]es / [e]dit specific fields: ___
 
 ---
 
+## Step 5a — Code intelligence (CodeGraph)
+
+Probe, then confirm — this is one question, not an interview:
+
+```bash
+command -v codegraph >/dev/null 2>&1 && echo binary
+test -d .codegraph && echo indexed
+```
+
+```
+Code intelligence:
+
+  CodeGraph: <found + indexed | found, no index yet | not installed>
+
+  With an index, w-task Phases 0b / 2 / 4 ask the graph which files matter instead
+  of grepping the tree — same answers, far fewer reads. Without it every phase
+  falls back to git grep on its own; nothing breaks either way.
+
+  codegraph.enabled:    auto      (use it whenever an index exists)
+  codegraph.auto_index: true      (offer to build one, once, on the first task)
+
+Accept? [Y]es / [e]dit / [d]isable entirely: ___
+```
+
+`d` writes `enabled: false` — every phase then uses git grep and never mentions it again.
+
+If the binary is present but `.codegraph/` is missing, do **not** index here — w-task
+asks at the start of the first task, when the developer is already waiting on it.
+Add `.codegraph/` to `.gitignore` if absent: the index is a local build artefact.
+
+---
+
+## Step 5b — Acceptance verification
+
+```
+Acceptance verification (w-task Phase 5b — runs after docs, before the PR):
+
+  Traces every requirement in the ticket to evidence in the code, tests and docs,
+  and for UI work compares the implementation against the Figma export so a redrawn
+  icon or an eyeballed colour cannot reach the PR. Findings are fixed, committed and
+  re-documented in a bounded loop; whatever survives is written up for you in plain
+  language instead of being retried forever.
+
+  verify.acceptance:            true    (requirement traceability)
+  verify.visual:                auto    (runs when the task has UI + a design ref)
+  verify.max_loops:             3       (fix iterations before handing back to you)
+  verify.browser_wait_seconds:  180     (how long to wait out a busy browser MCP
+                                         before asking you whether to wait or skip)
+
+Accept? [Y]es / [e]dit: ___
+```
+
+---
+
 ## Step 6 — Commands
 
 Show survey findings. Prefer CI-extracted commands over detected — mark clearly:
@@ -465,8 +567,9 @@ Write `.claude/workflow.yaml`:
 
 ```yaml
 # Generated by /w-setup — edit manually if needed
-# Consumed by: w-task, w-fix, w-status, w-reset, w-checkpoint, w-pr
-version: 2
+# Consumed by: w-task, w-fix, w-status, w-reset, w-checkpoint, w-pr,
+#              w-codegraph, w-acceptance-verify
+version: 3
 
 # Repos this workflow operates on. path "." is the main workspace; the rest are
 # git submodules. Each repo has its OWN default branch — they need not agree
@@ -512,6 +615,20 @@ project:
     prisma: <path or null>                 # e.g. prisma/schema.prisma
     graphql: <glob or null>                # e.g. src/**/*.graphql
   test_layers: <list or [unit]>            # e.g. [unit, integration, graphql, bullmq]
+  dev_server_command: <command or null>    # e.g. pnpm dev — null disables Phase 4c
+  dev_server_port: <port or null>          # e.g. 3000
+  codegraph:
+    enabled: auto                          # auto | true | false — auto = use when .codegraph/ exists
+    auto_index: true                       # offer to build the index once, on the first task
+    sync_phases: [0b, 2, 4, 5b]            # phases that refresh the graph before working
+
+# Phase 5b — acceptance verification. Set both `acceptance` and `visual` to false
+# to disable the phase entirely.
+verify:
+  acceptance: true                         # requirement-to-evidence traceability
+  visual: auto                             # auto | true | false — needs a design reference
+  max_loops: 3                             # fix iterations before handing back to the operator
+  browser_wait_seconds: 180                # MCP contention wait before the confirm gate
 
 pr:
   default_branch: <branch>           # = repos[path="."].default_branch — fallback for older consumers
@@ -548,7 +665,7 @@ Survey applied:
   Commands:     from CI / detected / manual
 
 Config written:
-  Version:        2
+  Version:        3
   Repos:          <N> (. → <branch>[, apps/api → master, ...])
   Issue tracker:  <type>
   State root:     .workflow/  (added to .gitignore)
@@ -562,6 +679,8 @@ Config written:
   Test:           <command or "none">
   Typecheck:      <command or "none">
   Lint:           <command or "none">
+  CodeGraph:      <auto — indexed | auto — not indexed | not installed | disabled>
+  Acceptance:     <on — visual auto, max 3 loops | off>
   PR:             <draft/open>, one PR per repo against its own default branch
 
 Next steps:
