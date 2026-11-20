@@ -23,6 +23,10 @@ dotclaude/
 │   │   └── skills/
 │   ├── openai-skills/              # vendored from openai/skills (Figma's own skills)
 │   │   └── skills/                 # figma, figma-implement-design, figma-use, …
+│   ├── 37signals-skills/           # vendored from marckohlbrugge/37signals-skills (Rails)
+│   │   └── skills/
+│   ├── pproenca-skills/            # vendored from pproenca/dot-skills (RSpec rails-testing)
+│   │   └── skills/
 │   ├── dotclaude/                  # self-authored — phantien133/dotclaude
 │   │   ├── dotclaude-self/         # preset wizards, component picker, plugin discovery
 │   │   ├── workflow/               # w-* dev workflow (w-task, w-fix, …)
@@ -74,6 +78,8 @@ pnpm typecheck && pnpm test
 | `everything-claude-code` | `claudekit/everything-claude-code/` | affaan-m/everything-claude-code |
 | `anthropic-skills` | `claudekit/anthropic-skills/` | anthropics/skills |
 | `openai-skills` | `claudekit/openai-skills/` | openai/skills — Figma-authored figma-* skills, **Figma Developer Terms** (not MIT); keep each skill's `LICENSE.txt` |
+| `37signals-skills` | `claudekit/37signals-skills/` | marckohlbrugge/37signals-skills — Rails-the-37signals-way skills; MIT, but Fizzy code examples are **O'Saasy License** |
+| `pproenca-skills` | `claudekit/pproenca-skills/` | pproenca/dot-skills — RSpec rails-testing (MIT) |
 | `dotclaude-self` | `claudekit/dotclaude/dotclaude-self/` | self — preset wizards |
 | `workflow` | `claudekit/dotclaude/workflow/` | self — w-* dev workflow |
 | `figma` | `claudekit/dotclaude/figma/` | self — f-* Figma suite |

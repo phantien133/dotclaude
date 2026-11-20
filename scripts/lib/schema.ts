@@ -47,6 +47,8 @@ export type ExternalSetupEntry = z.infer<typeof ExternalSetupEntrySchema>;
 //   everything-claude-code → claudekit/everything-claude-code/
 //   anthropic-skills       → claudekit/anthropic-skills/
 //   openai-skills          → claudekit/openai-skills/
+//   37signals-skills       → claudekit/37signals-skills/
+//   pproenca-skills        → claudekit/pproenca-skills/
 //   dotclaude-self         → claudekit/dotclaude/dotclaude-self/
 //   workflow               → claudekit/dotclaude/workflow/
 //   figma                  → claudekit/dotclaude/figma/
@@ -55,6 +57,8 @@ export const CLAUDEKIT_SOURCES = [
   'everything-claude-code',
   'anthropic-skills',
   'openai-skills',
+  '37signals-skills',
+  'pproenca-skills',
   'dotclaude-self',
   'workflow',
   'figma',

@@ -110,6 +110,36 @@ sources:
     role: sync_source
     license: per-skill
 
+  signals37_skills:
+    name: 37signals-skills
+    description: >-
+      Unofficial agent skills + reference guide for writing Rails the 37signals way —
+      extracted from Fizzy, Campfire, and DHH's code reviews (marckohlbrugge). Skills:
+      rails-best-practices-core, rails-testing (Minitest), rails-migrations,
+      rails-security-multitenancy, rails-jobs, rails-webhooks, rails-hotwire-realtime, dhh.
+      Not affiliated with 37signals. Licensing: skills/commentary MIT; code examples
+      extracted from Fizzy are under the O'Saasy License (https://osaasy.dev). No LICENSE
+      file at repo root — the terms are stated in README § License.
+    repo: https://github.com/marckohlbrugge/37signals-skills
+    local_path: upstream/37signals-skills
+    pinned_commit: c58e7d51e322442cd33674e17d074d093ed24f83
+    ref: main
+    role: sync_source
+    license: MIT (skills) + O'Saasy (Fizzy code examples)
+
+  pproenca_skills:
+    name: pproenca-skills
+    description: >-
+      pproenca/dot-skills — large curated skill catalog (rule-per-file references). Source of
+      the RSpec-focused rails-testing skill (skills/.curated/rails-testing). Also has
+      rails-dev, ruby-refactor, ruby-optimise for future Ruby coverage.
+    repo: https://github.com/pproenca/dot-skills
+    local_path: upstream/pproenca-skills
+    pinned_commit: cf93c57cac89d6fc3e4194686000411567f5caf3
+    ref: main
+    role: sync_source
+    license: MIT
+
   pm_skills:
     name: pm-skills
     description: Product-management skills collection by Pawel Huryn — PRD/strategy/discovery/GTM/analytics skill packs (pm-execution, pm-product-strategy, pm-product-discovery, pm-go-to-market, pm-market-research, pm-marketing-growth, pm-data-analytics, pm-ai-shipping, pm-toolkit). No infra/aws content. Vendorable (MIT).

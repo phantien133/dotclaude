@@ -1,0 +1,35 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/marckohlbrugge/37signals-skills
+  commit: c58e7d51e322442cd33674e17d074d093ed24f83
+  path: skills/rails-webhooks
+  ref: main
+imported_at: "2026-11-20"
+license: MIT (skill text); embedded Fizzy code examples under O'Saasy License (https://osaasy.dev)
+modified: false
+modifications: null
+notes: >-
+  Unofficial "Rails the 37signals way" skill, not affiliated with 37signals. Upstream
+  frontmatter keeps disable-model-invocation (except rails-best-practices-core), so it is
+  slash-invoked only — kept as-is by owner decision.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - ruby
+  - rails
+categories:
+  stacks:
+    - ruby
+    - rails

@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=../../../../presets/schema/sidecar.schema.json
+source:
+  repo: https://github.com/pproenca/dot-skills
+  commit: cf93c57cac89d6fc3e4194686000411567f5caf3
+  path: skills/.curated/rails-testing
+  ref: main
+imported_at: "2026-11-20"
+license: MIT
+modified: false
+modifications: null
+notes: >-
+  RSpec-focused Rails testing guide — 46 rules (design, FactoryBot data, model, request,
+  system, async/job, perf, organization), one reference file per rule. Chosen over
+  37signals-skills/rails-testing (Minitest) for RSpec projects. Upstream sibling skills
+  rails-dev, ruby-refactor, ruby-optimise are candidates for future Ruby coverage.
+dependencies:
+  required:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  optional:
+    agents: []
+    skills: []
+    commands: []
+    hooks: []
+    rules: []
+  external: []
+tags:
+  - ruby
+  - rails
+  - rspec
+  - factory-bot
+categories:
+  stacks:
+    - ruby
+    - rails
