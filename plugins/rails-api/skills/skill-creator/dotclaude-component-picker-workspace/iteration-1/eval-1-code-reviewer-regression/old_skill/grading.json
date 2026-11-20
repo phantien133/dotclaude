@@ -1,0 +1,26 @@
+{
+  "eval_id": "eval-1-code-reviewer-regression",
+  "configuration": "old_skill",
+  "expectations": [
+    {
+      "text": "Follows the complete pipeline (browse → evaluate → cross-ref scan → vendor → sidecar → preset → install → verify)",
+      "passed": false,
+      "evidence": "Old skill follows 7 steps (browse → evaluate → vendor → sidecar → preset → install → verify). No cross-reference scan step. The output itself notes at the end: 'old skill has no systematic process for discovering [dependencies] from component content'."
+    },
+    {
+      "text": "Runs Step 2.5 cross-reference scan on code-reviewer",
+      "passed": false,
+      "evidence": "Step 2 mentions 'internal dependencies: references coding-standards skill (already noted in existing sidecar)' but shows no grep commands. Dependency was noted because it was already in the sidecar from prior import, not discovered by scanning the component."
+    },
+    {
+      "text": "Creates correct sidecar file type (file component → .source.yaml sibling, not SOURCE.yaml inside folder)",
+      "passed": true,
+      "evidence": "Step 4 references `claudekit/agents/code-reviewer.source.yaml` explicitly — correct .source.yaml sibling pattern."
+    },
+    {
+      "text": "Uses correct install command (pnpm install:project not pnpm install)",
+      "passed": true,
+      "evidence": "Step 6: `pnpm install:project dotclaude-self --symlink --force`"
+    }
+  ]
+}
