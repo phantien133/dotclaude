@@ -1,0 +1,79 @@
+# yaml-language-server: $schema=../../schema/preset.schema.json
+name: rails-api
+kind: framework
+description: Ruby on Rails API-only preset — 37signals-style Rails conventions, RSpec testing, safe Postgres migrations, security, jobs, and webhooks.
+version: 0.1.0
+license: "MIT AND O'Saasy (Fizzy code examples in 37signals-skills skills)"
+extends:
+  - developer
+components:
+  skills:
+    - name: rails-best-practices-core
+      source: 37signals-skills
+    - name: rails-migrations
+      source: 37signals-skills
+    - name: rails-security-multitenancy
+      source: 37signals-skills
+    - name: rails-jobs
+      source: 37signals-skills
+    - name: rails-webhooks
+      source: 37signals-skills
+    - name: dhh
+      source: 37signals-skills
+    - name: rails-testing
+      source: pproenca-skills
+    - name: postgres-patterns
+      source: everything-claude-code
+    - name: database-migrations
+      source: everything-claude-code
+    - name: api-design
+      source: everything-claude-code
+    - name: backend-patterns
+      source: everything-claude-code
+    - name: security-bounty-hunter
+      source: everything-claude-code
+    - name: verification-loop
+      source: everything-claude-code
+  agents:
+    - name: database-reviewer
+      source: everything-claude-code
+    - name: tdd-guide
+      source: everything-claude-code
+external_setup:
+  - name: postgres-mcp
+    kind: mcp_server
+    standalone: false
+    install_hint: "claude mcp add postgres --env DATABASE_URI=postgresql://<readonly_user>:<pass>@localhost:5432/<db_development> -- uvx postgres-mcp --access-mode=restricted"
+    complexity: complex
+    docs_url: "https://github.com/crystaldba/postgres-mcp"
+    notes: "Not enabled by default — needs DATABASE_URI. Use a read-only role against the development DB; keep --access-mode=restricted. Gives EXPLAIN analysis, index tuning, health checks."
+  - name: playwright-mcp
+    kind: mcp_server
+    standalone: false
+    install_hint: "claude mcp add playwright -- npx -y @playwright/mcp@latest"
+    complexity: moderate
+    docs_url: "https://github.com/microsoft/playwright-mcp"
+    notes: "Not enabled by default — low value for API-only apps. Enable only if the project serves admin/HTML pages or you need browser-based acceptance checks."
+recommended_install_level: project
+tags:
+  - rails
+  - ruby
+  - backend
+  - rest-api
+  - postgres
+  - rspec
+use_case_tags:
+  roles:
+    - backend-developer
+  project_types:
+    - rest-api
+  stacks:
+    - ruby
+    - rails
+    - postgres
+  use_cases:
+    - api-development
+    - database-integration
+    - tdd
+    - security-review
+    - code-review

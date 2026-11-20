@@ -30,6 +30,7 @@ Full preset docs and authoring guide: **[docs/PLUGINS.md](./docs/PLUGINS.md)**
 | [`typescript`](./plugins/typescript/) | 0.1.0 | TypeScript language preset — coding style, idiomatic patterns, testing, security rules, and a dedicated TS code reviewer. Base for any TS framework. | [README](./presets/framework/typescript/README.md) |
 | [`nestjs`](./plugins/nestjs/) | 0.1.0 | NestJS modular TypeScript backend — DTO validation, guards, database integration, API design patterns. Extends `developer` + `typescript`. | [README](./presets/framework/nestjs/README.md) |
 | [`nextjs`](./plugins/nextjs/) | 0.1.0 | Next.js React app structure — Turbopack dev server, frontend patterns for production apps. Extends `developer` + `typescript`. | [README](./presets/framework/nextjs/README.md) |
+| [`rails-api`](./plugins/rails-api/) | 0.1.0 | Ruby on Rails API-only preset — 37signals-style Rails conventions, RSpec testing, safe Postgres migrations, security, jobs, and webhooks. Extends `developer`. | [README](./presets/framework/rails-api/README.md) |
 
 ### Dotclaude self-tooling
 
