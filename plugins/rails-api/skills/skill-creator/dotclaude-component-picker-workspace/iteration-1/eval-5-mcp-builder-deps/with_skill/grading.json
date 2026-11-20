@@ -1,0 +1,31 @@
+{
+  "eval_id": "eval-5-mcp-builder-deps",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "Greps mcp-builder/ for skill/agent references and reports findings",
+      "passed": true,
+      "evidence": "Step 2.5a 'References to other skills/agents in SKILL.md' section reports: 'No use_skill, invoke, or explicit references to other Claude Code skills were found.' Lists bundled reference docs and live WebFetch URLs as non-dependency items. Scan clearly performed and results reported."
+    },
+    {
+      "text": "Checks scripts/ for Python imports to identify external package dependencies",
+      "passed": true,
+      "evidence": "Step 2.5a shows exact import lines from scripts/connections.py (`from mcp import ClientSession...`) and scripts/evaluation.py (`from anthropic import Anthropic`, `from connections import create_connection`). Relative import within skill correctly identified as self-contained."
+    },
+    {
+      "text": "Correctly identifies fastmcp/mcp as external Python packages (not claudekit skills)",
+      "passed": true,
+      "evidence": "Decision matrix row: 'mcp>=1.1.0 (PyPI) — External → dependencies.external, type: python_pkg'. Response states: 'FastMCP refers to the Python library (fastmcp / mcp PyPI package), not a Claude Code skill.'"
+    },
+    {
+      "text": "Correctly concludes no inter-skill dependencies on existing claudekit skills",
+      "passed": true,
+      "evidence": "Decision matrix final row: 'Other claudekit skills (claude-api, docx, etc.) — None referenced → No inter-skill deps found'. Confirmed in summary: 'mcp-builder does not depend on any other skills already in claudekit.'"
+    },
+    {
+      "text": "Produces a dependencies section for SOURCE.yaml with correct external entry",
+      "passed": true,
+      "evidence": "Full SOURCE.yaml snippet shows two external entries: mcp (python_pkg, >=1.1.0) and anthropic (python_pkg, >=0.39.0), with reason fields populated. `dependencies.required.skills: []` correctly empty."
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "eval_id": "eval-1-code-reviewer-regression",
+  "configuration": "with_skill",
+  "expectations": [
+    {
+      "text": "Follows the complete pipeline (browse → evaluate → cross-ref scan → vendor → sidecar → preset → install → verify)",
+      "passed": true,
+      "evidence": "Response explicitly walks through Steps 1–7 plus 'Step 2.5 — Cross-Reference & Dependency Scan' as a named section. All major pipeline phases are present."
+    },
+    {
+      "text": "Runs Step 2.5 cross-reference scan on code-reviewer",
+      "passed": true,
+      "evidence": "Step 2.5 section shows: `grep -ni \"skill|agent|use_skill|invoke|require|depends\" \"$COMP\" | grep -v \"LICENSE\"` and reports scan results (self-invocation strings only, no dep references). Also runs Step 2.5d to verify the existing coding-standards dependency alignment."
+    },
+    {
+      "text": "Creates correct sidecar file type (file component → .source.yaml sibling, not SOURCE.yaml inside folder)",
+      "passed": true,
+      "evidence": "Step 4 references 'existing code-reviewer.source.yaml' by that exact filename. Step 2 notes 'code-reviewer.source.yaml ✅ sidecar present'. Correct .source.yaml sibling pattern confirmed."
+    },
+    {
+      "text": "Uses correct install command (pnpm install:project not pnpm install)",
+      "passed": true,
+      "evidence": "Step 6: `pnpm install:project dotclaude-self --symlink --force`"
+    }
+  ]
+}

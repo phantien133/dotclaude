@@ -1,0 +1,55 @@
+{
+  "name": "rails-api",
+  "version": "0.1.0",
+  "description": "Ruby on Rails API-only preset — 37signals-style Rails conventions, RSpec testing, safe Postgres migrations, security, jobs, and webhooks.",
+  "author": {
+    "name": "phantien133",
+    "email": "phanqtien@gmail.com"
+  },
+  "license": "MIT AND O'Saasy (Fizzy code examples in 37signals-skills skills)",
+  "keywords": [
+    "rails",
+    "ruby",
+    "backend",
+    "rest-api",
+    "postgres",
+    "rspec"
+  ],
+  "mcpServers": {},
+  "repository": "https://github.com/phantien133/dotclaude",
+  "skills": [
+    "./skills/"
+  ],
+  "commands": [
+    "./commands/"
+  ],
+  "external_setup": [
+    {
+      "name": "mgrep",
+      "kind": "claude_plugin",
+      "standalone": false,
+      "install_hint": "/plugins install mgrep@Mixedbread-Grep",
+      "complexity": "simple",
+      "docs_url": "https://github.com/mixedbread-ai/mgrep",
+      "notes": "Semantic code search plugin. settings_patch registers the Mixedbread-Grep marketplace and auto-enables the plugin."
+    },
+    {
+      "name": "postgres-mcp",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "claude mcp add postgres --env DATABASE_URI=postgresql://<readonly_user>:<pass>@localhost:5432/<db_development> -- uvx postgres-mcp --access-mode=restricted",
+      "complexity": "complex",
+      "docs_url": "https://github.com/crystaldba/postgres-mcp",
+      "notes": "Not enabled by default — needs DATABASE_URI. Use a read-only role against the development DB; keep --access-mode=restricted. Gives EXPLAIN analysis, index tuning, health checks."
+    },
+    {
+      "name": "playwright-mcp",
+      "kind": "mcp_server",
+      "standalone": false,
+      "install_hint": "claude mcp add playwright -- npx -y @playwright/mcp@latest",
+      "complexity": "moderate",
+      "docs_url": "https://github.com/microsoft/playwright-mcp",
+      "notes": "Not enabled by default — low value for API-only apps. Enable only if the project serves admin/HTML pages or you need browser-based acceptance checks."
+    }
+  ]
+}

@@ -889,6 +889,36 @@
       ],
       "strict": false,
       "repository": "https://github.com/phantien133/dotclaude"
+    },
+    {
+      "name": "rails-api",
+      "source": "./plugins/rails-api",
+      "description": "Ruby on Rails API-only preset — 37signals-style Rails conventions, RSpec testing, safe Postgres migrations, security, jobs, and webhooks.",
+      "version": "0.1.0",
+      "author": {
+        "name": "phantien133",
+        "email": "phanqtien@gmail.com"
+      },
+      "license": "MIT AND O'Saasy (Fizzy code examples in 37signals-skills skills)",
+      "keywords": [
+        "rails",
+        "ruby",
+        "backend",
+        "rest-api",
+        "postgres",
+        "rspec"
+      ],
+      "category": "workflow",
+      "tags": [
+        "rails",
+        "ruby",
+        "backend",
+        "rest-api",
+        "postgres",
+        "rspec"
+      ],
+      "strict": false,
+      "repository": "https://github.com/phantien133/dotclaude"
     }
   ]
 }
